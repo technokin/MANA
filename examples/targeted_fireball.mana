@@ -1,0 +1,23 @@
+# The spell only defines its behaviour. It never chooses a target.
+spldef fireball():
+    fire = create Fire
+    shape(fire, circle)
+    heat(fire, 500 K)
+    velocity(fire, 300 m/s)
+    incant fire
+
+# A target profile can use distance without requiring the user to calculate coordinates.
+npc = tgset:
+    hp = 250
+    max_hp = 250
+    defence = 10
+    resist_fire = 0.1
+    distance = 12 m
+
+# The selected target applies only inside this casting block.
+tgset(npc):
+    post(fireball)
+    release(fireball)
+
+show("Remaining NPC HP:", npc.hp)
+show("Collisions:", last_collisions())

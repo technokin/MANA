@@ -1,0 +1,26 @@
+# One definition creates a configured spell for whichever base element is selected.
+# Calling e_ball(Fire) configures a spell; it does not execute the spell body.
+spldef e_ball(element):
+    ball = create element
+    shape(ball, circle)
+    heat(ball, 500 K)
+    velocity(ball, 300 m/s)
+    incant ball
+
+fire_ball = e_ball(Fire)
+earth_ball = e_ball(Earth)
+water_ball = e_ball(Water)
+air_ball = e_ball(Air)
+
+# Tune an existing operation on only this configured instance.
+tune(fire_ball.velocity) = ball, 600 m/s
+tune(fire_ball.heat) = ball, 1500 K
+
+# post previews the configured spell and restores world state.
+post(fire_ball)
+post(earth_ball)
+
+# release executes and commits each spell's actual effects.
+release(fire_ball)
+release(earth_ball)
+show "Committed objects:", active_objects()

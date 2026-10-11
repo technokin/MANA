@@ -1,0 +1,33 @@
+# combine() returns a result object. Input objects preserve their stored properties;
+# source records may become inactive while represented by the composite.
+
+cancel_fire = create Fire
+cancel_water = create Water
+cancelled = combine(cancel_fire, cancel_water, mana_a=100, mana_b=100)
+show("Fire + Water result:", cancelled)
+show("Released energy:", cancelled.released_energy)
+show("Energy origin:", cancelled.energy_origin)
+
+mud_water = create Water
+earth = create Earth
+mud = combine(mud_water, earth, mana_a=100, mana_b=100)
+show("Water + Earth result:", mud)
+
+load planes
+planes.invoke("Life")
+life = create Life
+wood = combine(mud, life, mana_a=100, mana_b=50)
+show("Mud + Life result:", wood)
+
+# Fire + Air uses each element's mana by name, even if arguments are swapped.
+boost_air = create Air
+boost_fire = create Fire
+boosted = combine(boost_air, boost_fire, mana_a=20, mana_b=100)
+show("Air + Fire result:", boosted)
+
+# Ice is produced only when the water source has heat available to remove.
+ice_water = create Water
+ice_air = create Air
+heat(ice_water, 100 K)
+ice = combine(ice_water, ice_air)
+show("Water + Air result:", ice)

@@ -1,0 +1,182 @@
+{
+  "scopeName": "source.mana",
+  "name": "MANA",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#elements"
+    },
+    {
+      "include": "#units"
+    },
+    {
+      "include": "#builtins"
+    },
+    {
+      "include": "#geometry"
+    },
+    {
+      "include": "#libraryFunctions"
+    },
+    {
+      "include": "#libraryNamespaces"
+    },
+    {
+      "include": "#properties"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#functionDefinitions"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.mana",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.mana",
+      "patterns": [
+        {
+          "name": "string.quoted.double.mana",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.mana",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.mana",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.mana",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.mana",
+          "match": "\\b(def|spldef|load|incant|tgset|if|elif|else|while|for|in|and|or|not|true|false|create|simul|wait|after|every|when|skip|tune)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.mana",
+          "match": "\\b(c|pi)\\b"
+        }
+      ]
+    },
+    "elements": {
+      "patterns": [
+        {
+          "name": "support.constant.element.mana",
+          "match": "\\b(Fire|Water|Earth|Air|Light|Darkness|Life|Death|Order|Entropy|Spirit|Soul|Space|Time|Void|Lightning|Sound|Metal|Nature|Mud|Wood|Ice|ThermalRelease|Compound|EarthLifeCompound|Mana)\\b"
+        }
+      ]
+    },
+    "units": {
+      "patterns": [
+        {
+          "name": "keyword.other.unit.mana",
+          "match": "(?<=\\d)\\s*(kg/m3|kg\\*m/s|m/s2|m/s|mana/s|m2|m3|kg|K|s|m|mana|N|J|Pa|W)\\b"
+        }
+      ]
+    },
+    "builtins": {
+      "patterns": [
+        {
+          "name": "support.function.mana",
+          "match": "\\b(shape|move|heat|cool|accelerate|decelerate|velocity|detect|release|post|bind|combine|separate|transform|compress|expand|momentum|kinetic_energy|force|pressure|has_domain|matter_to_mana|mana_to_matter|mana_to_energy|energy_to_mana|advance_time|emit|show|active_objects|rotate|scale|push|pull|reflect|split|anchor|unanchor|dispel|last_collisions|sqrt|span|length)\\b(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.mana",
+          "match": "\\bshow\\b(?!\\s*\\()"
+        }
+      ]
+    },
+    "geometry": {
+      "patterns": [
+        {
+          "name": "constant.other.geometry.mana",
+          "match": "\\b(point|line|ray|segment|circle|round|arc|ellipse|ring|polygon|beam|wave|disc|spiral|fan|wall|field|dome|cage|chain|tendril|cone|corridor)\\b"
+        }
+      ]
+    },
+    "properties": {
+      "patterns": [
+        {
+          "name": "variable.other.property.mana",
+          "match": "(?<=\\.)(mass|volume|density|pos|vel|acc|force|energy|thermal_energy|kinetic_energy|momentum|temp|pressure|state|material|shape|rot|scale|anchored|anchor_pos|direction|active|released|bound|hp|max_hp|defence|resist_fire|resist_water|resist_earth|resist_air|distance|kind|combustible|powderable|ignition_temp|mana_energy|object_kind|burning)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.mana",
+          "match": "\\b(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?\\b"
+        }
+      ]
+    },
+    "functionDefinitions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.mana",
+          "match": "(?<=def\\s)[A-Za-z_][A-Za-z0-9_]*"
+        },
+        {
+          "name": "entity.name.function.mana",
+          "match": "(?<=spldef\\s)[A-Za-z_][A-Za-z0-9_]*"
+        }
+      ]
+    },
+    "libraryFunctions": {
+      "patterns": [
+        {
+          "name": "support.function.library.mana",
+          "match": "(?<=\\.)(bring|tame|send_back|call|find_being|reanimate|reanimate_many|is_undead|identify|exists|all_planes|regions_of|parent_of|category_of|planes_in|same_category|open_path|close_path|is_open|paths_of|neighbors|find_route|reachable|send_energy|open_channel|close_channel|energy_sent|invoke|revoke|has_permission|element_of|spirit_of|form|burst|emit|toward|away|lift|hold|levitate|stop|release_control|collect|point|direction|distance|project|reflect_vector|planar|is_planar|object_vector|span|length)\\b(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.library.mana",
+          "match": "(?<=\\.)([A-Za-z_][A-Za-z0-9_]*)(?=\\s*\\()"
+        }
+      ]
+    },
+    "libraryNamespaces": {
+      "patterns": [
+        {
+          "name": "support.module.mana",
+          "match": "\\b(planes|drafter|summoning|necromancy|geometry2d|vector3d|mana|elemental_planes|hell|heaven|atlantis|fae_paradise|lineage_halls|wild_realm)\\b(?=\\s*\\.)"
+        }
+      ]
+    }
+  }
+}

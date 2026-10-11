@@ -1,0 +1,21 @@
+load geometry2d
+
+# A fast projectile hits a target. Collision response and damage are simulated.
+projectile = create Fire
+projectile.collision_radius = 0.25 m
+velocity(projectile, geometry2d.direction(1, 0) * 100 m/s)
+
+target = tgset:
+    hp = 1000
+    max_hp = 1000
+    defence = 0
+    resist_fire = 0
+
+target.collision_radius = 0.25 m
+move(target, 2 m, geometry2d.direction(1, 0))
+advance_time(0.05 s, timestep=0.05 s)
+show "Target remaining HP:", target.hp
+show "Projectile velocity after impact:", projectile.vel
+show "Target velocity after impact:", target.vel
+show "Target temperature after impact:", target.temp
+show "Recent collision records:", last_collisions()

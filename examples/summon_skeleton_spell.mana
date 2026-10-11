@@ -1,0 +1,28 @@
+# Summon Skeleton is an ordinary MANA spell, not a built-in function.
+# This example forms an Earth-based body, invokes the Necro channel,
+# marks the new construct as undead, and applies ordinary physical control.
+load planes
+load necromancy
+
+planes.open_path("Underworld", "Mortal Plane")
+planes.invoke("Necro")
+
+spldef summon_skeleton():
+    skeleton = create Earth
+    skeleton.material = "Bone"
+    skeleton.display_name = "Skeleton"
+    skeleton.kind = "undead construct"
+    skeleton.object_kind = "target"
+    skeleton.is_being = true
+    skeleton.is_undead = true
+    skeleton.species = "Skeleton"
+    skeleton.home_plane = "Mortal Plane"
+    skeleton.necromantic_mana_type = "Necro"
+    skeleton.object_kind = "being"
+    velocity(skeleton, 2 m/s)
+    incant skeleton
+
+release(summon_skeleton)
+show active_objects()[-1].display_name
+show active_objects()[-1].is_undead
+show necromancy.is_undead(active_objects()[-1])

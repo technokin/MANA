@@ -1,0 +1,16 @@
+# A target profile describes a target; it does not cast a spell or cost mana.
+# In the headless prototype, distance-only profiles are placed forward (+X).
+guard = tgset:
+    hp = 250
+    max_hp = 250
+    defence = 40
+    resist_fire = 0.6
+    resist_water = 0.1
+    resist_earth = 0.25
+    resist_air = 0.15
+    distance = 12 m
+
+show("Target:", guard)
+show("HP:", guard.hp)
+show("Fire resistance:", guard.resist_fire)
+show("Distance:", guard.distance)

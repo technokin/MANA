@@ -1,0 +1,15 @@
+load geometry2d
+
+# Deterministic motion using the physics engine.
+stone = create Earth
+stone.collision_radius = 0.25 m
+accelerate(stone, geometry2d.direction(0, 1) * 2 m/s2)
+velocity(stone, geometry2d.direction(1, 0) * 10 m/s)
+advance_time(1 s, timestep=0.01 s, gravity=geometry2d.direction(0, -1) * 9.81 m/s2)
+show "Position after 1 second:", stone.pos
+show "Velocity after 1 second:", stone.vel
+show "Kinetic energy:", stone.kinetic_energy
+show "Thermal energy:", stone.thermal_energy
+show "Creation cost for 1 kg:", matter_to_mana(1 kg)
+show "Energy equivalent of 1 mana:", mana_to_energy(1 mana)
+show "Active world objects:", active_objects()

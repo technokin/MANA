@@ -1,0 +1,14 @@
+load planes
+load drafter
+
+# A plane is created from a draft; drafts cannot edit a registered plane.
+draft = drafter.begin("Crystal Reach", "ordinary", plane_id="crystal_reach")
+drafter.set_value(draft, "gravity_factor", 0.5)
+drafter.set_value(draft, "mana_density", 3)
+drafter.add_being(draft, "Crystal Drake", "beast", element="Earth", hp=100, max_hp=100)
+drafter.add_being(draft, "Cavern Wisp", "spirit")
+crystal_reach = drafter.create(draft)
+
+planes.open_path(crystal_reach, "Mortal Plane")
+show planes.category_of(crystal_reach)
+show length(drafter.beings_of(crystal_reach))

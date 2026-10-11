@@ -1,0 +1,21 @@
+load geometry2d
+
+# These operations work without any graphical engine.
+stone = create Earth
+stone.mass = 2 kg
+show("starting mass:", stone.mass)
+
+rotate(stone, 1.2)
+scale(stone, 0.5)
+show("rotation (radians):", stone.rot)
+show("scaled volume:", stone.volume)
+show("density after scaling:", stone.density)
+
+rock = create Earth
+velocity(rock, geometry2d.direction(0, 1) * 25 m/s)
+show("velocity:", rock.vel)
+
+anchor(stone)
+show("anchored:", stone.anchored)
+unanchor(stone)
+show("anchored after unanchor:", stone.anchored)

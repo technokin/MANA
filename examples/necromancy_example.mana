@@ -1,0 +1,19 @@
+load planes
+load necromancy
+
+# A body must already exist locally. Declaring Bone material when the object
+# is introduced represents existing bones; changing a stone's label later is
+# not a substitute for a corpse/bones source.
+planes.open_path("Underworld", "Mortal Plane")
+planes.invoke("Necro")
+bones = tgset:
+    material = "Bone"
+    state = "solid"
+    mass = 2 kg
+
+# No energy amount is supplied. Usage is recorded internally for accounting;
+# it is not added to the skeleton's physical energy or integrity.
+necromancy.reanimate(bones, "Bone Guard")
+velocity(bones, 2 m/s)
+show necromancy.is_undead(bones)
+show bones.display_name

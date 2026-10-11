@@ -1,0 +1,16 @@
+load planes
+
+fire = planes.identify("Fire")
+show fire.name
+show planes.category_of(fire)
+
+planes.open_path("Mortal Plane", "Fire")
+planes.open_path("Fire", "Ice")
+route = planes.find_route("Mortal", "Ice")
+show route
+
+planes.open_path("Underworld", "Mortal Plane")
+planes.invoke("Underworld")
+receipt = planes.send_energy(500 J, "Underworld", "Mortal Plane", "Death")
+show receipt.amount_j
+show planes.energy_sent("Underworld", "Mortal Plane")

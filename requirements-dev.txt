@@ -1,0 +1,4 @@
+# Optional maintainer/test tools; not required to run MANA programs.
+-r requirements.txt
+pytest>=8
+ruff>=0.8

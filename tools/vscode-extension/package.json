@@ -1,0 +1,47 @@
+{
+  "name": "mana-language",
+  "displayName": "MANA Language Support",
+  "description": "Syntax highlighting, comments, indentation, bracket matching, and snippets for the MANA magic programming language.",
+  "version": "1.0.0",
+  "publisher": "mana-language",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "mana",
+    "magic",
+    "language"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "mana",
+        "aliases": [
+          "MANA",
+          "Mana"
+        ],
+        "extensions": [
+          ".mana"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mana",
+        "scopeName": "source.mana",
+        "path": "./syntaxes/mana.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "mana",
+        "path": "./snippets/mana.json"
+      }
+    ]
+  }
+}

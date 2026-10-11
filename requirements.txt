@@ -1,0 +1,3 @@
+# MANA runtime dependencies.
+# None currently: the interpreter uses Python 3.12+ standard-library modules only.
+# Add a package here only when the MANA runtime actually needs it.

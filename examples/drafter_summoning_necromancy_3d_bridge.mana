@@ -1,0 +1,28 @@
+load planes
+load drafter
+load summoning
+load necromancy
+load vector3d
+load mana
+
+# Define a custom plane and a being without changing the runtime's physics rules.
+draft = drafter.begin("Aerie", "living realm", plane_id="aerie")
+drafter.set_value(draft, "gravity_factor", 0.8)
+drafter.add_being(draft, "Aerie Manta", "beast", element="Air")
+aerie = drafter.create(draft)
+planes.open_path(aerie, "Mortal Plane")
+spawn3 = vector3d.position(4 m, 2 m, 0 m)
+manta = summoning.bring("Aerie Manta", aerie, position=vector3d.planar(spawn3))
+position = vector3d.object_vector(manta)
+mana.lift(manta)
+show planes.plane_of(manta).name
+show vector3d.is_planar(position)
+
+# Necromancy remains separate: it needs a route and Underworld permission.
+planes.open_path("Underworld", "Mortal Plane")
+planes.invoke("Necro")
+remains = tgset:
+    material = "Bone"
+    state = "solid"
+undead = necromancy.reanimate(remains)
+show necromancy.is_undead(undead)

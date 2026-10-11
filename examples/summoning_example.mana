@@ -1,0 +1,17 @@
+load planes
+load summoning
+
+# One route is all that is needed; the active world destination is implicit.
+planes.open_path("Wild Realm", "Mortal Plane")
+
+# A direct summon need not be assigned a variable.
+summoning.bring("Griffin")
+
+# Naming the returned instance tames that particular being, allowing it to be
+# returned home and recalled later as the same instance.
+griffin = summoning.bring("Griffin")
+show griffin.tame_name
+show griffin.is_tamed
+summoning.send_back(griffin)
+summoning.call(griffin)
+show planes.plane_of(griffin).name
