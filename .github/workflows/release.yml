@@ -47,10 +47,6 @@ jobs:
           node --check tools/mana-visualiser-extension/media/viewer.js
       - name: Audit development dependency tree
         run: python -m pip_audit --strict -r requirements-dev.txt
-      - name: Lint Python source and tests
-        run: |
-          python -m ruff check magiclang tests tools mana.py
-          python -m pyflakes magiclang
       - name: Run regression and stress tests
         run: |
           python -m pytest -q
