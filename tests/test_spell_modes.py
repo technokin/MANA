@@ -63,12 +63,20 @@ def test_show_cannot_be_assigned_to_a_variable():
         make_runtime('value = show(4)\n')
 
 
-def test_execution_modes_accept_exactly_one_named_spell():
-    with pytest.raises(SyntaxErrorML, match='exactly one argument'):
+def test_post_accepts_optional_presentation_and_release_does_not():
+    _, default_result = run_last_statement(BASE + 'post(warm_stone)\n')
+    assert default_result.presentation == 'text'
+    _, text_result = run_last_statement(BASE + 'post(warm_stone, text)\n')
+    assert text_result.presentation == 'text'
+    _, visual_result = run_last_statement(BASE + 'post(warm_stone, visual)\n')
+    assert visual_result.presentation == 'visual'
+    assert visual_result.ok and not visual_result.committed
+
+    with pytest.raises(SyntaxErrorML, match='text.*visual'):
         make_runtime(BASE + 'post(warm_stone, 900 K)\n')
-    with pytest.raises(SyntaxErrorML, match='exactly one argument'):
-        make_runtime(BASE + 'release(warm_stone, 900 K)\n')
-    with pytest.raises(SyntaxErrorML, match='one spell name'):
+    with pytest.raises(SyntaxErrorML, match='release accepts only the spell name'):
+        make_runtime(BASE + 'release(warm_stone, visual)\n')
+    with pytest.raises(SyntaxErrorML, match='expects a named spell'):
         make_runtime(BASE + 'post("warm_stone")\n')
 
 

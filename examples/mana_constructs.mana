@@ -1,0 +1,14 @@
+# Woven mana is shaped, not created. The Visual button replays the preview.
+load geometry2d
+
+spell ward():
+    shield = weave mana:
+        shape = barrier
+        radius = 1.2 m
+        energy = 5000 J
+        position = geometry2d.point(3 m, 0 m)
+    incant shield
+
+post(ward, visual)
+release(ward)
+show "Ward shape:", active_objects()

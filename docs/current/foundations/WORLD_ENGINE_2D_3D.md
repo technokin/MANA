@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 MANA has one primary world simulation and separate geometry/math libraries. The primary world runtime is 2D. The existence of a `vector3d` library does not change collision, motion, terrain, targeting, or gravity into three-dimensional simulation.
 
@@ -70,7 +70,7 @@ The collision solver does not currently support arbitrary exact polygon terrain 
 
 Targeting is selected outside a spell using `tgset(...)` or `tgset: ...`. The spell body defines its behaviour; the world engine resolves target geometry and flight. Current targeted flight remains limited: it primarily handles eligible objects created by the spell, uses the innermost target context, has a documented fallback direction when the target is distance-only, and limits estimated flight duration. Check `PHYSICS_ENGINE.md` for the currently coded limits before relying on long-distance projectile behaviour.
 
-These are current prototype restrictions, not a reason to place target-selection logic inside every `spldef`.
+These are current prototype restrictions, not a reason to place target-selection logic inside every `spell` declaration.
 
 ## 7. Integrity and collapse
 
@@ -90,4 +90,4 @@ Physics operations reject values that are dimensionally inconsistent, negative w
 
 ## 10. Future engine work, not current promises
 
-A future version may add a graphical world viewport, 3D world state/collisions, destructible terrain, persistent steering controllers, ongoing combustion, more material-specific thermal properties, richer creature behaviour, and a relativistically consistent collision solver. None of those should be documented as implemented until code and tests support them.
+The optional Visualiser can replay JSONL records, but it is not a live world viewport or editor. Future engine work may add live observation, destructible terrain, persistent steering controllers, ongoing combustion, more material-specific thermal properties, richer creature behaviour, and a relativistically consistent collision solver. A full 3D world is not a goal for MANA 2.0; `vector3d` remains a calculation library. Do not describe any future capability as implemented until code and tests support it.

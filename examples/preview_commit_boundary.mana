@@ -1,0 +1,20 @@
+# A spell preview should not add a persistent world object; release should.
+load geometry2d
+
+spell place_marker():
+    marker = weave mana:
+        shape = point
+        radius = 0.25 m
+        energy = 250 J
+        position = geometry2d.point(2 m, 0 m)
+    incant marker
+
+before = length(active_objects())
+post(place_marker)
+after_preview = length(active_objects())
+release(place_marker)
+after_release = length(active_objects())
+
+show "World objects before preview:", before
+show "World objects after preview:", after_preview
+show "World objects after release:", after_release

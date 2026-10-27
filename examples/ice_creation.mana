@@ -1,0 +1,7 @@
+# This interaction can produce Ice when the Water source has heat available to remove.
+water_source = create Water
+air_source = create Air
+heat(water_source, 100 K)
+ice_result = combine(water_source, air_source)
+show "Combined result:", ice_result
+show "Result material:", ice_result.material

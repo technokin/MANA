@@ -2,14 +2,14 @@
 
 **Page kind:** Explanation  
 
-**MANA v1.0.0 — focused reference**
+**MANA v2.0.0 — focused reference**
 
 This document explains the difference between defining a spell, creating a configured spell instance, changing a spell's settings, and firing it.
 
 ## 1. Define the reusable behaviour
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -30,7 +30,7 @@ The parameter is only for element selection. It can be one of `Fire`, `Water`, `
 ## 2. Create separate configured instances
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -56,7 +56,7 @@ This does not run the spell body. It creates four separate configured instances 
 ## 3. Change one existing operation
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -83,7 +83,7 @@ The selected instance uses 600 m/s and a 1500 K temperature increment on later e
 The second part of the left-hand side identifies the operation name. The first item on the right identifies the variable used as the operation's first argument. MANA requires exactly one match in the spell definition.
 
 ```mana
-spldef twin_orb(element):
+spell twin_orb(element):
     near = create element
     far = create element
     velocity(near, 100 m/s)
@@ -106,7 +106,7 @@ This is unambiguous because `near` and `far` identify separate source-level targ
 ## 4. Preview and fire
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -147,7 +147,7 @@ Expected output:
 [POST fire_ball] ball.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(300, 0, 0) [kg*m/s] (velocity)
 [POST fire_ball] ball.vel: Vector3(0, 0, 0) [m/s] -> Vector3(300, 0, 0) [m/s] (velocity)
 [POST fire_ball] spell completed
-[POST fire_ball] mana cost: 545000 mana
+[POST fire_ball] mana appraisal: 545000 mana
 [POST fire_ball] created: ball (Fire, 1 kg)
 ```
 
@@ -161,7 +161,7 @@ Tuning is configuration, not world state. Therefore `post` does not undo tuning.
 ## 5. `show`, `incant`, and `skip`
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     velocity(ball, 300 m/s)
     incant ball
@@ -183,7 +183,7 @@ Inside a definition, `incant ball` supplies the `ball` object as the definition'
 `skip` does nothing and is useful for an unfinished block:
 
 ```mana
-spldef placeholder():
+spell placeholder():
     skip
 ```
 

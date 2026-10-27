@@ -1,0 +1,16 @@
+# Explicitly open and close a one-way plane path, then inspect both directions.
+load planes
+
+opened = planes.open_path("Fire", "Water", one_way=true)
+forward_while_open = planes.is_open("Fire", "Water")
+reverse_while_open = planes.is_open("Water", "Fire")
+closed = planes.close_path("Fire", "Water")
+forward_after_close = planes.is_open("Fire", "Water")
+reverse_after_close = planes.is_open("Water", "Fire")
+
+show "Path opened:", opened
+show "Forward path while open:", forward_while_open
+show "Reverse path while open:", reverse_while_open
+show "Path closed:", closed
+show "Forward path after close:", forward_after_close
+show "Reverse path after close:", reverse_after_close

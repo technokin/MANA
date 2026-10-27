@@ -1,0 +1,8 @@
+# A shaped Earth object can act as a simple anchored barrier.
+barrier_object = create Earth
+shape(barrier_object, "wall")
+barrier_object.collision_radius = 1 m
+anchor(barrier_object)
+show "Barrier:", barrier_object
+show "Shape:", barrier_object.shape
+show "Anchored:", barrier_object.anchored

@@ -1,0 +1,8 @@
+# Universal motion controls do not require the Air element.
+load geometry2d
+
+stone = create Earth
+velocity(stone, geometry2d.direction(1, 0) * 10 m/s)
+advance_time(0.5 s, timestep=0.01 s)
+show "Stone position:", stone.pos
+show "Stone velocity:", stone.vel

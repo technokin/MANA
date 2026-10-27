@@ -1,8 +1,8 @@
 {
   "name": "mana-language",
   "displayName": "MANA Language Support",
-  "description": "Syntax highlighting, comments, indentation, bracket matching, and snippets for the MANA magic programming language.",
-  "version": "1.0.0",
+  "description": "MANA syntax highlighting, inline completions, material-aware suggestions, and one Run action; add the optional Visualiser for the second editor button.",
+  "version": "2.0.0",
   "publisher": "mana-language",
   "license": "GPL-3.0-only",
   "engines": {
@@ -14,7 +14,11 @@
   "keywords": [
     "mana",
     "magic",
-    "language"
+    "programming language",
+    "inline completions",
+    "periodic table",
+    "world engine",
+    "run"
   ],
   "contributes": {
     "languages": [
@@ -37,11 +41,55 @@
         "path": "./syntaxes/mana.tmLanguage.json"
       }
     ],
-    "snippets": [
+    "commands": [
       {
-        "language": "mana",
-        "path": "./snippets/mana.json"
+        "command": "mana.runFile",
+        "title": "Run MANA File",
+        "icon": "$(play)"
       }
-    ]
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "mana.runFile",
+          "when": "resourceExtname == .mana",
+          "group": "navigation@70"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "mana.runFile",
+          "when": "resourceExtname == .mana"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "MANA",
+      "properties": {
+        "mana.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Python executable used to run MANA, such as python, python3 or py."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onLanguage:mana",
+    "onCommand:mana.runFile"
+  ],
+  "main": "./extension.js",
+  "icon": "images/mana-icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/technokin/MANA.git"
+  },
+  "homepage": "https://github.com/technokin/MANA#readme",
+  "bugs": {
+    "url": "https://github.com/technokin/MANA/issues"
+  },
+  "galleryBanner": {
+    "color": "#202326",
+    "theme": "dark"
   }
 }

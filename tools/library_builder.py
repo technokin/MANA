@@ -8,21 +8,28 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import sys
+import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from magiclang.ast_nodes import FunctionDef, LoadLibrary, SkipStatement
-from magiclang.lexer import Lexer
-from magiclang.parser import Parser
-from magiclang.elements import ELEMENTS
-from magiclang.errors import MagicLangError
-from magiclang.runtime import Runtime
+from magiclang.ast_nodes import FunctionDef, LoadLibrary, SkipStatement  # noqa: E402  (the script bootstraps the repository root for direct invocation)
+from magiclang.lexer import Lexer  # noqa: E402  (the script bootstraps the repository root for direct invocation)
+from magiclang.parser import Parser  # noqa: E402  (the script bootstraps the repository root for direct invocation)
+from magiclang.elements import ELEMENTS  # noqa: E402  (the script bootstraps the repository root for direct invocation)
+from magiclang.errors import MagicLangError  # noqa: E402  (the script bootstraps the repository root for direct invocation)
+from magiclang.runtime import (  # noqa: E402  (the script bootstraps the repository root for direct invocation)
+    Runtime, MAX_LIBRARY_ARCHIVE_BYTES, MAX_LIBRARY_ARCHIVE_MEMBERS,
+    MAX_LIBRARY_MANIFEST_BYTES, MAX_LIBRARY_UNCOMPRESSED_BYTES,
+)
+from magiclang.runner import MAX_SOURCE_FILE_BYTES  # noqa: E402
 
 MANIFEST_NAME = "mana-library.json"
 ENTRY_DEFAULT = "main.mana"
@@ -50,30 +57,86 @@ def valid_name(name: str) -> bool:
     return valid_identifier(name) and name not in RESERVED_LIBRARY_NAMES
 
 
-def read_package_source(folder: Path):
-    manifest_path = folder / MANIFEST_NAME
-    if not manifest_path.is_file():
-        raise ValueError(f"missing {MANIFEST_NAME} in {folder}")
+def _read_bounded_member(folder: Path, relative: str | Path, *, limit: int, label: str) -> bytes:
+    """Read one regular package input boundedly and reject symlink/path escapes."""
+    root = folder.resolve()
+    lexical = root / relative
+    # Reject symlink components as well as final symlinks; this makes the bundle
+    # independent of files outside the project and avoids following swapped links.
+    current = root
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        for component in Path(relative).parts:
+            if component in ("", ".", ".."):
+                raise ValueError(f"unsafe {label} path")
+            current = current / component
+            if current.is_symlink():
+                raise ValueError(f"{label} cannot be a symbolic link: {relative}")
+        resolved = lexical.resolve(strict=True)
+        resolved.relative_to(root)
+        info = resolved.stat()
+    except (OSError, RuntimeError) as exc:
+        raise ValueError(f"cannot safely access {label}: {exc}") from exc
+    except ValueError as exc:
+        if "symbolic link" in str(exc) or "unsafe" in str(exc):
+            raise
+        raise ValueError(f"{label} must remain inside the library folder") from exc
+    if not stat.S_ISREG(info.st_mode):
+        raise ValueError(f"{label} must be a regular file")
+    if info.st_size > limit:
+        raise ValueError(f"{label} exceeds the {limit:,}-byte safety limit")
+    fd = None
+    try:
+        # Open the resolved target without following a last-moment symlink swap.
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(resolved, flags)
+        opened_info = os.fstat(fd)
+        if not stat.S_ISREG(opened_info.st_mode):
+            raise ValueError(f"{label} must be a regular file")
+        if opened_info.st_size > limit:
+            raise ValueError(f"{label} exceeds the {limit:,}-byte safety limit")
+        with os.fdopen(fd, "rb") as handle:
+            fd = None
+            data = handle.read(limit + 1)
+    except OSError as exc:
+        raise ValueError(f"cannot read {label}: {exc}") from exc
+    finally:
+        if fd is not None:
+            os.close(fd)
+    if len(data) > limit:
+        raise ValueError(f"{label} exceeds the {limit:,}-byte safety limit")
+    return data
+
+
+def read_package_source(folder: Path):
+    folder = folder.expanduser().resolve()
+    try:
+        manifest_bytes = _read_bounded_member(
+            folder, MANIFEST_NAME, limit=MAX_LIBRARY_MANIFEST_BYTES, label=MANIFEST_NAME,
+        )
+        manifest = json.loads(manifest_bytes.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError, OSError) as exc:
         raise ValueError(f"invalid JSON in {MANIFEST_NAME}: {exc}") from exc
     if not isinstance(manifest, dict):
         raise ValueError(f"{MANIFEST_NAME} must contain a JSON object")
-    if manifest.get("format") != "manalib" or manifest.get("format_version") != FORMAT_VERSION:
+    if manifest.get("format") != "manalib" or type(manifest.get("format_version")) is not int or manifest.get("format_version") != FORMAT_VERSION:
         raise ValueError("unsupported MANA library package format")
     name = manifest.get("name")
     if not isinstance(name, str) or not valid_name(name):
         raise ValueError("manifest 'name' must be a valid MANA library identifier")
     entry = manifest.get("entry", ENTRY_DEFAULT)
     entry_parts = entry.replace("\\", "/").split("/") if isinstance(entry, str) else []
-    if (not isinstance(entry, str) or Path(entry).is_absolute() or entry.startswith(("/", "\\"))
+    if (not isinstance(entry, str) or not entry or len(entry) > 240 or "\x00" in entry
+            or Path(entry).is_absolute() or entry.startswith(("/", "\\"))
             or re.match(r"^[A-Za-z]:", entry) or ".." in entry_parts):
         raise ValueError("manifest 'entry' must be a safe relative path inside the library folder")
+    source_bytes = _read_bounded_member(
+        folder, entry, limit=MAX_SOURCE_FILE_BYTES, label=f"entry source {entry}",
+    )
+    try:
+        source = source_bytes.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"entry source {entry} is not valid UTF-8") from exc
     source_path = folder / entry
-    if not source_path.is_file():
-        raise ValueError(f"entry file not found: {entry}")
-    source = source_path.read_text(encoding="utf-8-sig")
     program = Parser(Lexer(source, str(source_path)).tokenize(), str(source_path), allow_library_parameters=True).parse()
     illegal = [type(statement).__name__ for statement in program.statements
                if not isinstance(statement, (FunctionDef, LoadLibrary, SkipStatement))]
@@ -142,26 +205,62 @@ def validate_library(folder: Path) -> tuple[dict, str, str, object]:
 
 
 def build_library(folder: Path, output: Path) -> Path:
-    folder = folder.resolve()
+    folder = folder.expanduser().resolve()
     manifest, entry, source, _program = validate_library(folder)
+    output = output.expanduser()
     output.mkdir(parents=True, exist_ok=True)
+    output = output.resolve()
     package_path = output / f"{manifest['name']}.manalib"
-    members = [folder / MANIFEST_NAME, folder / entry]
-    # Optional library documentation travels in the package but is not executed.
+    if package_path.is_symlink():
+        raise ValueError("output package must not be a symbolic link")
+    if package_path.exists() and not stat.S_ISREG(package_path.stat().st_mode):
+        raise ValueError("output package path must be a regular file")
+
+    # Read all members under strict per-file and total uncompressed limits before
+    # creating the archive. writestr() avoids a second unbounded file read.
+    members: list[tuple[str, bytes]] = []
+    manifest_data = _read_bounded_member(
+        folder, MANIFEST_NAME, limit=MAX_LIBRARY_MANIFEST_BYTES, label=MANIFEST_NAME,
+    )
+    source_data = _read_bounded_member(
+        folder, entry, limit=MAX_SOURCE_FILE_BYTES, label=f"entry source {entry}",
+    )
+    members.extend(((MANIFEST_NAME, manifest_data), (entry, source_data)))
     readme = folder / "README.md"
-    if readme.is_file():
-        members.append(readme)
-    with zipfile.ZipFile(package_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for item in members:
-            archive.write(item, item.relative_to(folder).as_posix())
-    with zipfile.ZipFile(package_path, "r") as archive:
-        if archive.testzip() is not None:
-            package_path.unlink(missing_ok=True)
-            raise ValueError("built library archive failed its integrity check")
-        bundled_manifest = json.loads(archive.read(MANIFEST_NAME).decode("utf-8"))
-        if bundled_manifest != manifest or entry not in archive.namelist():
-            package_path.unlink(missing_ok=True)
-            raise ValueError("built library package does not match its source manifest")
+    if readme.exists() or readme.is_symlink():
+        members.append(("README.md", _read_bounded_member(
+            folder, "README.md", limit=MAX_LIBRARY_UNCOMPRESSED_BYTES, label="README.md",
+        )))
+    names = [arcname for arcname, _ in members]
+    if len(members) > MAX_LIBRARY_ARCHIVE_MEMBERS or len(names) != len(set(names)):
+        raise ValueError("library package has too many or duplicate members")
+    if sum(len(data) for _, data in members) > MAX_LIBRARY_UNCOMPRESSED_BYTES:
+        raise ValueError(f"library package exceeds the {MAX_LIBRARY_UNCOMPRESSED_BYTES:,}-byte uncompressed safety limit")
+
+    fd, temp_name = tempfile.mkstemp(prefix=f".{manifest['name']}.", suffix=".manalib.tmp", dir=output)
+    os.close(fd)
+    temp_path = Path(temp_name)
+    try:
+        with zipfile.ZipFile(temp_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for arcname, data in members:
+                archive.writestr(arcname, data)
+        if temp_path.stat().st_size > MAX_LIBRARY_ARCHIVE_BYTES:
+            raise ValueError(f"compressed library package exceeds the {MAX_LIBRARY_ARCHIVE_BYTES:,}-byte safety limit")
+        with zipfile.ZipFile(temp_path, "r") as archive:
+            if archive.testzip() is not None:
+                raise ValueError("built library archive failed its integrity check")
+            bundled_manifest = json.loads(archive.read(MANIFEST_NAME).decode("utf-8-sig"))
+            if bundled_manifest != manifest or entry not in archive.namelist():
+                raise ValueError("built library package does not match its source manifest")
+        # Replace the output atomically only after the new package is verified; a
+        # failed build must not destroy a previously valid .manalib file.
+        os.replace(temp_path, package_path)
+    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, RecursionError, RuntimeError) as exc:
+        temp_path.unlink(missing_ok=True)
+        raise ValueError(f"failed to verify built library package: {exc}") from exc
+    except ValueError:
+        temp_path.unlink(missing_ok=True)
+        raise
     return package_path
 
 

@@ -1,0 +1,8 @@
+# The Air object follows the same supported 2D motion rules as other objects.
+load geometry2d
+
+current = create Air
+velocity(current, geometry2d.direction(1, 1) * 4 m/s)
+advance_time(0.5 s)
+show "Current position:", current.pos
+show "Current velocity:", current.vel

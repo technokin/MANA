@@ -1,0 +1,9 @@
+# Rotate and scale a direction with the 2D helper library, then apply it to motion.
+load geometry2d
+
+stone = create Earth
+turn = geometry2d.rotate(geometry2d.direction(1, 0), 1.57079632679)
+scaled_turn = geometry2d.scale(turn, 1)
+velocity(stone, scaled_turn * 5 m/s)
+advance_time(0.25 s)
+show "Stone after the quarter-turn movement:", stone.pos

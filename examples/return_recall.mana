@@ -1,0 +1,12 @@
+# A named summoned being can return home and later be recalled.
+load planes
+load summoning
+planes.open_path("Wild Realm", "Mortal Plane")
+
+griffin = summoning.bring("Griffin")
+summoning.tame(griffin, "Ashwing")
+show "Summoned being:", griffin.tame_name
+summoning.send_back(griffin)
+show "Returned:", griffin.active
+summoning.call(griffin)
+show "Recalled:", griffin.active

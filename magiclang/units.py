@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 import math
 from typing import Union
 
@@ -25,9 +26,13 @@ class Dimension:
         return Dimension(tuple(a * power for a in self.exponents))
 
     def __str__(self) -> str:
-        return _DIMENSION_LABELS.get(self, _format_dimension(self.exponents))
+        # Do not pass _format_dimension() as dict.get's default: Python would
+        # evaluate it even for the common, already-labelled SI dimensions.
+        label = _DIMENSION_LABELS.get(self)
+        return label if label is not None else _format_dimension(self.exponents)
 
 
+@lru_cache(maxsize=256)
 def _format_dimension(exponents: tuple[int, int, int, int, int]) -> str:
     num, den = [], []
     for name, power in zip(_EXPONENT_NAMES, exponents):

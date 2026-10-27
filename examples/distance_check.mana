@@ -1,0 +1,6 @@
+# geometry2d provides calculations; it does not run the world simulation.
+load geometry2d
+
+first_point = geometry2d.point(3 m, 4 m)
+second_point = geometry2d.point(0 m, 0 m)
+show "Distance between the points:", geometry2d.distance(first_point, second_point)

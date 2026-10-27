@@ -69,6 +69,7 @@ target = tgset:
     max_hp = 1000
     defence = 0
     resist_fire = 0
+    anchored = false
 target.collision_radius = 0.25 m
 move(target, 2 m, direction(1, 0, 0))
 advance_time(0.05 s, timestep=0.05 s)
@@ -96,6 +97,7 @@ target = tgset:
     max_hp = 1000
     defence = 5
     resist_fire = 0.5
+    anchored = false
 target.collision_radius = 0.25 m
 move(target, 2 m, direction(1, 0, 0))
 advance_time(0.05 s, timestep=0.05 s)
@@ -146,7 +148,7 @@ def test_zero_collision_radius_uses_projected_area_not_volume():
 
 
 def test_post_runs_physics_trial_against_existing_world_then_rolls_it_back(capsys):
-    runtime = execute('\nprojectile = create Fire\nprojectile.collision_radius = 0.25 m\nvelocity(projectile, direction(1, 0) * 100 m/s)\ntarget = tgset:\n    hp = 1000\n    max_hp = 1000\n    defence = 0\n    resist_fire = 0\ntarget.collision_radius = 0.25 m\nmove(target, 2 m, direction(1, 0))\n\nspldef trial_hit():\n    advance_time(0.05 s, timestep=0.05 s)\n    incant target\n')
+    runtime = execute('\nprojectile = create Fire\nprojectile.collision_radius = 0.25 m\nvelocity(projectile, direction(1, 0) * 100 m/s)\ntarget = tgset:\n    hp = 1000\n    max_hp = 1000\n    defence = 0\n    resist_fire = 0\n    anchored = false\ntarget.collision_radius = 0.25 m\nmove(target, 2 m, direction(1, 0))\n\nspldef trial_hit():\n    advance_time(0.05 s, timestep=0.05 s)\n    incant target\n')
     projectile = runtime.global_env.get("projectile")
     target = runtime.global_env.get("target")
     start_position = projectile.properties["pos"]
@@ -195,10 +197,11 @@ accelerate(stone, direction(1, 0, 0) * 1e10 m/s2)
     assert runtime.elapsed_virtual_time == pytest.approx(0.0)
     assert stone.properties["pos"] == before_position
     assert stone.properties["vel"] == before_velocity
+    assert runtime._continuous_energy_batch is None
 
 
 def test_collision_in_post_is_rolled_back_but_trace_contains_hit():
-    runtime = execute('\nspldef strike():\n    projectile = create Fire\n    projectile.collision_radius = 0.25 m\n    velocity(projectile, direction(1, 0, 0) * 100 m/s)\n    target = tgset:\n        hp = 1000\n        max_hp = 1000\n        defence = 0\n        resist_fire = 0\n    target.collision_radius = 0.25 m\n    move(target, 2 m, direction(1, 0, 0))\n    advance_time(0.05 s, timestep=0.05 s)\n    incant target\n')
+    runtime = execute('\nspldef strike():\n    projectile = create Fire\n    projectile.collision_radius = 0.25 m\n    velocity(projectile, direction(1, 0, 0) * 100 m/s)\n    target = tgset:\n        hp = 1000\n        max_hp = 1000\n        defence = 0\n        resist_fire = 0\n        anchored = false\n    target.collision_radius = 0.25 m\n    move(target, 2 m, direction(1, 0, 0))\n    advance_time(0.05 s, timestep=0.05 s)\n    incant target\n')
     spell = runtime.global_env.get("strike")
     result = runtime.op_post(spell)
     assert result.ok
@@ -258,7 +261,7 @@ advance_time(0.05 s, timestep=0.05 s)
 
 def test_collision_converts_lost_kinetic_energy_to_heat_without_losing_total_energy():
     runtime = Runtime()
-    runtime.execute(Parser(Lexer('\nload geometry2d\nprojectile = create Fire\nprojectile.collision_radius = 0.25 m\nvelocity(projectile, geometry2d.direction(1, 0, 0) * 100 m/s)\ntarget = tgset:\n    hp = 1000\n    max_hp = 1000\n    defence = 0\n    resist_fire = 0\ntarget.collision_radius = 0.25 m\nmove(target, 2 m, geometry2d.direction(1, 0, 0))\n').tokenize()).parse())
+    runtime.execute(Parser(Lexer('\nload geometry2d\nprojectile = create Fire\nprojectile.collision_radius = 0.25 m\nvelocity(projectile, geometry2d.direction(1, 0, 0) * 100 m/s)\ntarget = tgset:\n    hp = 1000\n    max_hp = 1000\n    defence = 0\n    resist_fire = 0\n    anchored = false\ntarget.collision_radius = 0.25 m\nmove(target, 2 m, geometry2d.direction(1, 0, 0))\n').tokenize()).parse())
     projectile = runtime.global_env.get("projectile")
     target = runtime.global_env.get("target")
     energy_before = projectile.properties["energy"].value + target.properties["energy"].value
@@ -299,6 +302,7 @@ target = tgset:
     max_hp = 1000
     defence = 0
     resist_fire = 0
+    anchored = false
 target.collision_radius = 0.25 m
 move(target, 2 m, direction(1, 0, 0))
 advance_time(0.05 s, timestep=0.01 s)
@@ -308,6 +312,7 @@ advance_time(0.05 s, timestep=0.01 s)
     for runtime in (first, second):
         projectile = runtime.global_env.get("projectile")
         target = runtime.global_env.get("target")
+        assert projectile.properties["pos"].x > 0
         assert target.properties["hp"] == pytest.approx(975.0)
         assert target.properties["pos"].x > 2.0
     assert first.global_env.get("projectile").properties["pos"] == second.global_env.get("projectile").properties["pos"]
@@ -344,7 +349,7 @@ def test_internal_acceleration_persistence_flag_cannot_be_assigned():
 
 
 def test_physics_collision_events_run_registered_handlers():
-    runtime = execute('\nprojectile = create Fire\nprojectile.collision_radius = 0.25 m\nvelocity(projectile, direction(1, 0, 0) * 100 m/s)\ntarget = tgset:\n    hp = 1000\n    max_hp = 1000\n    defence = 0\n    resist_fire = 0\ntarget.collision_radius = 0.25 m\nmove(target, 2 m, direction(1, 0, 0))\ndef register_events():\n    when impact:\n        heat(target, 10 K)\n    when damaged:\n        heat(target, 20 K)\nregister_events()\nadvance_time(0.05 s, timestep=0.05 s)\n')
+    runtime = execute('\nprojectile = create Fire\nprojectile.collision_radius = 0.25 m\nvelocity(projectile, direction(1, 0, 0) * 100 m/s)\ntarget = tgset:\n    hp = 1000\n    max_hp = 1000\n    defence = 0\n    resist_fire = 0\n    anchored = false\ntarget.collision_radius = 0.25 m\nmove(target, 2 m, direction(1, 0, 0))\ndef register_events():\n    when impact:\n        heat(target, 10 K)\n    when damaged:\n        heat(target, 20 K)\nregister_events()\nadvance_time(0.05 s, timestep=0.05 s)\n')
     target = runtime.global_env.get("target")
     assert target.properties["hp"] == pytest.approx(975.0)
     # Both handlers ran after the ordinary collision heat was applied.
@@ -415,3 +420,172 @@ scale(stone, 3)
     assert stone.properties["area"].value == pytest.approx(9.0)
     assert stone.properties["collision_radius"].value == pytest.approx(6.0)
     assert _collision_radius(stone) == pytest.approx(6.0)
+
+
+def test_world_friction_reduces_tangential_velocity_at_a_swept_contact():
+    def impact(friction):
+        runtime = Runtime(project_root=ROOT)
+        runtime.global_env.get("world").values["configure"](friction=friction)
+        source = """
+load geometry2d
+projectile = create Fire
+projectile.collision_radius = 0.3 m
+velocity(projectile, geometry2d.direction(1, 0) * 10 m/s)
+target = create Earth
+target.pos = geometry2d.point(2 m, 0.4 m)
+target.collision_radius = 0.3 m
+target.anchored = true
+advance_time(0.2 s, timestep=0.1 s)
+"""
+        runtime.execute(Parser(Lexer(source).tokenize()).parse())
+        return runtime.global_env.get("projectile").properties["vel"]
+
+    frictionless = impact(0.0)
+    rough = impact(1.0)
+    assert abs(rough.y) < abs(frictionless.y)
+    assert rough.x < frictionless.x  # tangential impulse transfers into the collision response
+
+
+def test_object_can_override_world_default_friction():
+    runtime = execute("""
+stone = create Earth
+stone.friction = 0
+""")
+    stone = runtime.global_env.get("stone")
+    assert stone.properties["friction"] == 0.0
+
+
+def test_swept_spatial_broadphase_matches_bruteforce_aabb_pairs():
+    """Seeded property test: the spatial hash may add no AABB-overlap omissions."""
+    import random
+    from magiclang.physics_engine import _candidate_collision_pairs, _swept_bounds
+    from magiclang.units import M
+
+    rng = random.Random(0x5A17B0A7)
+    objects = []
+    radii = {}
+    old_positions = {}
+    count = 180
+    for index in range(count):
+        obj = MagicObject("Earth")
+        sx, sy = rng.uniform(-80, 80), rng.uniform(-80, 80)
+        ex, ey = sx + rng.uniform(-25, 25), sy + rng.uniform(-25, 25)
+        obj.properties["pos"] = Vector3(ex, ey, 0, M)
+        radius = rng.uniform(0.03, 2.5)
+        objects.append(obj)
+        radii[id(obj)] = radius
+        old_positions[id(obj)] = Vector3(sx, sy, 0, M)
+
+    bounds = [_swept_bounds(obj, radii[id(obj)], old_positions[id(obj)]) for obj in objects]
+    expected = {
+        (i, j) for i in range(count) for j in range(i + 1, count)
+        if bounds[i][0] <= bounds[j][1] and bounds[j][0] <= bounds[i][1]
+        and bounds[i][2] <= bounds[j][3] and bounds[j][2] <= bounds[i][3]
+    }
+    actual = set(_candidate_collision_pairs(objects, radii, old_positions, None))
+    assert actual == expected
+
+
+def test_sparse_world_of_1500_objects_passes_small_actual_pair_budget(monkeypatch):
+    """Sparse scenes must not be rejected merely because n*(n-1)/2 is large."""
+    import magiclang.runtime as runtime_module
+    from magiclang.units import M
+
+    runtime = Runtime()
+    objects = []
+    for index in range(1500):
+        obj = MagicObject("Earth")
+        obj.properties["pos"] = Vector3(float(index * 3), float((index % 11) * 4), 0, M)
+        objects.append(obj)
+    runtime.active_objects.extend(objects)
+    monkeypatch.setattr(runtime_module, "MAX_COLLISION_PAIR_CHECKS_PER_ADVANCE", 500)
+
+    runtime.advance_time(1 / 60, timestep=1 / 60)
+    assert runtime.elapsed_virtual_time == pytest.approx(1 / 60)
+    assert not runtime.last_collisions
+
+
+def test_spatial_broadphase_keeps_high_speed_projectile_contact():
+    runtime = execute('''
+projectile = create Fire
+projectile.collision_radius = 0.1 m
+velocity(projectile, direction(1, 0) * 250 m/s)
+target = tgset:
+    hp = 1000
+    max_hp = 1000
+    anchored = false
+target.collision_radius = 0.2 m
+move(target, 12 m, direction(1, 0))
+target.anchored = true
+advance_time(0.1 s, timestep=0.1 s)
+''')
+    assert len(runtime.last_collisions) == 1
+    assert runtime.last_collisions[0]["time_s"] == pytest.approx(0.0468, abs=2e-4)
+
+
+def test_extremely_large_swept_collider_fails_with_mana_error_not_host_error():
+    from magiclang.physics_engine import _candidate_collision_pairs
+    from magiclang.errors import RuntimeErrorML
+    from magiclang.units import M
+
+    one = MagicObject("Earth")
+    two = MagicObject("Earth")
+    one.properties["pos"] = Vector3(0, 0, 0, M)
+    two.properties["pos"] = Vector3(10, 0, 0, M)
+    radii = {id(one): 1e100, id(two): 0.5}
+    old = {id(one): Vector3(0, 0, 0, M), id(two): Vector3(10, 0, 0, M)}
+    with pytest.raises(RuntimeErrorML, match="collision pairs"):
+        _candidate_collision_pairs([one, two], radii, old, max_pair_checks=0)
+
+    from magiclang.errors import PhysicsErrorML
+    huge = MagicObject("Earth")
+    huge.properties["pos"] = Vector3(1e308, 0, 0, M)
+    with pytest.raises(PhysicsErrorML, match="swept bounds"):
+        _candidate_collision_pairs([huge, two], {id(huge): 1e308, id(two): 0.5},
+                                   {id(huge): Vector3(1e308, 0, 0, M), id(two): old[id(two)]}, None)
+
+
+def test_swept_collision_quadratic_is_scaled_to_avoid_finite_input_overflow():
+    from magiclang.physics_engine import _collision_time_fraction
+    from magiclang.units import M
+
+    start = Vector3(1e200, 0, 0, M)
+    displacement = Vector3(-2e200, 0, 0, M)
+    assert _collision_time_fraction(start, displacement, 1.0) == pytest.approx(0.5)
+
+
+def test_generic_body_propel_supports_multistorey_jump_under_gravity():
+    from magiclang.libraries.physiology import advance_runtime
+    from magiclang.units import DIMENSIONLESS, S
+
+    runtime = Runtime(project_root=ROOT)
+    body = MagicObject("Being", {"is_being": True, "is_summoned": True, "active": True})
+    runtime.active_objects.append(body)
+    anatomy = runtime._load_library("anatomy").values
+    physiology = runtime._load_library("physiology").values
+    anatomy["bind"](body, "human")
+    physiology["enhance"](body, "strength", factor=2.0, duration=Quantity(10, S))
+    start_y = body.properties["pos"].y
+    physiology["propel"](body, Vector3(0, 1, 0, DIMENSIONLESS), Quantity(20, VELOCITY), mode="arcane")
+    runtime.advance_time(Quantity(0.5, S), timestep=Quantity(0.01, S),
+                         gravity=Vector3(0, -9.81, 0, ACCELERATION))
+    assert body.properties["pos"].y - start_y > 8.0  # several storeys of vertical travel
+    assert body.properties["vel"].y > 0
+    assert body.properties["mass"].value == pytest.approx(70.0)
+
+
+def test_generic_body_propel_allows_near_light_arcane_motion_but_not_c():
+    from magiclang.units import DIMENSIONLESS
+    from magiclang.physics import C
+
+    runtime = Runtime()
+    physiology = runtime._load_library("physiology").values
+    body = MagicObject("Being", {"is_being": True, "is_summoned": True, "active": True})
+    runtime.active_objects.append(body)
+    anatomy = runtime._load_library("anatomy").values
+    anatomy["bind"](body, "human")
+    physiology["propel"](body, Vector3(1, 0, 0, DIMENSIONLESS), Quantity(C, VELOCITY), mode="arcane")
+    observed_speed = body.properties["vel"].magnitude()
+    assert observed_speed < C
+    assert observed_speed == pytest.approx(C * (1.0 - 1e-9), rel=1e-12)
+    assert body.properties["motion_energy_mode"] == "arcane"

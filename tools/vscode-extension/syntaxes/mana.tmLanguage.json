@@ -82,7 +82,7 @@
       "patterns": [
         {
           "name": "keyword.control.mana",
-          "match": "\\b(def|spldef|load|incant|tgset|if|elif|else|while|for|in|and|or|not|true|false|create|simul|wait|after|every|when|skip|tune)\\b"
+          "match": "\\b(def|spell|spldef|weather|appraise|cast|load|incant|tgset|if|elif|else|while|for|in|and|or|not|true|false|create|weave|simul|wait|after|every|when|skip|tune)\\b"
         }
       ]
     },
@@ -98,7 +98,7 @@
       "patterns": [
         {
           "name": "support.constant.element.mana",
-          "match": "\\b(Fire|Water|Earth|Air|Light|Darkness|Life|Death|Order|Entropy|Spirit|Soul|Space|Time|Void|Lightning|Sound|Metal|Nature|Mud|Wood|Ice|ThermalRelease|Compound|EarthLifeCompound|Mana)\\b"
+          "match": "\\b(Fire|Water|Earth|Air|Light|Darkness|Life|Death|Order|Entropy|Spirit|Soul|Space|Time|Void|Lightning|Thunder|Sound|Metal|Nature|Mud|Wood|Ice|ThermalRelease|Compound|EarthLifeCompound|Mana)\\b"
         }
       ]
     },
@@ -113,8 +113,25 @@
     "builtins": {
       "patterns": [
         {
+          "name": "meta.summon.mana",
+          "match": "\\bsummon\\s+(?:\"[^\"]*\"|'[^']*'|\\([^)]*\\)|[A-Za-z_][A-Za-z0-9_]*)\\s+(from)\\b",
+          "captures": {
+            "1": {
+              "name": "keyword.operator.mana"
+            }
+          }
+        },
+        {
           "name": "support.function.mana",
-          "match": "\\b(shape|move|heat|cool|accelerate|decelerate|velocity|detect|release|post|bind|combine|separate|transform|compress|expand|momentum|kinetic_energy|force|pressure|has_domain|matter_to_mana|mana_to_matter|mana_to_energy|energy_to_mana|advance_time|emit|show|active_objects|rotate|scale|push|pull|reflect|split|anchor|unanchor|dispel|last_collisions|sqrt|span|length)\\b(?=\\s*\\()"
+          "match": "\\b(shape|transmute|transfigure|transform)\\b(?=\\s+[A-Za-z_][A-Za-z0-9_]*\\s+into\\b)"
+        },
+        {
+          "name": "support.function.mana",
+          "match": "\\bsummon\\b(?=\\s+(?:[\"']|[A-Za-z_(]))"
+        },
+        {
+          "name": "support.function.mana",
+          "match": "\\b(shape|move|heat|cool|accelerate|decelerate|velocity|detect|release|post|bind|combine|separate|transform|transmute|transfigure|conjure|compress|expand|momentum|kinetic_energy|force|pressure|has_domain|matter_to_mana|mana_to_matter|mana_to_energy|energy_to_mana|advance_time|emit|show|active_objects|rotate|scale|push|pull|reflect|split|anchor|unanchor|dispel|last_collisions|sqrt|span|length)\\b(?=\\s*\\()"
         },
         {
           "name": "support.function.mana",
@@ -126,7 +143,7 @@
       "patterns": [
         {
           "name": "constant.other.geometry.mana",
-          "match": "\\b(point|line|ray|segment|circle|round|arc|ellipse|ring|polygon|beam|wave|disc|spiral|fan|wall|field|dome|cage|chain|tendril|cone|corridor)\\b"
+          "match": "\\b(point|line|ray|segment|circle|round|arc|ellipse|ring|polygon|beam|wave|disc|spiral|fan|wall|field|dome|cage|chain|tendril|cone|corridor|sphere|ball|projectile|barrier|shield)\\b"
         }
       ]
     },
@@ -154,6 +171,10 @@
         },
         {
           "name": "entity.name.function.mana",
+          "match": "(?<=spell\\s)[A-Za-z_][A-Za-z0-9_]*"
+        },
+        {
+          "name": "entity.name.function.mana",
           "match": "(?<=spldef\\s)[A-Za-z_][A-Za-z0-9_]*"
         }
       ]
@@ -162,7 +183,7 @@
       "patterns": [
         {
           "name": "support.function.library.mana",
-          "match": "(?<=\\.)(bring|tame|send_back|call|find_being|reanimate|reanimate_many|is_undead|identify|exists|all_planes|regions_of|parent_of|category_of|planes_in|same_category|open_path|close_path|is_open|paths_of|neighbors|find_route|reachable|send_energy|open_channel|close_channel|energy_sent|invoke|revoke|has_permission|element_of|spirit_of|form|burst|emit|toward|away|lift|hold|levitate|stop|release_control|collect|point|direction|distance|project|reflect_vector|planar|is_planar|object_vector|span|length)\\b(?=\\s*\\()"
+          "match": "(?<=\\.)(bring|tame|send_back|call|find_being|reanimate|reanimate_many|is_undead|identify|exists|all_planes|regions_of|parent_of|category_of|planes_in|same_category|open_path|close_path|is_open|paths_of|neighbors|find_route|reachable|send_energy|open_channel|close_channel|energy_sent|invoke|revoke|has_permission|element_of|spirit_of|set|configure|clear|current|wind|precipitation|temperature|humidity|fog|clouds|heat|lightning|form|burst|emit|toward|away|lift|hold|levitate|stop|release_control|collect|point|direction|distance|project|reflect_vector|planar|is_planar|object_vector|span|length)\\b(?=\\s*\\()"
         },
         {
           "name": "support.function.library.mana",
@@ -174,7 +195,7 @@
       "patterns": [
         {
           "name": "support.module.mana",
-          "match": "\\b(planes|drafter|summoning|necromancy|geometry2d|vector3d|mana|elemental_planes|hell|heaven|atlantis|fae_paradise|lineage_halls|wild_realm)\\b(?=\\s*\\.)"
+          "match": "\\b(planes|drafter|summoning|necromancy|geometry2d|vector3d|mana|weather|elemental_planes|hell|heaven|atlantis|fae_paradise|lineage_halls|wild_realm)\\b(?=\\s*\\.)"
         }
       ]
     }

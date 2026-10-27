@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 This document separates MANA's intended cosmology from the numerical model used by the current prototype. These are related, but they are not interchangeable descriptions.
 
@@ -37,16 +37,16 @@ Creating an object may report a manifestation cost based on its mass. The initia
 
 The world engine tracks energy in an internal ledger. The runtime keeps input/output entries and per-object derived quantities. The central object readout is currently:
 
-`energy = thermal_energy + kinetic_energy + released_energy`
+`energy = thermal_energy + kinetic_energy + released_energy + mana_energy + bound_energy`
 
-Thermal energy is currently calculated from mass, the prototype's default specific heat, and absolute temperature. Kinetic energy and momentum are calculated from mass and velocity through the physics helpers. These values are derived/read-only through the language rather than arbitrary numbers that can be assigned without validation.
+`mana_energy` is the energy model assigned to a pure-mana construct or effect; `bound_energy` represents energy held in an active effect such as an ongoing planar channel. Neither is a stock of spendable mana, and neither makes ambient mana a finite player resource. Thermal energy is currently calculated from mass, the prototype's default specific heat, and absolute temperature. Kinetic energy and momentum are calculated from mass and velocity through the physics helpers. These values are derived/read-only through the language rather than arbitrary numbers that can be assigned without validation.
 
 The ledger distinguishes energy entering the simulated world, leaving it, changing form, and being transferred internally. A transfer should have matching source/destination accounting; it must not appear as new energy on both ends. Unabsorbed pure-mana effect energy is recorded as environmental/unabsorbed energy rather than silently discarded.
 
 ### Creation and composition
 
 - `create Fire`, `create Water`, `create Earth`, and `create Air` create objects of the four base types.
-- `create Mana` creates a pure-mana object/construct type where allowed by the current runtime.
+- `weave mana` shapes an ambient-mana construct. The lowercase `mana` namespace remains available for effects and for the shared construct-forming API.
 - Creating a non-base plane element requires the appropriate `planes` permission.
 - `combine(a, b)` marks source objects inactive and creates a composite whose energy derives from its sources, so the same source energy is not counted twice.
 - `separate(composite)` restores the original source objects.

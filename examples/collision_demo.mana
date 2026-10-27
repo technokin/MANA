@@ -10,6 +10,7 @@ target = tgset:
     max_hp = 1000
     defence = 0
     resist_fire = 0
+    anchored = false
 
 target.collision_radius = 0.25 m
 move(target, 2 m, geometry2d.direction(1, 0))

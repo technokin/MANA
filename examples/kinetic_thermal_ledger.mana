@@ -1,0 +1,15 @@
+# Mix direct mass/temperature updates with heat, cooling and motion changes.
+# The Python regression test checks the total-energy ledger after every stage.
+stone = create Earth
+stone.mass = 2 kg
+heat(stone, 300 K)
+velocity(stone, 12 m/s)
+cool(stone, 25 K)
+stone.temp = 450 K
+
+show "Final mass:", stone.mass
+show "Final temperature:", stone.temp
+show "Final velocity:", stone.vel
+show "Thermal energy:", stone.thermal_energy
+show "Kinetic energy:", stone.kinetic_energy
+show "Total energy:", stone.energy

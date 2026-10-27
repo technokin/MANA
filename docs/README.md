@@ -2,7 +2,7 @@
 
 The short project introduction is [`../MANA_INTRO.md`](../MANA_INTRO.md). The canonical detailed entry point is [`current/INDEX.md`](current/INDEX.md). Current documentation describes the latest source version; earlier audits and specifications are preserved separately for historical context.
 
-## Current documentation — v1.0.0
+## Current documentation — v2.0.0
 
 - `current/foundations/` — conceptual foundations: mana and energy, elements, spells, planes, beings, necromancy, object control, 2D/3D, libraries, and implementation status.
 - `current/getting_started/` — first programs and syntax basics.

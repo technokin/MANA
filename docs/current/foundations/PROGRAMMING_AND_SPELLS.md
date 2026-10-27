@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 MANA supports ordinary computation and world-changing magic in the same language. It distinguishes those roles in the language rather than making every function a spell.
 
@@ -30,12 +30,14 @@ Expected output:
 
 `incant` provides the result to the caller. A word absent from the MANA keyword table is not identified as a keyword. A definition that reaches its end without an `incant` result yields the runtime's no-result value.
 
-## 2. Spell definitions: `spldef`
+## 2. Spell definitions: `spell` (legacy alias: `spldef`)
 
-Use `spldef` when the body represents world-changing behaviour. It can create objects, change object state, configure motion, interact with energy, and use specialist libraries where allowed. A spell is not executed just because its name appears in an expression. Run it through `post(spell_name)` to trial it, or `release(spell_name)` to commit it.
+Use `spell` when the body represents world-changing behaviour. The older `spldef` spelling remains supported for existing projects. It can create objects, change object state, configure motion, interact with energy, and use specialist libraries where allowed. A spell is not executed just because its name appears in an expression. Use `appraise spell_name` to trial it without committing changes, or `cast spell_name` to commit supported effects. The older `post(spell_name)` and `release(spell_name)` forms remain supported.
+
+The block below keeps the legacy `post`/`release` spell-execution forms visible for compatibility. New v2 programs should prefer `appraise warm_stone` and `cast warm_stone`.
 
 ```mana
-spldef warm_stone():
+spell warm_stone():
     stone = create Earth
     heat(stone, 100 K)
     incant stone
@@ -61,18 +63,18 @@ Expected output:
 [POST warm_stone] stone.temp: 293.15 K -> 393.15 K (heat)
 [POST warm_stone] stone.thermal_energy: 293150 J -> 393150 J (heat)
 [POST warm_stone] spell completed
-[POST warm_stone] mana cost: 100000 mana
+[POST warm_stone] mana appraisal: 100000 mana
 [POST warm_stone] created: stone (Earth, 1 kg)
 ```
 
-`post` runs the spell transactionally and restores world state after producing its result/report. `release` runs and commits it. This boundary prevents ordinary direct calls from silently mutating the world without a trace. Calling a spell as a normal value-producing function is an error; use `post` or `release`.
+`appraise` runs the spell transactionally and restores world state after producing its report. `cast` runs and commits it. This boundary prevents ordinary direct calls from silently mutating the world without a trace. Calling a spell as a normal value-producing function is an error; use `appraise` or `cast`. The legacy `post` and `release` statements are retained for compatibility.
 
 ### Element-parameterised spell templates
 
-A `spldef` declared with a single parameter named `element` can be used as a reusable template:
+A `spell` declared with a single parameter named `element` can be used as a reusable template:
 
 ```mana
-spldef bolt(element):
+spell bolt(element):
     projectile = create element
     shape(projectile, circle)
     velocity(projectile, 200 m/s)
@@ -80,8 +82,8 @@ spldef bolt(element):
 
 fire_bolt = bolt(Fire)
 water_bolt = bolt(Water)
-post(fire_bolt)
-release(water_bolt)
+appraise fire_bolt
+cast water_bolt
 ```
 
 Expected output:
@@ -103,7 +105,7 @@ Expected output:
 [POST fire_bolt] projectile.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(200, 0, 0) [kg*m/s] (velocity)
 [POST fire_bolt] projectile.vel: Vector3(0, 0, 0) [m/s] -> Vector3(200, 0, 0) [m/s] (velocity)
 [POST fire_bolt] spell completed
-[POST fire_bolt] mana cost: 20000.1 mana
+[POST fire_bolt] mana appraisal: 20000.1 mana
 [POST fire_bolt] created: projectile (Fire, 1 kg)
 ```
 
@@ -119,7 +121,7 @@ npc = tgset:
     max_hp = 100
     distance = 10 m
 
-spldef fireball():
+spell fireball():
     projectile = create Fire
     shape(projectile, circle)
     velocity(projectile, 300 m/s)
@@ -137,7 +139,7 @@ Expected output:
 
 A target profile can contain supported combat values and a relative distance. A target context can also provide a destination to functions such as `mana.toward` or automatic direction for `mana.emit`. The runtime uses the current target context; the spell itself does not choose its target.
 
-`tgset` is not a new definition category and not a replacement for `spldef`. The normal architecture is: target context outside, spell behaviour inside, engine calculations in the runtime.
+`tgset` is not a new definition category and not a replacement for `spell`. The normal architecture is: target context outside, spell behaviour inside, engine calculations in the runtime.
 
 ## 4. The standard execution words
 
@@ -146,8 +148,8 @@ A target profile can contain supported combat values and a relative distance. A 
 | `create Element` | Create a runtime object from an available element/type. |
 | `show value` | Display values in the program output. |
 | `incant value` | Provide the result from a definition. This ends that execution path. |
-| `post(spell)` | Trial spell execution and report changes while rolling back world state. |
-| `release(spell)` | Execute a spell and commit the world-state changes. |
+| `appraise spell` | Trial spell execution and report changes while rolling back world state. |
+| `cast spell` | Execute a spell and commit the world-state changes. |
 | `load library` | Load a library namespace into the current program. |
 | `skip` | Explicit no-operation statement for a block that otherwise needs a statement. |
 | `span(...)` | Generate an integer iteration span for loop control. |
@@ -184,10 +186,10 @@ The objective is not to hardcode a separate spell for every visible effect. For 
 
 ## 9. Variable scope and pure helpers
 
-Control-flow blocks share the enclosing module/definition scope for newly introduced variables, so a variable first assigned in an `if` or loop remains visible after the block. Each ordinary definition establishes a local scope. A normal direct `def` call is intended for calculation, so a pure helper cannot create objects, assign world-object properties, or perform world-changing library operations. Move that behaviour into `spldef` and execute the spell with `post` or `release`.
+Control-flow blocks share the enclosing module/definition scope for newly introduced variables, so a variable first assigned in an `if` or loop remains visible after the block. Each ordinary definition establishes a local scope. A normal direct `def` call is intended for calculation, so a pure helper cannot create objects, assign world-object properties, or perform world-changing library operations. Move that behaviour into `spell` and execute the spell with `post` or `release`.
 
 ## 10. Language migration rule
 
-MANA source uses its own vocabulary. `load`, `incant`, `skip`, `span`, `length`, `def`, and `spldef` are the relevant language spellings. Any word absent from the MANA keyword table is not identified as a keyword.
+MANA source uses its own vocabulary. `load`, `incant`, `skip`, `span`, `length`, `def` and `spell` are the preferred language spellings; `spldef` remains a legacy alias. Any word absent from the MANA keyword table is not identified as a keyword.
 
 Use [Language Specification](../language/LANGUAGE_SPEC.md), [Keyword Migration](../language/KEYWORD_MIGRATION.md), and [Function Reference](../reference/FUNCTION_REFERENCE.md) for exact syntax and errors.

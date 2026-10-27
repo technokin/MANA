@@ -1,0 +1,11 @@
+# Demonstrate two explicit rules: Water + Earth -> Mud, then Mud + Life -> Wood.
+load planes
+planes.invoke("Life")
+
+water = create Water
+earth = create Earth
+mud = combine(water, earth)
+life = create Life
+wood = combine(mud, life)
+show "First result:", mud
+show "Second result:", wood

@@ -1,0 +1,22 @@
+load geometry2d
+
+# Climate is built from parameters; there is no dedicated rain or wind spell.
+world.configure(gravity=geometry2d.direction(0, -1) * 9.81 m/s2,
+                air_density=1.225 kg/m3, restitution=0.2, friction=0.35)
+
+weather.configure("custom", precipitation="rain", intensity=0.8,
+                  wind_speed=8 m/s, wind_direction="northwest",
+                  temperature=280 K, humidity=0.9, clouds=0.85,
+                  fog=0.2, duration=12 s)
+
+spell forge_warden():
+    warden = conjure("metal", mass=4 kg,
+                     position=geometry2d.point(3 m, 0 m),
+                     shape="sphere", name="Forged Warden")
+    transfigure(warden, "knight", scale=1.25)
+    incant warden
+
+release(forge_warden)
+advance_time(1 s)
+show weather.current()
+show world.laws()

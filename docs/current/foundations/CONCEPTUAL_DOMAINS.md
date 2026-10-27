@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Purpose:** keep four base elements, conceptual domains, specialised labels, and plane/channel names distinct.
 
 ## 1. The categories are different

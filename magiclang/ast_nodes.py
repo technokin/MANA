@@ -69,6 +69,13 @@ class Call:
 
 
 @dataclass(slots=True)
+class WeatherStatement:
+    """Native climate statement, e.g. weather rain, radius=80 m."""
+    kind: str
+    fields: list[tuple[str, Any]] = field(default_factory=list)
+
+
+@dataclass(slots=True)
 class Create:
     type_name: str
 
@@ -105,6 +112,15 @@ class TargetSet:
     """Create a configurable target/profile using `name = tgset:`."""
     name: str
     fields: list[tuple[str, Any]]
+
+
+@dataclass(slots=True)
+class WeaveMana:
+    """Shape ambient mana into a named construct using an optional field block."""
+    name: str
+    fields: list[tuple[str, Any]]
+
+
 
 
 @dataclass(slots=True)
@@ -164,9 +180,14 @@ class Every:
 
 @dataclass(slots=True)
 class SpellModeStatement:
-    """Standalone post/release command; deliberately not an expression."""
+    """Standalone post/release command; deliberately not an expression.
+
+    ``post`` may request a text report (the default) or a visual-only preview.
+    ``release`` always performs a normal committed execution.
+    """
     mode: str
     spell: Any
+    presentation: str = "text"
 
 
 @dataclass(slots=True)

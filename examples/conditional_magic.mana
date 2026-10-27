@@ -1,0 +1,8 @@
+# MANA also supports ordinary control flow around magical operations.
+stone = create Earth
+heat(stone, 100 K)
+
+if stone.temp > 350 K:
+    show "The stone is warm enough."
+else:
+    show "The stone is still cool."

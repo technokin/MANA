@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Scope:** current built-in records, home planes, prototype stats, and what the runtime can do with them.
 
 ## 1. What a being record is

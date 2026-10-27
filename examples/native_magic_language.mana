@@ -1,0 +1,18 @@
+# Primary spell syntax; spldef remains a supported legacy alias.
+spell rain_circle():
+    # Local climate is an environmental effect, not a dedicated rain spell type.
+    weather rain, intensity=0.8, wind_speed=8 m/s, wind_direction=north, duration=30 s, radius=80 m
+
+    # Conjure manifests matter and initializes its physical properties.
+    iron = conjure steel, mass=5 kg, shape=sphere, anchored=false, restitution=0.4
+    shape iron into ring
+    transmute iron into bronze
+    incant iron
+
+# appraise records a hypothetical result and rolls the world back.
+appraise rain_circle
+
+# cast commits the area-weather zone and the conjured physical object.
+cast rain_circle
+show weather.areas()
+show active_objects()

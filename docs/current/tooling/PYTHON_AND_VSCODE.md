@@ -1,4 +1,4 @@
-# Python Setup and VS Code — MANA v1.0.0
+# Python Setup and VS Code — MANA v2.0.0
 
 **Page kind:** How-to
 
@@ -35,13 +35,13 @@ python -m pytest -q
 
 ## 3. Install the VS Code extension
 
-The extension is named **MANA Language Support**. It recognises `.mana` files and supplies syntax highlighting, comment support, indentation configuration, bracket matching, and snippets. It does not execute MANA code.
+The extension is named **MANA Language Support**. It recognises `.mana` files and supplies syntax highlighting, comments, indentation, bracket matching, and inline completions. Its only editor toolbar action is Run. Install the optional MANA Magic Visualiser extension for the second action, Visualiser; there is no Check toolbar button.
 
 1. Open VS Code and select **Extensions** (`Ctrl+Shift+X`).
 2. Open the `...` menu and select **Install from VSIX...**.
-3. Choose `installers\vscode\mana-language-1.0.0.vsix`.
+3. Choose `installers\vscode\mana-language-2.0.0.vsix`.
 4. Open a `.mana` file and confirm that the language mode is MANA.
-5. To execute the active file, run the workspace task **MANA: Run current file**, or use the integrated terminal:
+5. Click the **Run** triangle in the editor toolbar. MANA runs as a normal process, without a debugger, and writes its output to the MANA panel. You can also use the integrated terminal:
 
 ```powershell
 python mana.py path\to\file.mana
@@ -53,7 +53,7 @@ The extension's source is in `tools/vscode-extension/`. Rebuild its package afte
 python tools/vscode/build_mana_vsix.py
 ```
 
-The MANA logo is stored in `assets/branding/mana-logo.png`, and the square icon at `assets/branding/mana-icon.png` is included in the VS Code extension package. The builder re-embeds this icon when rebuilding the VSIX.
+The square MANA icon at `assets/branding/mana-icon.png` is included in both extension packages and their extension-listing metadata. The builder re-embeds this icon when rebuilding the VSIX.
 
 ## 4. Troubleshooting
 
@@ -66,3 +66,23 @@ The MANA logo is stored in `assets/branding/mana-logo.png`, and the square icon 
 ## Development-only tooling
 
 `requirements.txt` lists third-party packages needed by the MANA runtime; it currently has no package entries because the runtime uses the Python standard library. `requirements-dev.txt` installs optional test and lint tools. Pytest runs the tests, and Ruff checks Python source for common errors and style issues. Neither is required to run a `.mana` program. `.editorconfig` coordinates indentation, text encoding, and line endings across compatible editors; `ruff.toml` configures Ruff.
+
+## Optional Magic Visualiser
+
+The Visualiser is a second, independent VS Code extension. It records a run only when you click the eye-shaped **MANA: Visual** button. Ordinary Run does not create a recording or open the viewer. MANA still works if the Visualiser is not installed.
+
+Install `installers/vscode/mana-magic-visualiser-2.0.0.vsix` using **Extensions → … → Install from VSIX…**. Open a `.mana` source file in the MANA project, then click the eye-shaped **MANA: Visual** action in the editor toolbar. It records the run and opens the replay when execution finishes. For a terminal recording, use:
+
+```powershell
+python mana.py --record fireball.jsonl examples/fireball_contact.mana
+```
+
+Open a saved file with **MANA: Open Visualiser Recording**. Use `manaVisualiser.pythonPath` if the Python command on your system is `python3` or `py`. `manaVisualiser.reduceMotion` reduces decorative animation; `manaVisualiser.maximumRecordingMB` controls the largest file the viewer will open.
+
+Use Play/Pause, the previous and next event buttons, Replay, the timeline, and the speed choices Slow motion, Slow, Normal, Fast and Very fast. This version is record-and-replay only. It shows spell effects and genuine contact events without displaying coordinates, energy ledgers, mana-flow graphics, portals or plane diagrams. The recording file is for the Visualiser; it is not a public engine-integration API. To rebuild the two extension packages after edits, run:
+
+```powershell
+python tools/vscode/build_mana_vsix.py
+python tools/vscode/build_mana_visualiser_vsix.py
+```
+

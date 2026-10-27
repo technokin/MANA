@@ -13,7 +13,7 @@ from magiclang.lexer import Lexer
 from magiclang.parser import Parser
 from magiclang.physics import Vector3
 from magiclang.runtime import Runtime
-from magiclang.units import ENERGY, FORCE, K, M, M2, Quantity
+from magiclang.units import ENERGY, FORCE, M, M2, Quantity
 from magiclang.libraries import geometry2d, three_d
 
 ROOT = Path(__file__).resolve().parents[1]

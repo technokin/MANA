@@ -1,0 +1,11 @@
+# This example uses the implemented Water + Earth -> Mud and Mud + Life -> Wood rules.
+load planes
+planes.invoke("Life")
+
+water_source = create Water
+earth_source = create Earth
+mud_result = combine(water_source, earth_source)
+life_source = create Life
+wood_result = combine(mud_result, life_source)
+show "Mud result:", mud_result
+show "Wood result:", wood_result

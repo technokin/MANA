@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Purpose:** list the currently defined plane identities, their category, associated records, and implementation boundaries. This is a technical catalogue, not an account of internal plane laws.
 
 ## 1. Plane identity and library boundaries

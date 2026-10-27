@@ -1,0 +1,32 @@
+# Target identity is selected outside the spell definition.
+# Only the selected target should receive the committed fireball.
+load geometry2d
+
+near_guard = tgset:
+    hp = 120
+    max_hp = 120
+    defence = 0
+    resist_fire = 0
+    pos = geometry2d.point(3 m, 0 m)
+    collision_radius = 0.3 m
+
+far_guard = tgset:
+    hp = 120
+    max_hp = 120
+    defence = 0
+    resist_fire = 0
+    pos = geometry2d.point(10 m, 0 m)
+    collision_radius = 0.3 m
+
+spell training_bolt():
+    bolt = create Fire
+    shape(bolt, circle)
+    velocity(bolt, geometry2d.direction(1, 0) * 50 m/s)
+    incant bolt
+
+tgset(near_guard):
+    release(training_bolt)
+
+show "Near guard remaining HP:", near_guard.hp
+show "Far guard remaining HP:", far_guard.hp
+show "Last collisions:", last_collisions()

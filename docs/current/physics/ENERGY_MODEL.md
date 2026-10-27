@@ -1,8 +1,8 @@
-# MANA Energy and Mana Model — current in v1.0.0
+# MANA Energy and Mana Model — current in v2.0.0
 
 **Page kind:** Explanation  
 
-This is the current energy/mana specification for MANA v1.0.0. The multiplier rules were introduced in v0.6.2 and remain current. It supersedes the older rate and budget descriptions in `../../archive/v0.6/DECISIONS_V0_4.md` and `../../archive/v0.6/ENERGY_AUDIT_V0_6_1.md`. Those files are retained as historical records.
+This is the current energy/mana specification for MANA v2.0.0. The multiplier rules were introduced in v0.6.2 and remain current. It supersedes the older rate and budget descriptions in `../../archive/v0.6/DECISIONS_V0_4.md` and `../../archive/v0.6/ENERGY_AUDIT_V0_6_1.md`. Those files are retained as historical records.
 
 ## Independent conversion multipliers
 
@@ -47,9 +47,9 @@ These are prototype defaults, not a final cosmological law. The default specific
 
 `energy` is runtime-derived:
 
-`energy = thermal_energy + kinetic_energy + released_energy`
+`energy = thermal_energy + kinetic_energy + released_energy + mana_energy + bound_energy`
 
-Thermal energy uses `mass × specific_heat × temperature`; kinetic energy and momentum are recalculated from mass and velocity using the physics module. These derived values, plus release-origin metadata, cannot be assigned directly through the MANA runtime.
+The final two terms represent the current model's energy associated with pure-mana constructs and bound planar energy. They are not a spendable mana pool. Thermal energy uses `mass × specific_heat × temperature`; kinetic energy and momentum are recalculated from mass and velocity using the physics module. These derived values, plus release-origin metadata, cannot be assigned directly through the MANA runtime.
 
 ## Energy ledger and composition
 

@@ -1,0 +1,6 @@
+# Heat and cool take temperature changes, not absolute temperatures.
+stone = create Earth
+heat(stone, 80 K)
+show "After heating:", stone.temp
+cool(stone, 30 K)
+show "After cooling:", stone.temp

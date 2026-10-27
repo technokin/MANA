@@ -2,8 +2,8 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
-**Related references:** [Function Reference](../reference/FUNCTION_REFERENCE.md), [Pure Mana and Universal Control](../libraries/MANA_LIBRARY.md), [Physics Engine](../physics/PHYSICS_ENGINE.md)
+**Current source version:** v2.0.0
+**Related references:** [Function Reference](../reference/FUNCTION_REFERENCE.md), [Pure Mana and Universal Control](../libraries/MANA_LIBRARY.md), [World Weather and Matter](../libraries/WORLD_WEATHER_AND_MATTER.md), [Physics Engine](../physics/PHYSICS_ENGINE.md)
 
 This document explains what MANA manipulates. A world object is not simply a material label: it carries physical properties, derived quantities, active/inactive status, and bookkeeping provenance.
 
@@ -68,7 +68,7 @@ The exact accepted fields and validations are part of the language/runtime refer
 
 Material names can infer some defaults. Common combustible labels (including Wood and related plant/fabric materials) may receive `combustible = true` unless explicitly overridden. A default ignition threshold exists. When a heat operation crosses the threshold, the material may change to the `burning` state and emit `object_ignited`.
 
-Powdering a supported solid changes its state and preserves the represented mass and tracked energy on the aggregate object. It does not yet create a spatial cloud of individual powder particles. Material changes are not a full chemistry or phase-equilibrium solver: a state label such as `liquid` or `gas` does not automatically implement all thermodynamic consequences.
+Powdering a supported solid changes its state and preserves the represented mass and tracked energy on the aggregate object. It does not yet create a spatial cloud of individual powder particles. Material changes are not a full chemistry or phase-equilibrium solver. When `world.phase_changes_enabled` is true, known catalogue materials can switch their `state` as temperature crosses registered melting/boiling points; latent heat, fractional phases, pressure-dependent phase diagrams and reaction kinetics are not yet modelled. Wind drag, world gravity, contact friction, wetting and thermal exchange use configurable world laws; see [World Weather and Matter](../libraries/WORLD_WEATHER_AND_MATTER.md).
 
 ## 5. Physical fields and derived quantities
 
@@ -91,6 +91,13 @@ Powdering a supported solid changes its state and preserves the represented mass
 
 Quantities carry dimensions. MANA does not silently treat metres, seconds, joules, and newtons as interchangeable. Managed values are updated through runtime operations; attempting to bypass that machinery with direct assignment can be rejected.
 
+
+## 5.1 Conjured matter and the periodic catalogue
+
+`conjure(material, ...)` creates a new physical matter object with stored mass, volume, density, state, temperature and creation provenance. `transmute(target, material, preserve_mass=true)` changes composition/material while keeping the same object ID and preserving mass by default. The built-in `periodic` catalogue contains 118 element records and can provide reference density, standard state, atomic number/symbol, and available transition points. Unknown and estimated values are not silently treated as measured precision. Common alloy compositions such as generic steel, brass, and bronze are explicitly approximate. The catalogue does not implement arbitrary chemical reaction equations or nuclear transmutation.
+
+`shape()` remains the operation for ordinary geometric forms. `transfigure()` is restricted to living objects and matter originally created by `conjure()`; it changes the object's represented form (for example, conjured iron into a knight-like form) rather than changing chemical composition.
+
 ## 6. Lifecycle: active, inactive, released, combined, and collapsed
 
 Objects have a lifecycle. An operation may create a new active object, change an existing object's state, mark an input inactive as part of a composite operation, release an object from active simulation, or collapse a failing object into a `ThermalRelease` carrier. Energy provenance is retained so that the same physical energy is not simultaneously counted in inactive input and active output objects.
@@ -105,7 +112,7 @@ These lifecycle rules are critical to conservation; removing an object from a ho
 
 ## 7. Object profiles versus target selection
 
-`tgset` target data and `tgset(target):` context are used to supply target identity/fields and to select a target for execution. The spell itself should define the behaviour; the context tells the engine what object/position is currently selected. This supports reusable projectile spells and target-directed operations without writing target-selection logic into each `spldef`.
+`tgset` target data and `tgset(target):` context are used to supply target identity/fields and to select a target for execution. The spell itself should define the behaviour; the context tells the engine what object/position is currently selected. This supports reusable projectile spells and target-directed operations without writing target-selection logic into each `spell` declaration.
 
 A target profile may contain HP, max HP, defence, attack, distance, resistance values, position, or other supported properties. That does not yet implement a full creature AI, path-finding, or game-like combat engine.
 

@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 **Related reference:** [Pure Mana and Universal Control API](../libraries/MANA_LIBRARY.md)
 
 This chapter explains the model behind the lowercase `mana` library. It is about *how to think about* the operations; use the library reference for exact signatures, defaults, optional parameters, and errors.

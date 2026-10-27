@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 MANA distinguishes the four fundamental elements from conceptual domains and derived/specialised entries. This distinction is essential: the presence of a name in a catalogue does not mean that it is a fifth fundamental constituent or that every spell involving it is already implemented.
 

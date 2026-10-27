@@ -2,7 +2,7 @@
 
 **Page kind:** Reference  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 
 This page documents the element catalogue currently in the code. The catalogue categorises concepts; it does not claim every listed pairing has a fully implemented magical reaction.
 

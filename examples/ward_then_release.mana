@@ -1,0 +1,14 @@
+# A visual preview is hypothetical; the following release commits the spell.
+load geometry2d
+
+spell ward():
+    shield = weave mana:
+        shape = shield
+        radius = 0.9 m
+        energy = 2400 J
+        position = geometry2d.point(2 m, 0 m)
+    incant shield
+
+post(ward, visual)
+release(ward)
+show "Ward committed:", active_objects()

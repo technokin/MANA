@@ -80,6 +80,43 @@ def normalize(value) -> Vector3:
     return Vector3(x / norm, y / norm, z / norm, DIMENSIONLESS)
 
 
+def rotate(value: Vector3, x=0, y=0, z=0) -> Vector3:
+    """Rotate a vector by Euler angles (radians), in X then Y then Z order.
+
+    Rotation changes direction only and preserves the vector's units. It is a
+    calculation helper; it does not rotate or mutate a world object.
+    """
+    if not isinstance(value, Vector3):
+        raise TypeErrorML("vector3d.rotate() expects a vector")
+    ax = _component(x, DIMENSIONLESS, "x rotation")
+    ay = _component(y, DIMENSIONLESS, "y rotation")
+    az = _component(z, DIMENSIONLESS, "z rotation")
+    cx, sx = math.cos(ax), math.sin(ax)
+    cy, sy = math.cos(ay), math.sin(ay)
+    cz, sz = math.cos(az), math.sin(az)
+    # X rotation, then Y, then Z.
+    x1, y1, z1 = value.x, value.y * cx - value.z * sx, value.y * sx + value.z * cx
+    x2, y2, z2 = x1 * cy + z1 * sy, y1, -x1 * sy + z1 * cy
+    return Vector3(x2 * cz - y2 * sz, x2 * sz + y2 * cz, z2, value.dimension)
+
+
+def lerp(a: Vector3, b: Vector3, amount) -> Vector3:
+    """Interpolate between matching-unit 3D vectors; amount is not clamped."""
+    if not isinstance(a, Vector3) or not isinstance(b, Vector3):
+        raise TypeErrorML("vector3d.lerp() expects two vectors")
+    if a.dimension != b.dimension:
+        raise UnitErrorML("vector3d.lerp() requires matching vector dimensions")
+    t = _component(amount, DIMENSIONLESS, "interpolation amount")
+    if 0.0 <= t <= 1.0:
+        return Vector3((1-t)*a.x+t*b.x, (1-t)*a.y+t*b.y, (1-t)*a.z+t*b.z, a.dimension)
+    return Vector3(a.x+(b.x-a.x)*t, a.y+(b.y-a.y)*t, a.z+(b.z-a.z)*t, a.dimension)
+
+
+def midpoint(a: Vector3, b: Vector3) -> Vector3:
+    """Return the midpoint of two matching-unit 3D vectors."""
+    return lerp(a, b, 0.5)
+
+
 def dot(a, b) -> Quantity:
     if not isinstance(a, Vector3) or not isinstance(b, Vector3):
         raise TypeErrorML("vector3d.dot() expects two vectors")
@@ -255,6 +292,9 @@ def build_library() -> dict[str, Any]:
         "acceleration_vector": acceleration_vector,
         "magnitude": magnitude,
         "normalize": normalize,
+        "rotate": rotate,
+        "lerp": lerp,
+        "midpoint": midpoint,
         "dot": dot,
         "cross": cross,
         "distance": distance,
@@ -280,5 +320,5 @@ def build_library() -> dict[str, Any]:
 __all__ = ["Vector3", "as_vector", "clamp_speed", "displacement", "enforce_speed",
            "force", "kinetic_energy", "momentum", "pressure", "scalar",
            "vector", "direction", "position", "velocity_vector", "acceleration_vector", "magnitude",
-           "normalize", "dot", "cross", "distance", "angle_between", "project", "reflect",
+           "normalize", "rotate", "lerp", "midpoint", "dot", "cross", "distance", "angle_between", "project", "reflect",
            "scale", "components", "is_zero", "planar", "is_planar", "object_vector", "build_library"]

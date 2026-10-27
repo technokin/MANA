@@ -1,0 +1,8 @@
+# MANA can also express ordinary calculations and reusable helpers.
+def midpoint(first, second):
+    incant (first + second) / 2
+
+values = [4, 8, 12]
+show "Midpoint:", midpoint(10, 20)
+show "List length:", length(values)
+show "Fourth value in span:", span(2, 6)[2]

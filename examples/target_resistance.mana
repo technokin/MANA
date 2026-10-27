@@ -1,0 +1,12 @@
+# Target profiles can include dimensionless resistance values between 0 and 1.
+training_target = tgset:
+    hp = 180
+    max_hp = 180
+    defence = 5
+    resist_fire = 0.65
+    resist_water = 0.1
+    collision_radius = 0.45 m
+
+show "Target:", training_target
+show "Fire resistance:", training_target.resist_fire
+show "Defence:", training_target.defence

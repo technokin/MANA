@@ -1,0 +1,23 @@
+# mana.emit() evaluates beam range and width in the runtime.
+load geometry2d
+
+practice_target = tgset:
+    hp = 100
+    max_hp = 100
+    defence = 0
+    pos = geometry2d.point(5 m, 0 m)
+    collision_radius = 0.4 m
+
+spell focused_beam():
+    result = mana.emit(
+        power = 900 W,
+        duration = 0.4 s,
+        range = 8 m,
+        beam_radius = 0.35 m,
+        position = geometry2d.point(0 m, 0 m),
+        direction = geometry2d.direction(1, 0)
+    )
+    incant result
+
+release(focused_beam)
+show "Target temperature after the beam:", practice_target.temp

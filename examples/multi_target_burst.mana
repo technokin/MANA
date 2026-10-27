@@ -1,0 +1,25 @@
+# A burst affects eligible objects inside the chosen radius.
+load geometry2d
+
+near_target = tgset:
+    pos = geometry2d.point(3 m, 0 m)
+    collision_radius = 0.3 m
+middle_target = tgset:
+    pos = geometry2d.point(4 m, 0 m)
+    collision_radius = 0.3 m
+far_target = tgset:
+    pos = geometry2d.point(5 m, 0 m)
+    collision_radius = 0.3 m
+
+spell ring_burst():
+    result = mana.burst(
+        energy = 900 J,
+        radius = 1.5 m,
+        position = geometry2d.point(4 m, 0 m)
+    )
+    incant result
+
+release(ring_burst)
+show "Near target temperature:", near_target.temp
+show "Middle target temperature:", middle_target.temp
+show "Far target temperature:", far_target.temp

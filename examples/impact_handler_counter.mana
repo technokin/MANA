@@ -1,0 +1,21 @@
+# Count only collision events the runtime actually reports.
+load geometry2d
+
+reported_impacts = 0
+when impact:
+    reported_impacts = reported_impacts + 1
+
+projectile = create Fire
+projectile.collision_radius = 0.2 m
+velocity(projectile, geometry2d.direction(1, 0) * 30 m/s)
+
+target = tgset:
+    hp = 100
+    max_hp = 100
+    defence = 0
+    pos = geometry2d.point(1 m, 0 m)
+    collision_radius = 0.2 m
+
+advance_time(0.1 s, timestep=0.01 s)
+show "Runtime-reported impacts:", reported_impacts
+show "Target HP after contact:", target.hp

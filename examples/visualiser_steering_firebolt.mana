@@ -1,0 +1,25 @@
+# A moving spell whose direction changes while it travels.
+# The Visualiser must follow the recorded bends, not draw a straight line
+# between the first and last positions.
+load geometry2d
+
+spell steering_firebolt():
+    bolt = create Fire
+    bolt.collision_radius = 0.12 m
+    velocity(bolt, geometry2d.direction(1, 0) * 8 m/s)
+    advance_time(0.15 s, timestep=0.01 s)
+
+    # Turn upward while the bolt is already moving.
+    velocity(bolt, geometry2d.direction(0.94, 0.342) * 8 m/s)
+    advance_time(0.15 s, timestep=0.01 s)
+
+    # Continue turning. This is a sequence of actual movement changes,
+    # not an invented decorative curve added by the Visualiser.
+    velocity(bolt, geometry2d.direction(0.707, 0.707) * 8 m/s)
+    advance_time(0.15 s, timestep=0.01 s)
+
+    velocity(bolt, geometry2d.direction(0.342, 0.94) * 8 m/s)
+    advance_time(0.15 s, timestep=0.01 s)
+    incant bolt
+
+release(steering_firebolt)

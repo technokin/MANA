@@ -6,19 +6,54 @@ import re
 from .errors import SyntaxErrorML
 from .tokens import KEYWORDS, Token, TokenType
 
+MAX_SOURCE_BYTES = 2 * 1024 * 1024
+MAX_SOURCE_LINES = 50_000
+MAX_TOKEN_COUNT = 150_000
+MAX_STRING_LITERAL_CHARS = 100_000
+
 
 class Lexer:
     _number = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
     _ident = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
     def __init__(self, source: str, filename: str = "<input>"):
+        self.filename = filename
+        # Bound inputs before splitlines() or token allocation. The character
+        # check avoids encoding an attacker-supplied multi-gigabyte string.
+        if len(source) > MAX_SOURCE_BYTES:
+            raise SyntaxErrorML(
+                f"source exceeds the {MAX_SOURCE_BYTES:,}-character safety limit",
+                filename, 1, 1,
+            )
+        try:
+            byte_count = len(source.encode("utf-8"))
+        except UnicodeEncodeError as exc:
+            raise SyntaxErrorML("source contains invalid Unicode surrogate characters", filename, 1, 1) from exc
+        if byte_count > MAX_SOURCE_BYTES:
+            raise SyntaxErrorML(
+                f"source exceeds the {MAX_SOURCE_BYTES:,}-byte safety limit",
+                filename, 1, 1,
+            )
         self.original_source = source
         # The existing language defines a tab as four indentation spaces.
         self.source = source.replace("\t", "    ")
-        self.filename = filename
+        line_breaks = self.source.count("\n") + self.source.count("\r") - self.source.count("\r\n")
+        if line_breaks > MAX_SOURCE_LINES:
+            raise SyntaxErrorML(
+                f"source exceeds the {MAX_SOURCE_LINES:,}-line safety limit", filename, 1, 1
+            )
 
     def tokenize(self) -> list[Token]:
         tokens: list[Token] = []
+
+        def emit(token: Token) -> None:
+            if len(tokens) >= MAX_TOKEN_COUNT:
+                raise SyntaxErrorML(
+                    f"source exceeds the {MAX_TOKEN_COUNT:,}-token safety limit",
+                    self.filename, token.line, token.column,
+                )
+            tokens.append(token)
+
         indent_stack = [0]
         expanded_lines = self.source.splitlines()
         original_lines = self.original_source.splitlines()
@@ -53,11 +88,11 @@ class Lexer:
             if not continuation_line:
                 if leading > indent_stack[-1]:
                     indent_stack.append(leading)
-                    tokens.append(Token(TokenType.INDENT, leading, line_no, 1))
+                    emit(Token(TokenType.INDENT, leading, line_no, 1))
                 elif leading < indent_stack[-1]:
                     while leading < indent_stack[-1]:
                         indent_stack.pop()
-                        tokens.append(Token(TokenType.DEDENT, leading, line_no, leading + 1))
+                        emit(Token(TokenType.DEDENT, leading, line_no, leading + 1))
                     if leading != indent_stack[-1]:
                         raise SyntaxErrorML("inconsistent indentation", self.filename, line_no, leading + 1)
 
@@ -100,7 +135,12 @@ class Lexer:
                         raise SyntaxErrorML("unterminated string", self.filename, line_no, start_col)
                     i += 1
                     col += 1
-                    tokens.append(Token(TokenType.STRING, "".join(chars), line_no, start_col))
+                    if len(chars) > MAX_STRING_LITERAL_CHARS:
+                        raise SyntaxErrorML(
+                            f"string literal exceeds the {MAX_STRING_LITERAL_CHARS:,}-character safety limit",
+                            self.filename, line_no, start_col,
+                        )
+                    emit(Token(TokenType.STRING, "".join(chars), line_no, start_col))
                     continue
 
                 m = self._number.match(raw, i)
@@ -118,7 +158,7 @@ class Lexer:
                             "numeric literal is outside the supported finite range",
                             self.filename, line_no, col,
                         )
-                    tokens.append(Token(TokenType.NUMBER, value, line_no, col))
+                    emit(Token(TokenType.NUMBER, value, line_no, col))
                     i = m.end()
                     col += len(text)
                     continue
@@ -126,34 +166,34 @@ class Lexer:
                 m = self._ident.match(raw, i)
                 if m:
                     text = m.group(0)
-                    tokens.append(Token(KEYWORDS.get(text, TokenType.IDENT), text, line_no, col))
+                    emit(Token(KEYWORDS.get(text, TokenType.IDENT), text, line_no, col))
                     i = m.end()
                     col += len(text)
                     continue
 
                 two = raw[i:i+2]
                 if two == "==":
-                    tokens.append(Token(TokenType.EQEQ, two, line_no, col))
+                    emit(Token(TokenType.EQEQ, two, line_no, col))
                     i += 2
                     col += 2
                     continue
                 if two == "!=":
-                    tokens.append(Token(TokenType.NE, two, line_no, col))
+                    emit(Token(TokenType.NE, two, line_no, col))
                     i += 2
                     col += 2
                     continue
                 if two == "<=":
-                    tokens.append(Token(TokenType.LE, two, line_no, col))
+                    emit(Token(TokenType.LE, two, line_no, col))
                     i += 2
                     col += 2
                     continue
                 if two == ">=":
-                    tokens.append(Token(TokenType.GE, two, line_no, col))
+                    emit(Token(TokenType.GE, two, line_no, col))
                     i += 2
                     col += 2
                     continue
                 if two == "**":
-                    tokens.append(Token(TokenType.POWER, two, line_no, col))
+                    emit(Token(TokenType.POWER, two, line_no, col))
                     i += 2
                     col += 2
                     continue
@@ -174,16 +214,16 @@ class Lexer:
                     bracket_depth += 1
                 elif token_type in (TokenType.RPAREN, TokenType.RBRACKET):
                     bracket_depth = max(0, bracket_depth - 1)
-                tokens.append(Token(token_type, ch, line_no, col))
+                emit(Token(token_type, ch, line_no, col))
                 i += 1
                 col += 1
 
             if bracket_depth == 0:
-                tokens.append(Token(TokenType.NEWLINE, "\\n", line_no, len(raw) + 1))
+                emit(Token(TokenType.NEWLINE, "\\n", line_no, len(raw) + 1))
 
         while len(indent_stack) > 1:
             indent_stack.pop()
-            tokens.append(Token(TokenType.DEDENT, indent_stack[-1], len(expanded_lines) + 1, 1))
+            emit(Token(TokenType.DEDENT, indent_stack[-1], len(expanded_lines) + 1, 1))
 
-        tokens.append(Token(TokenType.EOF, None, len(expanded_lines) + 1, 1))
+        emit(Token(TokenType.EOF, None, len(expanded_lines) + 1, 1))
         return tokens

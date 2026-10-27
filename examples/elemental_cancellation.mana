@@ -1,0 +1,7 @@
+# Fire and Water cancel in the currently implemented interaction rules.
+flame = create Fire
+water_source = create Water
+combined = combine(flame, water_source)
+show "Interaction result:", combined
+show "Energy origin:", combined.energy_origin
+show "Released energy:", combined.released_energy

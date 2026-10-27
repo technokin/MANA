@@ -1,0 +1,19 @@
+# A simple projectile and target for the MANA Visualiser contact demo.
+load geometry2d
+
+training_knight = tgset:
+    hp = 100
+    max_hp = 100
+    defence = 0
+    pos = geometry2d.point(6 m, 0 m)
+    collision_radius = 0.45 m
+
+spell ember_shot():
+    ember = create Fire
+    shape(ember, circle)
+    ember.collision_radius = 0.2 m
+    velocity(ember, 80 m/s)
+    incant ember
+
+tgset(training_knight):
+    release(ember_shot)

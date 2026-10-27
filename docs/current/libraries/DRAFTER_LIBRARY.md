@@ -1,4 +1,4 @@
-# `drafter` Library — MANA v1.0.0
+# `drafter` Library — MANA v2.0.0
 
 **Page kind:** Reference  
 

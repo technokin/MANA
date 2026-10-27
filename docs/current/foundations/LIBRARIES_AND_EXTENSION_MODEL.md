@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 MANA separates core rules from optional/domain-specific features. A library is a namespace of related functions and data. Importing one makes that namespace available; it should not alter unrelated language semantics simply because its data was loaded.
 

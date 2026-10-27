@@ -1,0 +1,5 @@
+# Ordinary helpers return values; they do not need to be spells.
+def doubled(value):
+    incant value * 2
+
+show "Twenty-one doubled is:", doubled(21)

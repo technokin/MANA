@@ -52,6 +52,13 @@ def main() -> int:
             if any(marker in preceding for marker in SKIP_MARKERS):
                 continue
             label = f"{path.relative_to(ROOT)}:{original.count(chr(10), 0, match.start()) + 1}"
+            if args.check:
+                # A check is a consistency check, not an execution pass. Running
+                # every uncaptured snippet here can be slow and may trigger
+                # intentional long-running examples. Generation is responsible
+                # for executing the snippet and capturing its output.
+                missing.append(f"{label}: runnable example lacks captured output")
+                continue
             try:
                 output = captured_output(match.group(1), label)
             except Exception as exc:

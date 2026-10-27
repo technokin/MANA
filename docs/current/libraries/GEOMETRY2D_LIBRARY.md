@@ -2,7 +2,7 @@
 
 **Page kind:** Reference  
 
-**MANA version:** 1.0.0
+**MANA version:** 2.0.0
 **Import:** `load geometry2d`
 
 The 2D world engine always works without importing anything. It already integrates motion, selects a target-directed heading for scalar `velocity` inside `tgset(target):`, detects circular collisions, and applies the configured collision response. `geometry2d` adds direct access to planar calculations for spell authors who want more precise control.
@@ -38,7 +38,8 @@ Expected output:
 | `coordinates(vector)` | Returns a two-item list containing the vector's x and y quantities with their units preserved. |
 | `angle(vector)` | Returns the direction angle from positive x, in radians. |
 | `angle_between(a, b)` | Returns the unsigned angle between nonzero planar vectors, in radians. |
-| `rotate_vector(vector, radians)` | Rotates a vector counter-clockwise while preserving its units. |
+| `rotate_vector(vector, radians)` / `rotate(vector, radians)` | Rotates a vector counter-clockwise while preserving its units. `rotate` is a concise alias. |
+| `scale(vector, factor)` | Multiplies both planar components by a finite dimensionless factor while preserving the vector units. |
 | `normalize(vector)` | Returns a unit direction from a nonzero vector. |
 | `perpendicular(vector)` | Rotates a vector 90 degrees counter-clockwise without changing its magnitude or units. |
 | `dot(a, b)` | Returns the scalar dot product, including the product of the input units. |
@@ -85,7 +86,7 @@ npc = tgset:
     max_hp = 100
     distance = 10 m
 
-spldef fireball():
+spell fireball():
     projectile = create Fire
     shape(projectile, circle)
     velocity(projectile, 300 m/s)

@@ -1,5 +1,5 @@
 # The spell only defines its behaviour. It never chooses a target.
-spldef fireball():
+spell fireball():
     fire = create Fire
     shape(fire, circle)
     heat(fire, 500 K)

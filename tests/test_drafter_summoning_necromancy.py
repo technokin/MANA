@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from magiclang.errors import MagicErrorML, PhysicsErrorML, RuntimeErrorML, TypeErrorML, UnitErrorML
+from magiclang.errors import MagicErrorML, PhysicsErrorML, RuntimeErrorML, TypeErrorML
 from magiclang.lexer import Lexer
 from magiclang.parser import Parser
 from magiclang.runtime import Runtime
@@ -223,3 +223,103 @@ def test_earth_relabelled_as_bone_is_not_a_reanimation_source():
     ])
     with pytest.raises(MagicErrorML, match="requires an existing object identified"):
         run(source)
+
+
+def test_summoning_and_reanimation_have_explicit_safety_limits():
+    from magiclang.libraries.summoning import MAX_ACTIVE_SUMMONED_BEINGS, _active_summoned_count
+    from magiclang.libraries.necromancy import MAX_REANIMATION_BATCH
+    from magiclang.runtime import MagicObject
+
+    runtime = run("load planes\nload summoning\nload necromancy\n")
+    runtime.active_objects.extend(
+        MagicObject("Being", {"is_summoned": True, "active": True})
+        for _ in range(MAX_ACTIVE_SUMMONED_BEINGS)
+    )
+    assert _active_summoned_count(runtime) == MAX_ACTIVE_SUMMONED_BEINGS
+    bring = runtime.global_env.get("summoning").values["bring"]
+    with pytest.raises(RuntimeErrorML, match="active summoned-being limit"):
+        bring("Griffin", "Wild Realm")
+
+    reanimate_many = runtime.global_env.get("necromancy").values["reanimate_many"]
+    with pytest.raises(RuntimeErrorML, match="limited to 256 bodies"):
+        reanimate_many([None] * (MAX_REANIMATION_BATCH + 1))
+
+
+def test_summoning_limit_counts_summons_beyond_the_scene_snapshot_prefix():
+    """The viewer's bounded scene walk must not weaken the summon safety cap."""
+    from magiclang.libraries.summoning import MAX_ACTIVE_SUMMONED_BEINGS, _active_summoned_count
+    from magiclang.runtime import MagicObject
+
+    runtime = run('load planes\nload summoning\nplanes.open_path("Wild Realm", "Mortal Plane")\n')
+    # These ordinary objects fill the prefix that used to stop the observer walk.
+    runtime.active_objects.extend(MagicObject("Earth") for _ in range(300))
+    army = [
+        MagicObject("Being", {
+            "is_summoned": True,
+            "active": True,
+            "is_returned_to_plane": False,
+            "species": f"Test Griffin {index}",
+        })
+        for index in range(MAX_ACTIVE_SUMMONED_BEINGS)
+    ]
+    runtime.global_env.set_local("army", army)
+
+    assert _active_summoned_count(runtime) == MAX_ACTIVE_SUMMONED_BEINGS
+    bring = runtime.global_env.get("summoning").values["bring"]
+    with pytest.raises(RuntimeErrorML, match="active summoned-being limit"):
+        bring("Griffin", "Wild Realm")
+
+
+def test_returned_beings_free_summoning_capacity():
+    from magiclang.libraries.summoning import MAX_ACTIVE_SUMMONED_BEINGS, _active_summoned_count
+
+    runtime = run('load planes\nload summoning\nplanes.open_path("Wild Realm", "Mortal Plane")\n')
+    bring = runtime.global_env.get("summoning").values["bring"]
+    send_back = runtime.global_env.get("summoning").values["send_back"]
+    army = [bring("Griffin", "Wild Realm") for _ in range(MAX_ACTIVE_SUMMONED_BEINGS)]
+    runtime.global_env.set_local("army", army)
+    assert _active_summoned_count(runtime) == MAX_ACTIVE_SUMMONED_BEINGS
+    with pytest.raises(RuntimeErrorML, match="active summoned-being limit"):
+        bring("Griffin", "Wild Realm")
+
+    send_back(army[0])
+    assert _active_summoned_count(runtime) == MAX_ACTIVE_SUMMONED_BEINGS - 1
+    replacement = bring("Griffin", "Wild Realm")
+    runtime.global_env.set_local("replacement", replacement)
+    assert replacement.properties["is_summoned"] is True
+    assert _active_summoned_count(runtime) == MAX_ACTIVE_SUMMONED_BEINGS
+
+
+def test_summoned_being_counter_stress_1000_scene_layouts():
+    """Scene clutter must not hide active summons from the gameplay cap."""
+    import random
+    from magiclang.libraries.summoning import MAX_ACTIVE_SUMMONED_BEINGS, _active_summoned_count
+    from magiclang.runtime import MagicObject
+
+    rng = random.Random(0x53554D4D4F4E)
+    runtime = run("load planes\nload summoning\n")
+    summoned = [
+        MagicObject("Being", {
+            "is_summoned": True,
+            "active": True,
+            "is_returned_to_plane": False,
+            "species": f"Stress Griffin {index}",
+        })
+        for index in range(MAX_ACTIVE_SUMMONED_BEINGS + 1)
+    ]
+    clutter = [MagicObject("Earth") for _ in range(350)]
+    runtime.global_env.set_local("stress_army", summoned)
+
+    for case in range(1000):
+        active_count = rng.randint(0, MAX_ACTIVE_SUMMONED_BEINGS + 1)
+        clutter_count = rng.randint(0, len(clutter))
+        for index, being in enumerate(summoned):
+            being.properties["active"] = index < active_count
+            being.properties["is_returned_to_plane"] = False
+        runtime.active_objects[:] = clutter[:clutter_count]
+        expected = min(active_count, MAX_ACTIVE_SUMMONED_BEINGS)
+        actual = _active_summoned_count(runtime)
+        assert actual == expected, (
+            f"case {case}: active_count={active_count}, clutter_count={clutter_count}, "
+            f"expected={expected}, actual={actual}"
+        )

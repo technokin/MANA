@@ -6,4 +6,4 @@ and pathways, and ``mana`` provides pure-mana effects plus element-independent
 object control. The calculation libraries do not enable 3D world simulation.
 """
 
-__all__ = ["geometry2d", "three_d", "planes", "mana", "planar_registry"]
+__all__ = ["geometry2d", "three_d", "planes", "mana", "planar_registry", "anatomy", "arcana", "materials", "physiology"]

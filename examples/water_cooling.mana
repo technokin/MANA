@@ -1,0 +1,5 @@
+# cool() removes a temperature difference; it does not set absolute temperature.
+flame = create Fire
+show "Before cooling:", flame.temp
+cool(flame, 250 K)
+show "After cooling:", flame.temp

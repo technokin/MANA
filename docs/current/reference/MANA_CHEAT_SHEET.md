@@ -7,7 +7,7 @@ This is a compact lookup page. For full rules, see the [Language Specification](
 
 ## Core keywords
 
-`def`, `spldef`, `load`, `incant`, `tgset`, `if`, `elif`, `else`, `while`, `for`, `in`, `and`, `or`, `not`, `true`, `false`, `create`, `simul`, `wait`, `after`, `every`, `when`, `skip`.
+`def`, `spell` (legacy alias `spldef`), `appraise`, `cast`, `load`, `incant`, `tgset`, `if`, `elif`, `else`, `while`, `for`, `in`, `and`, `or`, `not`, `true`, `false`, `create`, `simul`, `wait`, `after`, `every`, `when`, `skip`. Legacy `post(...)` and `release(...)` forms remain supported.
 
 `post(...)` runs a spell as a trial; `release(...)` commits its changes. `show(...)` displays values. These are built-ins, not control keywords. `tune(...)` is the tuning operation.
 

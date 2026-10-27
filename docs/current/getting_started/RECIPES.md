@@ -7,7 +7,7 @@ Each recipe is a starting point using currently implemented APIs. Run the exampl
 ## Projectile spell
 
 ```mana
-spldef earth_bolt():
+spell earth_bolt():
     bolt = create Earth
     shape(bolt, circle)
     velocity(bolt, 25 m/s)

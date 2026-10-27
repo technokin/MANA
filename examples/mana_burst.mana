@@ -1,0 +1,20 @@
+# A radial pulse affects eligible objects inside its radius.
+load geometry2d
+
+practice_target = tgset:
+    hp = 100
+    max_hp = 100
+    defence = 0
+    pos = geometry2d.point(4 m, 0 m)
+    collision_radius = 0.35 m
+
+spell pulse():
+    result = mana.burst(
+        energy = 1200 J,
+        radius = 1.5 m,
+        position = geometry2d.point(4 m, 0 m)
+    )
+    incant result
+
+release(pulse)
+show "Target temperature after the pulse:", practice_target.temp

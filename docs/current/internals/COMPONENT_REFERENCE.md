@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Purpose:** map the implementation to the language behaviours it provides. This guide is for people auditing or extending MANA; spell authors normally need the [Language Guide](../getting_started/LANGUAGE_GUIDE.md) and [Built-in Reference](../reference/FUNCTION_REFERENCE.md), not the internals described here.
 
 ## 1. How a program runs
@@ -32,7 +32,7 @@ The 2D world engine operates without an explicit library load. `geometry2d` and 
 | File or folder | Responsibility | What it should not decide |
 |---|---|---|
 | `mana.py` | Command-line entry point; validates the requested `.mana` path and reports MANA errors. | Language syntax or physics rules. |
-| `magiclang/__init__.py` | Declares the implementation package version (`1.0.0`). | Runtime setup or program execution. |
+| `magiclang/__init__.py` | Declares the implementation package version (`2.0.0`). | Runtime setup or program execution. |
 | `magiclang/runner.py` | Reads a source file, tokenizes and parses it, creates a project-aware runtime, then runs the program. | The semantics of an individual physics operation. |
 | `magiclang/tokens.py` | Defines token kinds, reserved keyword mapping, and the token record with source location. | Whether a parsed spell is physically possible. |
 | `magiclang/lexer.py` | Converts source characters into tokens, including strings, numbers, comments, indentation and punctuation. | Program execution. |
@@ -90,7 +90,7 @@ The lexer maps these reserved source words to keyword token kinds:
 | Token kind | Source spelling | Role |
 |---|---|---|
 | `KW_DEF` | `def` | Define an ordinary calculation/helper function. It may accept parameters and supplies its result with `incant`. |
-| `KW_SPLDEF` | `spldef` | Define a spell. Current spell forms accept no parameters or one `element` selector. |
+| `KW_SPLDEF` | `spldef` | Legacy spell-declaration token retained for compatibility. The preferred `spell name(...):` form is parsed contextually. |
 | `KW_LOAD` | `load` | Load a library into its own namespace. |
 | `KW_INCANT` | `incant` | Supply a definition's value and immediately exit the current definition. |
 | `KW_TGSET` | `tgset` | Define a target profile or open a temporary target context, depending on syntax. |
@@ -98,7 +98,7 @@ The lexer maps these reserved source words to keyword token kinds:
 | `KW_WHILE`, `KW_FOR`, `KW_IN` | `while`, `for`, `in` | Repetition and sequence iteration. |
 | `KW_AND`, `KW_OR`, `KW_NOT` | `and`, `or`, `not` | Boolean operations. |
 | `KW_TRUE`, `KW_FALSE` | `true`, `false` | Boolean values. |
-| `KW_CREATE` | `create` | Create a magical object; the result must be assigned directly. |
+| `KW_CREATE`, `KW_WEAVE` | `create` | Create a magical object; the result must be assigned directly. |
 | `KW_SIMUL` | `simul` | Begin a validated source-order simultaneous-operation block. |
 | `KW_WAIT`, `KW_AFTER`, `KW_EVERY` | `wait`, `after`, `every` | Advance time or schedule work in virtual time. |
 | `KW_WHEN` | `when` | Register an event handler. |
@@ -116,13 +116,13 @@ The parser reads the token stream and creates a tree of intent. It checks syntax
 |---|---|---|
 | `a = 4`, `object.temp = 500 K` | `Assignment` | Variable/property assignment is different from invoking a standalone command. Runtime-managed properties cannot be overwritten arbitrarily. |
 | `def calculate(value):` | `FunctionDef(is_spell=False)` | Ordinary calculation function; supports parameters and uses `incant` to supply a value. |
-| `spldef e_ball(element):` | `FunctionDef(is_spell=True)` configured as an element template | Spell definitions accept no parameters or exactly one `element` selector for a base element. |
+| `spell e_ball(element):` | `FunctionDef(is_spell=True)` configured as an element template | Spell definitions accept no parameters or exactly one `element` selector for a base element. |
 | `spell_instance = e_ball(Fire)` | `Call` followed by assignment; creates `SpellInstance` | Configuration only; does not execute the spell body. |
 | `tune(spell.velocity) = ball, 300 m/s` | `TuneAssignment` | Exactly one existing operation/target pair must match. |
 | `show value` or `show(value)` | `ExpressionStatement` using output | Output command, not an expression value. |
-| `post(spell)` / `release(spell)` | `SpellModeStatement` | Standalone commands accepting one named spell. Not assignable or nestable. |
+| `post(spell[, text|visual])` / `release(spell)` | `SpellModeStatement` | Standalone commands. Text is the default; visual records a non-committing scene preview. Not assignable or nestable. |
 | `name = create Fire` | `Assignment` whose value is a `Create` node | Creation must be assigned directly; nested/unassigned creation is rejected. |
-| `target = tgset:` | `TargetSet` | Creates a target profile outside the spell. |
+| `target = tgset:` | `TargetSet`, `WeaveMana` | Creates a target profile outside the spell. |
 | `tgset(target):` | `TargetContext` | Temporarily selects an existing target for the enclosed cast operation. |
 | `if` / `elif` / `else`, `while`, `for` | Conditional or loop AST nodes | Indented body is required. Runtime caps guard loops. |
 | `simul:`, `wait`, `after`, `every`, `when` | Scheduling, event or concurrent AST nodes | These use virtual time/runtime safeguards; `simul` validates write conflicts, then runs statements in source order with rollback on failure. |
@@ -144,7 +144,7 @@ Every syntactic form is represented by a node from `magiclang/ast_nodes.py`. Nod
 | `Unary`, `Binary`, `Call` | Unary operator, binary expression, and a callable expression with arguments. |
 | `Create`, `Assignment`, `ExpressionStatement` | Object-creation request, assignment, and a standalone expression/command. |
 | `FunctionDef`, `Incant`, `SkipStatement` | Ordinary/spell definition, value supplied by a definition, and deliberate no-op (`skip`). |
-| `TargetSet`, `TargetContext` | Target-profile creation and temporary selected-target context. |
+| `TargetSet`, `WeaveMana`, `TargetContext` | Target-profile creation and temporary selected-target context. |
 | `If`, `While`, `For`, `Simul` | Conditional, loop, and source-order `simul` statements. |
 | `Wait`, `After`, `Every`, `Event` | Virtual-time and event constructs. |
 | `SpellModeStatement` | Standalone `post`/`release` command. |
@@ -173,7 +173,7 @@ If a new source-language feature is added, it normally needs changes in at least
 
 `magiclang/units.py` represents a quantity as a numeric value plus a dimension vector, including an absolute-temperature marker for Celsius literals. The five base dimensions are `kg`, `m`, `s`, `K`, and `mana`; derived units include `m2`, `m3`, `m/s`, `m/s2`, `N`, `J`, `Pa`, `W`, `kg/m3`, `kg*m/s`, and `mana/s`. Addition/subtraction require matching dimensions. Multiplication/division compose dimensions.
 
-`magiclang/physics.py` contains reusable vector and mechanics calculations. `magiclang/physics_engine.py` integrates the always-on 2D world: movement, optional per-call gravity, swept equivalent-circle contacts, basic impulse response, collision heat, HP loss, and collision/event history. Shape names are currently labels; they are not exact polygon colliders. The optional `vector3d` namespace provides 3D mathematics only, `geometry2d` provides advanced planar calculations, and `planes` manages pathway references and internal transfer ledger entries.
+`magiclang/physics.py` contains reusable vector and mechanics calculations. `magiclang/physics_engine.py` integrates the always-on 2D world: movement, configurable gravity, spatial-hash swept-AABB broad phase, swept equivalent-circle contacts, basic impulse response, collision heat, HP loss, and collision/event history. Continuous physics energy transfers are aggregated per `advance_time` call so ledger size stays bounded for long simulations. Shape names are currently labels; they are not exact polygon colliders. The optional `vector3d` namespace provides 3D mathematics only, `geometry2d` provides advanced planar calculations, and `planes` manages pathway references and internal transfer ledger entries.
 
 ## 8. Elements and rules
 
@@ -228,3 +228,8 @@ python mana.py examples\targeted_fireball.mana
 ```
 
 Read the [current documentation index](../INDEX.md) for user-facing guides and the [historical v0.10.1 audit](../../archive/audits/AUDIT_V0_10_1.md) for fixes and remaining limitations.
+
+
+## Native weather syntax node
+
+`WeatherStatement` is the AST node for a brace-free climate statement such as `weather rain, radius=80 m`. It is interpreted by the runtime's built-in weather rules, supports global climate when no radius is given, and records area zones otherwise. `spell` is a contextual declaration spelling in the parser rather than a globally reserved token, which preserves `spell` as a legal ordinary identifier and keeps `spldef` compatibility.

@@ -1,0 +1,12 @@
+# One spell definition can configure a different base element each time.
+spell orb(element):
+    object = create element
+    shape(object, circle)
+    velocity(object, 15 m/s)
+    incant object
+
+fire_orb = orb(Fire)
+water_orb = orb(Water)
+post(fire_orb)
+release(water_orb)
+show "Committed objects:", active_objects()

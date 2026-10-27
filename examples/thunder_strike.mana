@@ -1,0 +1,21 @@
+# Thunder is a specialised element and must be invoked before it is used.
+load geometry2d
+load planes
+planes.invoke("Thunder")
+
+training_target = tgset:
+    hp = 100
+    max_hp = 100
+    defence = 0
+    pos = geometry2d.point(3 m, 0 m)
+    collision_radius = 0.45 m
+
+spell thunder_strike():
+    bolt = create Thunder
+    bolt.collision_radius = 0.15 m
+    velocity(bolt, 80 m/s)
+    incant bolt
+
+tgset(training_target):
+    release(thunder_strike)
+show "Target health after the cast:", training_target.hp

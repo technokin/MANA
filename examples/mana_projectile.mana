@@ -1,0 +1,22 @@
+# A woven projectile uses the same contact solver as the rest of the 2D world.
+load geometry2d
+
+training_target = tgset:
+    hp = 100
+    max_hp = 100
+    defence = 0
+    pos = geometry2d.point(4 m, 0 m)
+    collision_radius = 0.45 m
+
+spell blue_bolt():
+    bolt = weave mana:
+        shape = projectile
+        radius = 0.2 m
+        energy = 1200 J
+        position = geometry2d.point(0 m, 0 m)
+    velocity(bolt, 70 m/s)
+    incant bolt
+
+tgset(training_target):
+    release(blue_bolt)
+show "Target temperature after contact:", training_target.temp

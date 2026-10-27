@@ -15,9 +15,15 @@ RUNTIME = ROOT / "magiclang/runtime.py"
 
 
 def anchor(text: str) -> str:
-    text = re.sub(r"[`*_]", "", text).casefold()
-    text = re.sub(r"[^a-z0-9\s-]", "", text)
-    return re.sub(r"\s+", "-", text.strip())
+    """Build a GitHub-style heading fragment for a Markdown heading.
+
+    Underscores are valid in GitHub heading IDs. Removing them made many
+    generated links to function names such as ``active_objects()`` incorrect.
+    """
+    text = re.sub(r"[`*]", "", text).casefold()
+    text = re.sub(r"[^a-z0-9_\s-]", "", text)
+    text = re.sub(r"\s+", "-", text.strip())
+    return re.sub(r"-+", "-", text)
 
 
 def generate_api_index() -> str:

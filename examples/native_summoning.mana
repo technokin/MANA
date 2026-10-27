@@ -1,0 +1,12 @@
+# Native summon is distinct from conjure: it brings an existing being record
+# through an already-open path. Appraisal records the trial; cast commits it.
+load planes
+planes.open_path("Wild Realm", "Mortal Plane")
+
+spell call_griffin():
+    griffin = summon "Griffin" from "Wild Realm"
+    incant griffin
+
+appraise call_griffin
+cast call_griffin
+show active_objects()

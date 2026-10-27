@@ -38,7 +38,7 @@ python tools/vscode/build_mana_vsix.py --check
 ## Language and runtime changes
 
 - MANA programs use `.mana` syntax; do not accidentally introduce Python syntax as a language feature.
-- Preserve the distinction between ordinary `def` functions and `spldef` spells.
+- Preserve the distinction between ordinary `def` functions and `spell` declarations; keep `spldef` working as a backward-compatible alias.
 - `incant` is a MANA statement, not a function; `show` displays output; `post` runs a trial and rolls state back; `release` commits successful spell effects; `tgset` establishes target context outside the spell body.
 - Do not add keywords or change spell semantics without a documented reason and appropriate tests.
 - Add regression tests for bugs, boundary cases, invalid inputs, and rollback behaviour.

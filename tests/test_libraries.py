@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from magiclang.errors import PhysicsErrorML, RuntimeErrorML, TypeErrorML
+from magiclang.errors import PhysicsErrorML, RuntimeErrorML
 from magiclang.lexer import Lexer
 from magiclang.parser import Parser
 from magiclang.physics import Vector3
 from magiclang.runtime import Runtime
-from magiclang.units import M, VELOCITY, Quantity
+from magiclang.units import VELOCITY
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -50,6 +50,29 @@ def test_geometry2d_namespace_provides_coordinates_angles_and_units():
     assert rotated.x == pytest.approx(0.0, abs=1e-9)
     assert rotated.y == pytest.approx(5.0)
     assert runtime.global_env.get("circle_area_result").value == pytest.approx(4 * 3.141592653589793)
+
+
+def test_geometry2d_rotate_and_scale_aliases_preserve_vector_units():
+    runtime = run('load geometry2d\nv = geometry2d.scale(geometry2d.rotate(geometry2d.polar(2 m/s, 0), geometry2d.to_radians(90)), 3)\n')
+    result = runtime.global_env.get("v")
+    assert result.dimension == VELOCITY
+    assert result.x == pytest.approx(0.0, abs=1e-9)
+    assert result.y == pytest.approx(6.0)
+
+
+def test_vector3d_rotate_lerp_and_midpoint_are_calculation_only_helpers():
+    runtime = run('load vector3d\na = vector3d.position(1 m, 0 m, 0 m)\nb = vector3d.position(3 m, 4 m, 2 m)\nr = vector3d.rotate(a, 0, 0, 1.5707963267948966)\nm = vector3d.midpoint(a, b)\nl = vector3d.lerp(a, b, 0.25)\n')
+    rotated = runtime.global_env.get("r")
+    midpoint = runtime.global_env.get("m")
+    lerped = runtime.global_env.get("l")
+    assert rotated.x == pytest.approx(0.0, abs=1e-9)
+    assert rotated.y == pytest.approx(1.0)
+    assert midpoint.x == pytest.approx(2.0)
+    assert midpoint.y == pytest.approx(2.0)
+    assert midpoint.z == pytest.approx(1.0)
+    assert lerped.x == pytest.approx(1.5)
+    assert lerped.y == pytest.approx(1.0)
+    assert lerped.z == pytest.approx(0.5)
 
 
 def test_explicit_direction_uses_velocity_and_geometry2d_only_provides_geometry():
@@ -264,3 +287,43 @@ def test_user_library_can_export_a_builtin_name_without_overwriting_global_opera
     assert runtime.global_env.get("custom_result") == 42
     assert isinstance(runtime.global_env.get("global_force"), Vector3)
     assert runtime.global_env.get("force").__name__ == "op_force"
+
+
+def test_library_builder_rejects_entry_symlink_outside_package(tmp_path):
+    from tools.library_builder import init_library, validate_library
+
+    folder = init_library("symlinkkit", tmp_path / "source")
+    external = tmp_path / "external.mana"
+    external.write_text("def identity(value):\n    incant value\n", encoding="utf-8")
+    (folder / "main.mana").unlink()
+    try:
+        (folder / "main.mana").symlink_to(external)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is unavailable on this platform")
+    with pytest.raises(ValueError, match="symbolic link"):
+        validate_library(folder)
+
+
+def test_library_builder_rejects_readme_symlink_outside_package(tmp_path):
+    from tools.library_builder import build_library, init_library
+
+    folder = init_library("readmelink", tmp_path / "source")
+    external = tmp_path / "external-readme.md"
+    external.write_text("must not be packaged", encoding="utf-8")
+    (folder / "README.md").unlink()
+    try:
+        (folder / "README.md").symlink_to(external)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation is unavailable on this platform")
+    with pytest.raises(ValueError, match="symbolic link"):
+        build_library(folder, tmp_path / "output")
+
+
+def test_library_builder_rejects_oversized_manifest_before_json_parse(tmp_path):
+    from tools.library_builder import MANIFEST_NAME, read_package_source, init_library
+    from magiclang.runtime import MAX_LIBRARY_MANIFEST_BYTES
+
+    folder = init_library("bigmanifest", tmp_path / "source")
+    (folder / MANIFEST_NAME).write_bytes(b" " * (MAX_LIBRARY_MANIFEST_BYTES + 1))
+    with pytest.raises(ValueError, match="safety limit"):
+        read_package_source(folder)

@@ -49,7 +49,7 @@ Earth
 A spell definition describes behaviour; it does not execute until a spell mode is invoked.
 
 ```mana
-spldef spark():
+spell spark():
     flame = create Fire
     heat(flame, 500 K)
     incant flame

@@ -1,4 +1,4 @@
-# `necromancy` Library — MANA v1.0.0
+# `necromancy` Library — MANA v2.0.0
 
 **Page kind:** Reference  
 

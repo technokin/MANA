@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 MANA is a language with its own `.mana` source syntax, lexer, parser, runtime, and semantics. The current implementation of that language is written in Python. Python is therefore required to execute MANA programs from this source project, but MANA programs are not written in Python.
 

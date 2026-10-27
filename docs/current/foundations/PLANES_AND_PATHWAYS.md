@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 Planes are locations in the cosmology. For MANA's program, their relevant properties are identity, category, parent relationship for a region, and the data library that describes the plane's inhabitants or region entries. Plane contents must not act as hidden language laws: changing a plane record cannot change how unrelated arithmetic, physics operations, or definitions execute.
 

@@ -1,0 +1,14 @@
+# Shape names select current visual/semantic forms; they are not all exact colliders.
+point_mark = create Air
+shape(point_mark, point)
+
+ring_mark = create Air
+shape(ring_mark, ring)
+
+wave_mark = create Water
+shape(wave_mark, wave)
+
+spiral_mark = create Air
+shape(spiral_mark, spiral)
+
+show "Created four differently shaped markers."

@@ -2,11 +2,11 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
-MANA is a programming language designed around programmable magic. A MANA program can perform ordinary computation, define reusable functions, compose spells, create and manipulate objects, apply physical operations, and use libraries for specialised systems such as planar pathways, summoning, and necromancy.
+MANA begins with a model of magic: mana is an omnipresent magical medium; Fire, Water, Earth, and Air are its four foundational elemental modes; spells compose operations; targets are real world objects or beings; and the world engine decides what actually changes. Conjuration creates matter, transmutation changes composition, shaping changes geometry, transfiguration changes supported form, weather controls alter the atmosphere, and summoning brings a defined being through an eligible planar route. These are distinct ideas, not interchangeable names for visual effects.
 
-MANA is not a story format and its plane catalogue is not a narrative requirement. Plane and being records are structured data. A program can use them to identify a home plane, find a route, move energy through a pathway, or bring a being into the simulated world. The data does not alter how unrelated statements execute.
+The programming language is the notation used to describe and test that magic. Its runtime currently implements a bounded 2D world simulation with explicit physics and event records. The implementation is narrower than the full imaginative model: a concept in a catalogue does not guarantee that every associated power exists. For the extensive conceptual explanation, begin with the [MANA Magic System Compendium](MAGIC_SYSTEM_COMPENDIUM.md) and the repository-level [MANA Introduction](../../../MANA_INTRO.md).
 
 ## The core idea
 
@@ -51,7 +51,7 @@ The VS Code extension is optional syntax support; it does not define language se
 
 The project currently includes a working interpreter, lexer/parser/AST, 2D object simulation, units, an energy ledger, pure-mana controls, element interaction rules, plane registry and pathways, plane data modules, custom plane creation through `drafter`, cross-plane entity access through `summoning`, local corpse/bone reanimation through `necromancy`, 2D geometry and 3D vector-calculation libraries, tests, examples, documentation, and optional VS Code syntax support.
 
-Several larger pieces remain incomplete: a graphical World Engine viewport, a genuinely 3D world, real terrain extraction, continued fire simulation, a general creature AI/behaviour framework, and final calibration of all physical and combat values. See [Implementation Status](IMPLEMENTATION_STATUS.md).
+An optional Visualiser can replay recorded runs as a magical 2D scene. The recording is an internal viewer format, not a supported external integration API. The world engine is deliberately 2D; there is no live world viewport, built-in game-engine plug-in, terrain extraction, continuing fire simulation or general creature AI. Physical and combat values also remain prototype calibrations. See [Implementation Status](IMPLEMENTATION_STATUS.md) and [Where MANA Could Be Used](FUTURE_USES_AND_ROADMAP.md).
 
 ## How to navigate the project
 

@@ -1,0 +1,7 @@
+# State labels are useful for a simplified rule model; they are not a fluid solver.
+wood = tgset:
+    material = "Wood"
+    state = "solid"
+show "Starting state:", wood.state
+transform(wood, "powder")
+show "After transform:", wood.state

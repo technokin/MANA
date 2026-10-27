@@ -1,8 +1,8 @@
-# Pure Mana and Universal Control — MANA v1.0.0
+# Pure Mana and Universal Control — MANA v2.0.0
 
 **Page kind:** Reference  
 
-The lowercase `mana` namespace provides pure-mana effects and element-independent control operations. It is installed by the runtime automatically; `load mana` is also accepted. Uppercase `Mana` is the type selector recognized by `create Mana`. The namespace and the type selector have different jobs.
+The lowercase `mana` namespace provides pure-mana effects and element-independent control operations. It is installed by the runtime automatically; `load mana` is also accepted. The namespace and the `weave mana` language operation have different jobs: `weave mana` creates a named construct from ambient mana; the lowercase namespace provides reusable construct and effect functions.
 
 The main world simulation is 2D in the x-y plane. Positions and directions must follow MANA's unit rules. All numeric effect defaults are defaults, not a mana-storage limit; the runtime records energy and mana-equivalent use in its readouts and ledger.
 

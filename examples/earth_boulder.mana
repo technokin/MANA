@@ -1,0 +1,10 @@
+# Move a boulder through the 2D world and inspect its resulting position.
+load geometry2d
+
+boulder = create Earth
+boulder.pos = geometry2d.point(0 m, 0 m)
+boulder.collision_radius = 0.45 m
+velocity(boulder, geometry2d.direction(1, 0) * 12 m/s)
+advance_time(0.4 s, timestep=0.01 s)
+show "Boulder position:", boulder.pos
+show "Boulder velocity:", boulder.vel

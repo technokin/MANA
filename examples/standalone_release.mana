@@ -1,5 +1,5 @@
 # post and release accept exactly one named spell. The spell owns its settings.
-spldef ember():
+spell ember():
     flame = create Fire
     heat(flame, 1200 K)
     incant flame

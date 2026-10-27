@@ -31,6 +31,50 @@ def _same_plane(first: str, second: str) -> bool:
 
 # This is only a lookup index. Full being data remains inside each plane's
 # separate, lazily loaded data library.
+# A hard cap keeps repeated summon loops from exhausting memory or making the
+# pairwise 2D collision solver prohibitively expensive. Returned beings do not
+# count toward this active-world limit.
+MAX_ACTIVE_SUMMONED_BEINGS = 256
+
+
+def _active_summoned_count(runtime: Any) -> int:
+    """Count every reachable active summon, not just the first scene objects.
+
+    The Visualiser deliberately caps scene snapshots, but that display limit
+    must not be reused for gameplay safety checks. A world can contain hundreds
+    of ordinary objects before a directly assigned summoned being in the global
+    environment; limiting the walk to 257 total objects would miss that being
+    and allow the summon cap to be bypassed. The runtime's physics-object walk
+    already deduplicates objects across globals, the active world, and an
+    in-progress spell, so use it for an authoritative count.
+    """
+    from ..runtime import MagicObject
+
+    collector = getattr(runtime, "_collect_physics_objects", None)
+    if callable(collector):
+        candidates = collector()
+    else:
+        # Compatibility fallback for small library-level test doubles.
+        candidates = list(getattr(runtime, "active_objects", []))
+        for result in getattr(runtime, "_spell_run_stack", []):
+            candidates.extend(getattr(result, "created", []))
+        observed = getattr(runtime, "_observed_objects", None)
+        if callable(observed):
+            candidates.extend(observed())
+
+    seen: set[int] = set()
+    for obj in candidates:
+        if not isinstance(obj, MagicObject):
+            continue
+        props = obj.properties
+        if (props.get("is_summoned", False) and props.get("active", True)
+                and not props.get("is_returned_to_plane", False)):
+            seen.add(id(obj))
+            if len(seen) >= MAX_ACTIVE_SUMMONED_BEINGS:
+                return len(seen)
+    return len(seen)
+
+
 _BUILTIN_BEING_LIBRARY_INDEX = {
     **{name.casefold(): "wild_realm" for name in ("Griffin", "Werewolf", "Vampire", "Chimera", "Giant", "Orc")},
     "mermaid": "atlantis",
@@ -182,6 +226,11 @@ def build_library(runtime: Any) -> dict[str, Any]:
         destination_ref = plane_lib["identify"]("Mortal Plane")
         if _same_plane(destination_ref.name, source_ref.name):
             raise RuntimeErrorML("summoning source and destination must be different planes")
+        if _active_summoned_count(runtime) >= MAX_ACTIVE_SUMMONED_BEINGS:
+            raise RuntimeErrorML(
+                f"active summoned-being limit ({MAX_ACTIVE_SUMMONED_BEINGS}) reached; "
+                "send a being back or return one before summoning another"
+            )
         _validate_requirements(record, requirements)
         plane_lib["find_route"](source_ref, destination_ref)
         world_position = _position(position)

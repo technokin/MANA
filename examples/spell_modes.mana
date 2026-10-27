@@ -1,5 +1,5 @@
 # A regular zero-parameter spell definition can be previewed or fired by name.
-spldef warm_stone():
+spell warm_stone():
     stone = create Earth
     heat(stone, 1200 K)
     incant stone
@@ -9,6 +9,6 @@ release(warm_stone)
 show "World objects after release:", active_objects()
 
 # skip is a no-operation statement, useful for an unfinished definition.
-spldef unfinished_spell():
+spell unfinished_spell():
     skip
 post(unfinished_spell)

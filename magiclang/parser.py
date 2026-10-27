@@ -28,6 +28,8 @@ from .ast_nodes import (
     Subscript,
     TargetContext,
     TargetSet,
+    WeaveMana,
+    WeatherStatement,
     TuneAssignment,
     Unary,
     Wait,
@@ -152,6 +154,41 @@ class Parser:
             return self.parse_def(is_spell=False)
         if t == TokenType.KW_SPLDEF:
             return self.parse_def(is_spell=True)
+        if (t == TokenType.IDENT and self.current.value == "spell"
+                and self.i + 2 < len(self.tokens)
+                and self.tokens[self.i + 1].type == TokenType.IDENT
+                and self.tokens[self.i + 2].type == TokenType.LPAREN):
+            # Contextual declaration keyword: ``spell name():``. Keeping it
+            # contextual preserves existing programs that use ``spell`` as a
+            # perfectly ordinary variable or spell name.
+            return self.parse_def(is_spell=True)
+        # `spell name():` is the readable primary spelling; `spldef` remains
+        # accepted for compatibility with existing MANA projects. Both use the
+        # language's indentation-based blocks, never curly braces.
+        if (t == TokenType.IDENT and self.current.value == "weather"
+                and self.i + 1 < len(self.tokens)
+                and self.tokens[self.i + 1].type in {TokenType.IDENT, TokenType.STRING}):
+            return self.parse_weather_statement()
+        # Native spell-language verbs keep common magical operations readable
+        # without forcing every source line to look like a library invocation.
+        # Parenthesised destinations allow dynamic expressions when needed.
+        if (t == TokenType.IDENT and self.current.value in {"shape", "transmute", "transfigure", "transform"}
+                and self.i + 2 < len(self.tokens)
+                and self.tokens[self.i + 1].type == TokenType.IDENT
+                and self.tokens[self.i + 2].type == TokenType.IDENT
+                and str(self.tokens[self.i + 2].value).casefold() == "into"):
+            return self.parse_native_transformation()
+        # Primary spell execution verbs. post()/release() stay available for
+        # existing code; appraise/cast express the same actions in domain terms.
+        if (t == TokenType.IDENT and self.current.value in {"appraise", "cast"}
+                and self.i + 1 < len(self.tokens)
+                and self.tokens[self.i + 1].type == TokenType.IDENT
+                and self.i + 2 < len(self.tokens)
+                and self.tokens[self.i + 2].type in {TokenType.NEWLINE, TokenType.EOF}):
+            mode = self.advance().value
+            spell_name = self.advance().value
+            self.expect(TokenType.NEWLINE)
+            return SpellModeStatement(mode, Name(str(spell_name)))
         if t == TokenType.KW_LOAD:
             return self.parse_load()
         if t == TokenType.KW_SKIP:
@@ -171,6 +208,10 @@ class Parser:
                 and self.tokens[self.i + 1].type == TokenType.EQ
                 and self.tokens[self.i + 2].type == TokenType.KW_TGSET):
             return self.parse_tgset()
+        if (t == TokenType.IDENT and self.i + 2 < len(self.tokens)
+                and self.tokens[self.i + 1].type == TokenType.EQ
+                and self.tokens[self.i + 2].type == TokenType.KW_WEAVE):
+            return self.parse_weave_mana()
         if t == TokenType.KW_IF:
             return self.parse_if()
         if t == TokenType.KW_WHILE:
@@ -238,7 +279,17 @@ class Parser:
                     "the old '.tune' syntax is removed; use 'tune(spell.operation) = target, value'",
                     self.filename, self.current.line,
                 )
-            value = self.parse_expression()
+            if (isinstance(expr, Name) and self.check(TokenType.IDENT)
+                    and self.current.value == "conjure"
+                    and self.i + 1 < len(self.tokens)
+                    and self.tokens[self.i + 1].type != TokenType.LPAREN):
+                value = self.parse_conjure_expression()
+            elif (isinstance(expr, Name) and self.check(TokenType.IDENT)
+                    and self.current.value == "summon"
+                    and self._looks_like_native_summon()):
+                value = self.parse_summon_expression()
+            else:
+                value = self.parse_expression()
             if self.contains_statement_call(expr) or self.contains_statement_call(value):
                 raise SyntaxErrorML(
                     "show/post/release cannot be assigned to variables; tune is only valid as a special assignment form",
@@ -266,12 +317,24 @@ class Parser:
         self.expect(TokenType.LPAREN)
         spell = self.parse_expression()
         if not isinstance(spell, Name):
-            raise SyntaxErrorML(f"{mode} accepts one spell name, for example '{mode}(fireball)'", self.filename, self.current.line)
+            raise SyntaxErrorML(f"{mode} expects a named spell, for example '{mode}(fireball)'", self.filename, self.current.line)
+
+        presentation = "text"
         if self.check(TokenType.COMMA):
-            raise SyntaxErrorML(f"{mode} accepts exactly one argument: the spell name; use 'tune(spell.operation) = target, value' to change an existing operation", self.filename, self.current.line)
-        self.expect(TokenType.RPAREN, f"{mode} accepts exactly one argument: the spell name")
+            comma = self.advance()
+            if mode != "post":
+                raise SyntaxErrorML("release accepts only the spell name; visual presentation is available with post(spell, visual)", self.filename, comma.line, comma.column)
+            option = self.expect(TokenType.IDENT, "post's second argument must be 'text' or 'visual'")
+            if option.value not in {"text", "visual"}:
+                raise SyntaxErrorML("post's second argument must be 'text' or 'visual'", self.filename, option.line, option.column)
+            presentation = option.value
+            if self.check(TokenType.COMMA):
+                extra = self.current
+                raise SyntaxErrorML("post accepts at most two arguments: the spell name and optional 'text' or 'visual'", self.filename, extra.line, extra.column)
+
+        self.expect(TokenType.RPAREN, f"{mode} expects a named spell and an optional post presentation")
         self.expect(TokenType.NEWLINE)
-        return SpellModeStatement(mode, spell)
+        return SpellModeStatement(mode, spell, presentation)
 
     def validate_value_expression(self, expr, context: str) -> None:
         if self.contains_statement_call(expr):
@@ -327,6 +390,196 @@ class Parser:
             return any(Parser.contains_create(item) for item in expr.items)
         return False
 
+    def parse_native_transformation(self):
+        """Parse ``transmute iron into silver`` and sibling native verb forms.
+
+        A bare destination is a domain name (material, geometry, phase, or form).
+        Parenthesise an expression to use a computed destination, e.g.
+        ``transmute ingot into (desired_material)``. The long-form API calls
+        remain available for advanced options such as preserve_mass=False.
+        """
+        operation = str(self.advance().value)
+        target_token = self.expect(TokenType.IDENT, f"{operation} expects an object name before 'into'")
+        into = self.expect(TokenType.IDENT, f"write '{operation} {target_token.value} into ...'")
+        if str(into.value).casefold() != "into":
+            raise SyntaxErrorML(f"expected 'into' in {operation} statement", self.filename, into.line, into.column)
+        if self.check(TokenType.STRING):
+            destination = Literal(self.advance().value)
+        elif self.check(TokenType.IDENT):
+            destination = Literal(str(self.advance().value))
+        elif self.check(TokenType.LPAREN):
+            self.advance()
+            destination = self.parse_expression()
+            self.expect(TokenType.RPAREN, "close the parenthesised transformation destination")
+            self.validate_value_expression(destination, f"{operation} destination")
+        else:
+            token = self.current
+            raise SyntaxErrorML(
+                f"{operation} needs a destination after 'into'; use a name or a parenthesised expression",
+                self.filename, token.line, token.column,
+            )
+        self.expect(TokenType.NEWLINE, f"{operation} must be a standalone statement")
+        call = Call(Name(operation), [Name(str(target_token.value)), destination])
+        return ExpressionStatement(call)
+
+    def _looks_like_native_summon(self) -> bool:
+        """Distinguish ``summon (dynamic_name) from plane`` from ``summon(...)``.
+
+        Parenthesised values are native summon syntax only when followed by
+        the explicit source-plane marker. This preserves normal function calls.
+        """
+        if self.i + 1 >= len(self.tokens):
+            return False
+        if self.tokens[self.i + 1].type != TokenType.LPAREN:
+            return True
+        depth = 0
+        for j in range(self.i + 1, len(self.tokens)):
+            token_type = self.tokens[j].type
+            if token_type == TokenType.LPAREN:
+                depth += 1
+            elif token_type == TokenType.RPAREN:
+                depth -= 1
+                if depth == 0:
+                    return (j + 1 < len(self.tokens)
+                            and self.tokens[j + 1].type == TokenType.IDENT
+                            and str(self.tokens[j + 1].value).casefold() == "from")
+            elif token_type in {TokenType.NEWLINE, TokenType.EOF}:
+                return False
+        return False
+
+    def parse_summon_expression(self):
+        """Parse ``guardian = summon Griffin from Wild Realm, position=...``.
+
+        A single bare name or quoted label is a being name; a parenthesised
+        expression can supply a dynamic name/record. Source plane is optional
+        for indexed beings and may also be parenthesised when computed.
+        """
+        token = self.advance()  # summon
+        being = self._parse_summon_value("being name")
+        args = [being]
+        if self.check(TokenType.IDENT) and str(self.current.value).casefold() == "from":
+            self.advance()
+            args.append(self._parse_summon_value("source plane"))
+        kwargs: dict[str, Any] = {}
+        if self.check(TokenType.COMMA):
+            self.advance()
+        allowed = {"position", "requirements"}
+        while not self.check(TokenType.NEWLINE, TokenType.EOF):
+            key = self.expect(TokenType.IDENT, "summon options must use position=value or requirements=[...]")
+            if key.value in kwargs:
+                raise SyntaxErrorML(f"summon option '{key.value}' is specified more than once", self.filename, key.line, key.column)
+            self.expect(TokenType.EQ, "summon options must use name=value")
+            value = self.parse_expression()
+            self.validate_value_expression(value, f"summon option '{key.value}'")
+            kwargs[key.value] = value
+            if self.check(TokenType.COMMA):
+                self.advance()
+                if self.check(TokenType.NEWLINE, TokenType.EOF):
+                    raise SyntaxErrorML("summon options cannot end with a comma", self.filename, self.current.line, self.current.column)
+            elif not self.check(TokenType.NEWLINE, TokenType.EOF):
+                raise SyntaxErrorML("separate summon options with commas", self.filename, self.current.line, self.current.column)
+        unknown = sorted(set(kwargs) - allowed)
+        if unknown:
+            raise SyntaxErrorML("unknown summon option(s): " + ", ".join(unknown), self.filename, token.line, token.column)
+        # Assignment parsing owns the newline, just as it does for conjure.
+        return Call(Name("summon"), args, kwargs)
+
+    def _parse_summon_value(self, label: str):
+        if self.check(TokenType.STRING):
+            return Literal(self.advance().value)
+        if self.check(TokenType.IDENT):
+            return Literal(str(self.advance().value))
+        if self.check(TokenType.LPAREN):
+            self.advance()
+            value = self.parse_expression()
+            self.expect(TokenType.RPAREN, f"close the parenthesised {label}")
+            self.validate_value_expression(value, f"summon {label}")
+            return value
+        token = self.current
+        raise SyntaxErrorML(f"summon needs a {label}; use a name or a parenthesised expression", self.filename, token.line, token.column)
+
+    def parse_weather_statement(self):
+        """Parse a native area/global climate declaration in statement position.
+
+        Example: ``weather rain, intensity=0.8, radius=80 m``. Bare enum
+        values for precipitation and compass direction are accepted, while all
+        other values use ordinary MANA expressions and units.
+        """
+        start = self.advance()
+        kind_token = self.advance()
+        if kind_token.type == TokenType.STRING:
+            kind = str(kind_token.value)
+        else:
+            kind = str(kind_token.value)
+        if not kind.strip():
+            raise SyntaxErrorML("weather needs a named climate preset", self.filename, kind_token.line, kind_token.column)
+        fields: list[tuple[str, Any]] = []
+        names: set[str] = set()
+        if self.check(TokenType.COMMA):
+            self.advance()
+        while not self.check(TokenType.NEWLINE, TokenType.EOF):
+            key = self.expect(TokenType.IDENT, "weather options must use name=value, for example radius=80 m")
+            if key.value in names:
+                raise SyntaxErrorML(f"weather option '{key.value}' is specified more than once", self.filename, key.line, key.column)
+            names.add(key.value)
+            self.expect(TokenType.EQ, "weather options must use name=value")
+            if (key.value in {"precipitation", "wind_direction"}
+                    and self.check(TokenType.IDENT)):
+                value = Literal(self.advance().value)
+            else:
+                value = self.parse_expression()
+            self.validate_value_expression(value, f"weather option '{key.value}'")
+            fields.append((key.value, value))
+            if self.check(TokenType.COMMA):
+                self.advance()
+                if self.check(TokenType.NEWLINE, TokenType.EOF):
+                    raise SyntaxErrorML("weather options cannot end with a comma", self.filename, self.current.line, self.current.column)
+            elif not self.check(TokenType.NEWLINE, TokenType.EOF):
+                raise SyntaxErrorML("separate weather options with commas", self.filename, self.current.line, self.current.column)
+        self.expect(TokenType.NEWLINE, "weather change must be a standalone statement")
+        allowed = {"intensity", "precipitation", "wind_speed", "wind_direction", "temperature",
+                   "humidity", "clouds", "fog", "heat", "lightning", "duration", "radius", "center"}
+        unknown = sorted(names - allowed)
+        if unknown:
+            raise SyntaxErrorML("unknown weather option(s): " + ", ".join(unknown), self.filename, start.line, start.column)
+        return WeatherStatement(kind.strip(), fields)
+
+    def parse_conjure_expression(self):
+        """Parse ``conjure steel, mass=5 kg`` as a language-level matter expression."""
+        keyword = self.advance()  # conjure
+        material_token = self.current
+        if material_token.type not in {TokenType.IDENT, TokenType.STRING}:
+            raise SyntaxErrorML("conjure needs a material name, e.g. 'iron = conjure steel, mass=5 kg'",
+                                self.filename, material_token.line, material_token.column)
+        material = str(self.advance().value)
+        kwargs: dict[str, Any] = {}
+        allowed = {"mass", "position", "shape", "name", "temperature", "density", "state",
+                   "velocity", "anchored", "collidable", "restitution", "friction", "drag_coefficient",
+                   "material", "item", "length", "width", "thickness", "durability", "payload"}
+        if self.check(TokenType.COMMA):
+            self.advance()
+        while not self.check(TokenType.NEWLINE, TokenType.EOF):
+            key = self.expect(TokenType.IDENT, "conjure options must use name=value, e.g. shape=cube")
+            if key.value in kwargs:
+                raise SyntaxErrorML(f"conjure option '{key.value}' is specified more than once", self.filename, key.line, key.column)
+            self.expect(TokenType.EQ, "conjure options must use name=value")
+            if key.value in {"shape", "state", "name", "material", "item", "payload"} and self.check(TokenType.IDENT):
+                value = Literal(self.advance().value)
+            else:
+                value = self.parse_expression()
+            self.validate_value_expression(value, f"conjure option '{key.value}'")
+            kwargs[key.value] = value
+            if self.check(TokenType.COMMA):
+                self.advance()
+                if self.check(TokenType.NEWLINE, TokenType.EOF):
+                    raise SyntaxErrorML("conjure options cannot end with a comma", self.filename, self.current.line, self.current.column)
+            elif not self.check(TokenType.NEWLINE, TokenType.EOF):
+                raise SyntaxErrorML("separate conjure options with commas", self.filename, self.current.line, self.current.column)
+        unknown = sorted(set(kwargs) - allowed)
+        if unknown:
+            raise SyntaxErrorML("unknown conjure option(s): " + ", ".join(unknown), self.filename, keyword.line, keyword.column)
+        return Call(Name("conjure"), [Literal(material)], kwargs)
+
     def parse_load(self):
         self.advance()
         name = self.expect(TokenType.IDENT, "load expects a library name, such as geometry2d or vector3d").value
@@ -357,20 +610,41 @@ class Parser:
                     break
                 self.advance()
         self.expect(TokenType.RPAREN)
-        # `def` is an ordinary computational function. `spldef` is a spell
-        # definition; its only current parameterised form selects a base element.
+        # `def` is an ordinary computational function. The contextual `spell`
+        # declaration is the v2 spelling; `spldef` remains a legacy token alias.
         if is_spell and params and params != ["element"]:
             raise SyntaxErrorML(
-                "spell definitions currently accept no parameters or one element selector: spldef name(element):",
+                "spell definitions accept no parameters or one element selector: use spell name(element):",
                 self.filename, self.current.line,
             )
         if is_spell and params == ["element"] and defaults:
             raise SyntaxErrorML("the spell element selector cannot have a default value", self.filename, self.current.line)
         if self.allow_library_parameters and is_spell:
-            raise SyntaxErrorML("library modules may export ordinary def functions, not spldef spells", self.filename, self.current.line)
+            raise SyntaxErrorML("library modules may export ordinary def functions, not spell definitions", self.filename, self.current.line)
         library_function = self.allow_library_parameters
         body = self.parse_block()
+        if is_spell and self._contains_target_context(body):
+            raise SyntaxErrorML(
+                "target selection belongs outside a spell; use `tgset(target): release(spell)` around the cast",
+                self.filename, self.locations.get(id(body), (self.filename, self.current.line, 1))[1],
+            )
         return FunctionDef(name, params, body, defaults, library_function, is_spell)
+
+    @staticmethod
+    def _contains_target_context(value):
+        """Find target-selection statements nested anywhere in a parsed spell body."""
+        from dataclasses import fields, is_dataclass
+        if isinstance(value, TargetContext):
+            return True
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            return False
+        if isinstance(value, list):
+            return any(Parser._contains_target_context(item) for item in value)
+        if isinstance(value, tuple):
+            return any(Parser._contains_target_context(item) for item in value)
+        if is_dataclass(value):
+            return any(Parser._contains_target_context(getattr(value, item.name)) for item in fields(value))
+        return False
 
     def parse_incant(self):
         self.advance()
@@ -440,6 +714,39 @@ class Parser:
             self.skip_newlines()
         self.expect(TokenType.DEDENT)
         return TargetSet(name, fields)
+
+    def parse_weave_mana(self):
+        """Parse `orb = weave mana` and its optional indented options block."""
+        name = self.expect(TokenType.IDENT, "woven construct needs a variable name").value
+        self.expect(TokenType.EQ)
+        self.expect(TokenType.KW_WEAVE)
+        selector = self.expect(TokenType.IDENT, "write `weave mana`, followed by optional construct settings")
+        if selector.value != "mana":
+            raise SyntaxErrorML("weave currently accepts only `mana`", self.filename, selector.line, selector.column)
+
+        fields: list[tuple[str, object]] = []
+        seen: set[str] = set()
+        has_block = self.check(TokenType.COLON)
+        if has_block:
+            self.advance()
+        self.expect(TokenType.NEWLINE)
+        if has_block:
+            self.expect(TokenType.INDENT, "expected indented settings after `weave mana:`")
+            self.skip_newlines()
+            while not self.check(TokenType.DEDENT, TokenType.EOF):
+                field_token = self.expect(TokenType.IDENT, "construct settings must use names such as shape, radius, energy, position, collidable, or anchored")
+                field_name = field_token.value
+                if field_name in seen:
+                    raise SyntaxErrorML(f"construct setting '{field_name}' is defined more than once", self.filename, field_token.line, field_token.column)
+                seen.add(field_name)
+                self.expect(TokenType.EQ, "construct settings must use '='")
+                value = self.parse_expression()
+                self.validate_value_expression(value, "construct setting")
+                self.expect(TokenType.NEWLINE)
+                fields.append((field_name, value))
+                self.skip_newlines()
+            self.expect(TokenType.DEDENT)
+        return WeaveMana(name, fields)
 
     def parse_if(self):
         branches = []
@@ -752,6 +1059,6 @@ class Parser:
         elif t.type == TokenType.IDENT:
             message = f"'{t.value}' is not identified"
         else:
-            message = f"unexpected {self._unexpected_token_message(TokenType.EOF).removeprefix('expected the end of the file, found ')}"
+            message = f"unexpected {self._unexpected_token_message(TokenType.EOF).removeprefix('expected the end of the file, found ').replace('the end of the line', 'end of line').replace('the end of the file', 'end of file')}"
         raise SyntaxErrorML(message, self.filename, t.line, t.column)
 

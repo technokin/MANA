@@ -1,0 +1,9 @@
+# Life is a specialised elemental entry, not a fifth fundamental element.
+load planes
+planes.invoke("Life")
+
+bloom = create Life
+shape(bloom, spiral)
+show "Life construct:", bloom
+show "Shape:", bloom.shape
+show "Element domain:", has_domain(bloom, "vitality")

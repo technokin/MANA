@@ -2,7 +2,7 @@
 
 **Page kind:** Tutorial  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Audience:** beginners learning to write and test MANA spells
 
 MANA is a standalone language for programmable magic. Source files use `.mana` and follow MANA’s own defined grammar and runtime rules.
@@ -31,12 +31,12 @@ Expected output:
 
 A direct ordinary-function call cannot create world objects or otherwise mutate the simulated world. This keeps helper calculations predictable.
 
-### Spell definitions: `spldef`
+### Spell definitions: `spell` (legacy alias: `spldef`)
 
-Use `spldef` for code that should run through `post` or `release`. A spell takes no parameters, or one `element` selector for a base-element template.
+Use `spell` for code that runs through `appraise` or `cast`. The older `post(...)` and `release(...)` execution forms remain supported. It uses the same indentation and colon block style as the rest of MANA, not curly braces. A spell takes no parameters, or one `element` selector for a base-element template. Existing programs using `spldef` continue to work unchanged.
 
 ```mana
-spldef warm_stone():
+spell warm_stone():
     stone = create Earth
     heat(stone, 100 K)
     incant stone
@@ -62,14 +62,14 @@ Expected output:
 [POST warm_stone] stone.temp: 293.15 K -> 393.15 K (heat)
 [POST warm_stone] stone.thermal_energy: 293150 J -> 393150 J (heat)
 [POST warm_stone] spell completed
-[POST warm_stone] mana cost: 100000 mana
+[POST warm_stone] mana appraisal: 100000 mana
 [POST warm_stone] created: stone (Earth, 1 kg)
 ```
 
 A parameterized elemental template looks like this:
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -109,7 +109,7 @@ Expected output:
 [POST fire_ball] ball.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(300, 0, 0) [kg*m/s] (velocity)
 [POST fire_ball] ball.vel: Vector3(0, 0, 0) [m/s] -> Vector3(300, 0, 0) [m/s] (velocity)
 [POST fire_ball] spell completed
-[POST fire_ball] mana cost: 545000 mana
+[POST fire_ball] mana appraisal: 545000 mana
 [POST fire_ball] created: ball (Fire, 1 kg)
 ```
 
@@ -124,7 +124,7 @@ The only currently supported spell-template parameter is `element`, selecting `F
 Calling an element template with a base element configures a spell instance. It does **not** execute the spell body:
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -152,7 +152,7 @@ The argument to `e_ball(...)` must be exactly one of `Fire`, `Water`, `Earth`, o
 Use this syntax:
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -189,7 +189,7 @@ See [Spell Templates and Tuning](../language/SPELL_TEMPLATES_AND_TUNING.md) for 
 ## 4. Previewing and firing
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -230,7 +230,7 @@ Expected output:
 [POST fire_ball] ball.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(300, 0, 0) [kg*m/s] (velocity)
 [POST fire_ball] ball.vel: Vector3(0, 0, 0) [m/s] -> Vector3(300, 0, 0) [m/s] (velocity)
 [POST fire_ball] spell completed
-[POST fire_ball] mana cost: 545000 mana
+[POST fire_ball] mana appraisal: 545000 mana
 [POST fire_ball] created: ball (Fire, 1 kg)
 ```
 
@@ -242,7 +242,7 @@ Expected output:
 | `incant value` | Ends the current definition and supplies a value to its caller. `incant` is a statement that exits the current definition. |
 | `skip` | Does nothing. Useful as a placeholder for an unfinished block. |
 
-`post` and `release` each accept exactly one named spell or configured spell instance. They are standalone commands: do not assign them to variables or place them inside another expression. Their detailed execution record is available to the host runtime and tests, not as a MANA-source return value.
+`post` accepts a named spell or configured instance and an optional presentation: `post(spell)` and `post(spell, text)` print the text report, while `post(spell, visual)` records the non-committing preview for the optional Visualiser. The Visualiser appears only when you click its Visual button or open a recording. `release` accepts only the spell name and commits successful world changes. These are standalone commands: do not assign them to variables or place them inside another expression. Their detailed execution record is available to the host runtime and tests, not as a MANA-source return value.
 
 `show` is ordinary printing. For example, `show stone.temp` prints the temperature; it does not provide the step-by-step report that `post` provides.
 
@@ -339,7 +339,7 @@ The primary world engine is always the x-y plane (`z = 0`) and does not require 
 MANA syntax decisions for this release:
 
 - `def` is for ordinary computational helper functions.
-- `spldef` is for spells executed through `post(...)` or `release(...)`.
+- `spell` declares spells executed through `appraise` or `cast`; `spldef` remains a compatible legacy alias, as do `post(...)` and `release(...)`.
 - `tgset` creates/selects a target context; it is not a definition keyword.
 - `load` loads a library namespace; `skip` is the empty/no-operation statement.
 - `span(...)` produces an integer iteration span; `length(...)` counts supported sequences.
@@ -378,7 +378,7 @@ MANA supports `if`, `elif`, `else`, `while`, `for`, `simul:`, `wait`, `after`, `
 Use `skip` when a block is intentionally empty while you are developing it:
 
 ```mana
-spldef future_spell():
+spell future_spell():
     skip
 ```
 
@@ -418,9 +418,76 @@ Use this table when translating familiar concepts into MANA. It is a comparison 
 | `len` | `length` |
 | `return` | `incant value` |
 | `print` | `show` |
-| `def` | `def` for calculations; `spldef` for spells |
+| `def` | `def` for calculations; `spell` for spells (`spldef` is a backward-compatible alias) |
 | `True`, `False` | `true`, `false` |
 | `if`, `elif`, `else`, `while`, `for`, `in`, `and`, `or`, `not` | Same spellings in MANA |
 | `None`, `lambda`, `class`, `try`, `except`, `with`, `yield`, `raise`, `global`, `del`, `assert`, `break`, `continue` | Not identified as MANA constructs |
 
 The [Language Specification](../language/LANGUAGE_SPEC.md) contains the full comparison table and grammar rules. Any word not in MANA's keyword table is not identified as a keyword; non-reserved names can still be user-defined.
+
+
+## Native local weather and conjuration
+
+Weather can be written as a language statement inside a spell instead of requiring every spell to call the weather API explicitly:
+
+```mana
+spell summer_rain():
+    weather rain, intensity=0.85, temperature=290 K, duration=45 s, radius=75 m
+    blade = conjure steel, mass=3 kg, shape=ring, anchored=false
+    incant blade
+
+appraise summer_rain
+cast summer_rain
+```
+
+Expected output:
+
+```text
+[APPRAISAL summer_rain] inputs: no parameters
+[APPRAISAL summer_rain] local weather configured: rain (radius 75 m, intensity 0.85)
+[APPRAISAL summer_rain] energy input: 879450 J (conjure steel; matter manifestation)
+[APPRAISAL summer_rain] created Steel (Compound, 3 kg; conjured material steel)
+[APPRAISAL summer_rain] executed conjure('steel')
+[APPRAISAL summer_rain] spell completed
+[APPRAISAL summer_rain] mana appraisal: 0.3 mana
+[APPRAISAL summer_rain] created: Steel (Compound, 3 kg)
+[CAST summer_rain] spell committed
+[CAST summer_rain] mana appraisal: 0.3 mana
+```
+
+A weather statement without `radius` configures the global climate. Supplying `radius=75 m` creates local weather around the caster's position; objects outside that radius are not affected by that zone. Optional `center=...` targets an explicit 2D world position or positioned object. Zones are recorded as world state and are rolled back by `appraise` (or legacy `post`), then committed by `cast` (or legacy `release`).
+
+The bare-material conjure form is equivalent to a normal built-in call, but is easier to read: `anvil = conjure iron, mass=40 kg, shape=sphere`. Options include `mass`, `position`, `shape`, `name`, `temperature`, `density`, `state`, `velocity`, `anchored`, `collidable`, `restitution`, `friction`, and `drag_coefficient`. Material creation is appraised and recorded by MANA; mana usage is not a spendable personal casting pool.
+
+
+## Native summoning
+
+Summoning uses an existing being record; conjuring creates physical matter. Open the required pathway, then describe the summon directly inside a spell:
+
+```mana
+load planes
+planes.open_path("Wild Realm", "Mortal Plane")
+
+spell call_griffin():
+    griffin = summon "Griffin" from "Wild Realm"
+    incant griffin
+
+appraise call_griffin
+cast call_griffin
+```
+
+Expected output:
+
+```text
+[APPRAISAL call_griffin] inputs: no parameters
+[APPRAISAL call_griffin] planar energy transfer: 293150 J (Wild Realm -> Mortal Plane)
+[APPRAISAL call_griffin] created Griffin (Being, 1 kg; summoned from Wild Realm)
+[APPRAISAL call_griffin] executed summon('Griffin', 'Wild Realm')
+[APPRAISAL call_griffin] spell completed
+[APPRAISAL call_griffin] mana appraisal: 0 mana
+[APPRAISAL call_griffin] created: Griffin (Being, 1 kg)
+[CAST call_griffin] spell committed
+[CAST call_griffin] mana appraisal: 0 mana
+```
+
+Use `summon (chosen_being) from (chosen_plane)` for computed names. Optional `position=...` sets the arrival position and `requirements=[...]` supplies conditions declared by the being record. The route must be open. `appraise` is a non-committing record; `cast` commits a successful result.

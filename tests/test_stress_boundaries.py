@@ -212,3 +212,23 @@ def test_rejected_targeted_velocity_does_not_mutate_aim_direction():
     finally:
         runtime._target_context_stack.pop()
     assert stone.properties["direction"] == original_direction
+
+
+def test_release_benchmark_reaches_its_expected_object_count():
+    """The benchmark must not silently time a release rejected by safety limits."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    completed = subprocess.run(
+        [sys.executable, str(root / "tools" / "benchmark_many_creates.py")],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+    assert "9,999-object release:" in completed.stdout
+    assert "active objects: 9999" in completed.stdout
+    assert "[RELEASE" not in completed.stdout

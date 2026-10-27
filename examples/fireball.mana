@@ -1,6 +1,6 @@
 # One definition creates a configured spell for whichever base element is selected.
 # Calling e_ball(Fire) configures a spell; it does not execute the spell body.
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)

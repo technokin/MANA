@@ -1,14 +1,18 @@
 import re
+from pathlib import Path
+
 import pytest
-from magiclang.errors import MagicErrorML, PhysicsErrorML, RuntimeErrorML
+from magiclang.errors import MagicErrorML, RuntimeErrorML
 from magiclang.lexer import Lexer
 from magiclang.parser import Parser
 from magiclang.runtime import Runtime
 from magiclang.units import Quantity, KG, M3, DENSITY
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 def run(source):
-    rt=Runtime(project_root=ROOT if "ROOT" in globals() else None)
+    rt = Runtime(project_root=ROOT)
     if re.search(r"(?<!\.)\bdirection\s*\(", source):
         if not source.lstrip().startswith('load geometry2d'):
             source = 'load geometry2d\n' + source
@@ -66,16 +70,22 @@ def test_target_context_release_auto_aims_and_commits_hit():
     npc = rt.global_env.get("npc")
     assert npc.properties["hp"] < 250
     fire = next(obj for obj in rt.active_objects if obj.element == "Fire")
-    assert fire.properties["vel"].x > 0
+    # Combat target profiles are fixed by default: the projectile rebounds, while the target stays put.
+    assert fire.properties["vel"].x < 0
     assert fire.properties["vel"].y == pytest.approx(0)
+    assert npc.properties["pos"] == npc.properties["anchor_pos"]
+    assert npc.properties["vel"].magnitude() == pytest.approx(0)
     assert any(item["object_a"] == "npc" or item["object_b"] == "npc" for item in rt.last_collisions)
 
 
 def test_target_context_aims_at_actual_2d_position_not_positive_x():
     rt = run('npc = tgset:\n    hp = 250\n    max_hp = 250\n    pos = direction(0, 1) * 10 m\n\nspldef arrow():\n    rock = create Earth\n    velocity(rock, 100 m/s)\n    incant rock\n\ntgset(npc):\n    release(arrow)\n')
     rock = next(obj for obj in rt.active_objects if obj.element == "Earth" and obj is not rt.global_env.get("npc"))
-    assert rock.properties["vel"].y > 0
+    assert rock.properties["vel"].y < 0
     assert abs(rock.properties["vel"].x) < 1e-9
+    npc = rt.global_env.get("npc")
+    assert npc.properties["pos"] == npc.properties["anchor_pos"]
+    assert npc.properties["vel"].magnitude() == pytest.approx(0)
 
 
 def test_anchor_blocks_motion_until_unanchor():

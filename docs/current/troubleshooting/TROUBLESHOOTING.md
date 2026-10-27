@@ -2,7 +2,7 @@
 
 **Page kind:** How-to  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 This page lists common mistakes and how to correct them. It describes the current prototype; it does not promise behaviour that is not implemented.
 
 ## 1. A template call runs no magic
@@ -10,7 +10,7 @@ This page lists common mistakes and how to correct them. It describes the curren
 This is expected:
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     velocity(ball, 300 m/s)
@@ -32,7 +32,7 @@ Expected output:
 Valid:
 
 ```mana
-spldef elemental_ball(element):
+spell elemental_ball(element):
     ball = create element
     velocity(ball, 300 m/s)
     incant ball
@@ -47,7 +47,7 @@ Expected output:
 **Expected failure (intentionally invalid):** this demonstrates the unsupported two-parameter spell-template syntax.
 
 ```mana
-spldef elemental_ball(element, speed):
+spell elemental_ball(element, speed):
     skip
 ```
 
@@ -58,7 +58,7 @@ Put settings such as velocity, shape, temperature change, and duration in the de
 `tune` must match an operation call that already exists in the definition, including the internal target variable.
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     velocity(ball, 300 m/s)
     incant ball
@@ -86,7 +86,7 @@ They are execution commands, not value-producing expressions in MANA source.
 Correct, standalone example:
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     velocity(ball, 300 m/s)
     incant ball
@@ -114,7 +114,7 @@ Expected output:
 [POST fire_ball] ball.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(300, 0, 0) [kg*m/s] (velocity)
 [POST fire_ball] ball.vel: Vector3(0, 0, 0) [m/s] -> Vector3(300, 0, 0) [m/s] (velocity)
 [POST fire_ball] spell completed
-[POST fire_ball] mana cost: 45000.1 mana
+[POST fire_ball] mana appraisal: 45000.1 mana
 [POST fire_ball] created: ball (Fire, 1 kg)
 ```
 
@@ -128,10 +128,10 @@ result = release(fire_ball)
 
 ## 6. `show` does not display a spell trace
 
-`show` prints its arguments. Use `post(spell)` when you want the step-by-step preview trace.
+`show` prints its arguments. Use `post(spell)` for the step-by-step text preview, or `post(spell, visual)` to record the non-committing preview for playback. The Visualiser opens only when you click its Visual button or open a recording.
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     velocity(ball, 300 m/s)
     incant ball
@@ -160,7 +160,7 @@ Expected output:
 [POST fire_ball] ball.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(300, 0, 0) [kg*m/s] (velocity)
 [POST fire_ball] ball.vel: Vector3(0, 0, 0) [m/s] -> Vector3(300, 0, 0) [m/s] (velocity)
 [POST fire_ball] spell completed
-[POST fire_ball] mana cost: 45000.1 mana
+[POST fire_ball] mana appraisal: 45000.1 mana
 [POST fire_ball] created: ball (Fire, 1 kg)
 ```
 
@@ -189,4 +189,4 @@ If `python` does not resolve on Windows, use the installed Python executable's f
 
 ## 10. VS Code extension is not the interpreter
 
-Install `installers/vscode/mana-language-1.0.0.vsix` through **Extensions → Install from VSIX**. The extension supplies editor support; run MANA using the command in Section 9 or the project task. The root `.vscode/tasks.json` is workspace configuration, not part of the VSIX extension.
+Install `installers/vscode/mana-language-2.0.0.vsix` through **Extensions → Install from VSIX**. The extension supplies editor support; run MANA using the command in Section 9 or the project task. The root `.vscode/tasks.json` is workspace configuration, not part of the VSIX extension.

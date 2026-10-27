@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 **Status:** Current terminology reference
 
 This glossary keeps words that sound similar from being used interchangeably. Entries marked **design** describe the intended model; entries marked **implemented** describe current code where relevant.
@@ -14,12 +14,15 @@ This glossary keeps words that sound similar from being used interchangeably. En
 | **MANA** | The language, runtime, and world-engine project. |
 | **`.mana` program** | Source code parsed by MANA's lexer, parser, and runtime. It is not a Python file. |
 | **`def`** | An ordinary function definition for reusable calculations and helpers. It must not silently mutate the world when called directly. |
-| **`spldef`** | A spell definition for world-changing behaviour. Execute it with `post(...)` or `release(...)`. |
+| **`spell`** | The primary declaration for reusable world-changing spell behaviour. Execute it with `appraise` or `cast`; legacy `post(...)` and `release(...)` are also supported. |
+| **`spldef`** | Backward-compatible legacy alias for `spell`. Existing programs remain supported. |
 | **`incant`** | The MANA statement used to supply a value from a definition and exit that definition. It exits the current definition and can provide the value supplied to the caller. |
 | **`tgset`** | A target-profile/context construct. Target choice is performed outside the spell body. It is also used to define named material/target records. |
 | **`load`** | Loads a built-in or packaged library namespace. It loads a built-in or packaged MANA library into the current program. |
-| **`post`** | Runs a spell as a trial and restores world state after collecting the execution report. |
-| **`release`** | Runs a spell and commits its world-state changes. |
+| **`appraise`** | Runs a spell as a non-committing trial and records its report. |
+| **`post`** | Backward-compatible legacy form of `appraise`. |
+| **`cast`** | Runs a spell and commits its world-state changes. |
+| **`release`** | Backward-compatible legacy form of `cast`. |
 | **Runtime** | The component that evaluates parsed MANA statements and expressions and applies their semantics. |
 | **World Engine** | Runtime world state plus physical calculations, motion, collision handling, and energy bookkeeping. The current simulated world is 2D. |
 
@@ -28,7 +31,7 @@ This glossary keeps words that sound similar from being used interchangeably. En
 | Term | Meaning |
 |---|---|
 | **Mana** | The underlying magical medium in the design. It is not one of the four base elements and is not a finite stored player resource. |
-| **`Mana`** | Uppercase type selector used where the language creates pure-mana objects. |
+| **`Mana`** | The concept of pure mana. In source code, use `weave mana` to shape a construct; `Mana` is no longer a directly creatable type. |
 | **`mana`** | Lowercase built-in namespace for pure-mana effects and universal object controls. |
 | **Mana-equivalent readout** | A reported amount associated with an operation. It is not a remaining mana balance that can run out. |
 | **Physical energy** | Tracked energy of world objects and transfers: thermal, kinetic, released, and other accounted contributions. |
@@ -38,6 +41,25 @@ This glossary keeps words that sound similar from being used interchangeably. En
 | **Derived/specialised entry** | A catalogue entry such as Lightning, Sound, Metal, or Nature. It is not a fifth base element. |
 | **Invocation** | Permission to use a registered non-base elemental/special channel. Invocation is not a resource payment. |
 | **Null versus Void** | Null is a worldbuilding concept of absence/opposition to mana. `Void` is the current code/plane label. They are not declared exact synonyms. |
+
+## Magic and world effects
+
+| Term | Meaning |
+|---|---|
+| **Spell intent** | The desired outcome a spell is composed to attempt; intent does not guarantee success. |
+| **Target profile** | A named/contextual target description used to identify which entity an operation should affect. |
+| **Conjuration** | Introducing a new physical material object with supported world state. It does not summon a being. |
+| **Transmutation** | Changing the material composition of an existing eligible object. |
+| **Shaping** | Changing supported geometry without declaring that an object has become a living creature. |
+| **Transfiguration** | Changing the supported represented form of a living entity or eligible conjured matter. |
+| **Environment state** | World-level settings such as precipitation, wind, temperature, humidity, fog, and cloud cover. Weather controls configure this state; weather is not a required catalogue of named spells. |
+| **Projectile** | A moving object/effect with a trajectory and possible contact; a visual trail is not itself a collision. |
+| **Beam** | A directed effect with a defined path and lifetime. Appearance alone does not determine hit semantics. |
+| **Field** | An effect whose influence is defined over an area or while conditions hold. It needs explicit scope and expiry rules. |
+| **Ward** | A protective rule/state whose blocked effect classes, strength/uses, and lifetime must be defined. The label alone implies no universal immunity. |
+| **Anchored target** | A target profile fixed in the current world by default. It must be explicitly configured for movement where supported. |
+| **Physics contact** | A collision/contact event detected and recorded by the world engine, rather than guessed from rendered overlap. |
+| **Recording event** | A structured report about program/world activity used by tools such as the Visualiser. It is observation data, not a public game API or independent authority. |
 
 ## Cosmology and beings
 

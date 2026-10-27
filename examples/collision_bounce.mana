@@ -1,0 +1,15 @@
+# Two moving objects can make contact during one physics step.
+load geometry2d
+
+left_stone = create Earth
+right_stone = create Water
+left_stone.pos = geometry2d.point(-0.5 m, 0 m)
+right_stone.pos = geometry2d.point(0.5 m, 0 m)
+left_stone.collision_radius = 0.3 m
+right_stone.collision_radius = 0.3 m
+velocity(left_stone, geometry2d.direction(1, 0) * 10 m/s)
+velocity(right_stone, geometry2d.direction(-1, 0) * 10 m/s)
+advance_time(0.05 s, timestep=0.005 s)
+show "Left object position:", left_stone.pos
+show "Right object position:", right_stone.pos
+show "Recent contacts:", last_collisions()

@@ -1,0 +1,14 @@
+# Run this file with the VS Code Visual button to watch the preview.
+# post(..., visual) never commits the trial's world changes.
+load geometry2d
+
+spell blue_flare():
+    flare = weave mana:
+        shape = disc
+        radius = 0.6 m
+        energy = 1600 J
+        position = geometry2d.point(3 m, 0 m)
+    mana.burst(energy = 900 J, radius = 1.5 m, position = geometry2d.point(3 m, 0 m))
+    incant flare
+
+post(blue_flare, visual)

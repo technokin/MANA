@@ -1,0 +1,11 @@
+# vector3d calculations are three-dimensional maths, not 3D world physics.
+load vector3d
+
+start = vector3d.position(1 m, 2 m, 3 m)
+finish = vector3d.position(4 m, 6 m, 3 m)
+turned = vector3d.rotate(start, 0, 0, 0.25)
+show "Planning distance:", vector3d.distance(start, finish)
+show "Midpoint:", vector3d.midpoint(start, finish)
+show "Quarterway point:", vector3d.lerp(start, finish, 0.25)
+show "Rotated planning vector:", turned
+show "Planar projection:", vector3d.planar(finish)

@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 A being is data describing an entity and the place it belongs to. A being record is not itself an active, moving world object. `summoning` uses a record to instantiate an entity in the Mortal Plane. After it exists as a world object, ordinary MANA movement, physical operations, and universal mana controls operate on it.
 
@@ -118,7 +118,7 @@ A named/tamed instance is useful when a program needs to send a being away and l
 
 Groups and armies should be composable program behaviour. A user can loop over records or create several constructed/reanimated entities, then apply ordinary controls or release multiple spells. This does not require a separate language keyword or a hardcoded function for every formation. Large groups are subject to runtime loop/object-count/performance constraints.
 
-A cross-plane army of defined beings is different from a necromantic skeleton-summoning spell. `summoning.bring` instantiates beings defined in a home-plane data source. A spell that creates a skeleton-like construct from Necro energy and ordinary mana constructs is not required to have a pre-existing creature record or pass through `summoning`; it is written as a `spldef` using available general primitives.
+A cross-plane army of defined beings is different from a necromantic skeleton-summoning spell. `summoning.bring` instantiates beings defined in a home-plane data source. A spell that creates a skeleton-like construct from Necro energy and ordinary mana constructs is not required to have a pre-existing creature record or pass through `summoning`; it is written as a `spell` using available general primitives.
 
 ## 7. Where being records live
 

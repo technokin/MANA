@@ -6,7 +6,7 @@ This page collects current limitations in one place. A listed limitation is not 
 
 | Limitation | Current behaviour | Related documentation |
 |---|---|---|
-| No 3D world simulation | The world solver advances objects and resolves collisions in 2D. `vector3d` provides calculations only. | [World Engine: 2D and 3D](WORLD_ENGINE_2D_3D.md), [3D Vector Calculations](../libraries/VECTOR3D_LIBRARY.md) |
+| Deliberate 2D world scope | MANA 2.0 keeps world movement and collisions in 2D. `vector3d` provides standalone calculations; a 3D world is not a v2 target. | [World Engine: 2D and 3D](WORLD_ENGINE_2D_3D.md), [3D Vector Calculations](../libraries/VECTOR3D_LIBRARY.md) |
 | Beings do not autonomously fight | Being records and combat-like statistics exist, but there is no complete combat AI or tactical behaviour system. | [Beings and Summoning](BEINGS_AND_SUMMONING.md), [Creature Catalogue](CREATURE_CATALOGUE.md) |
 | Plane interiors are not fully simulated | Plane metadata, regions, pathways, and energy-transfer functions exist; every plane is not an independently simulated world. | [Planes and Pathways](PLANES_AND_PATHWAYS.md), [Plane Catalogue](PLANE_CATALOGUE.md) |
 | Arbitrary interplane travel is limited | Current being transfer follows implemented routes and destinations; it is not unrestricted movement to any imaginable plane. | [Summoning Library](../libraries/SUMMONING_LIBRARY.md) |

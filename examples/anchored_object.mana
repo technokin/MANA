@@ -1,0 +1,9 @@
+# An anchored object cannot be moved until it is unanchored.
+stone = create Earth
+stone.collision_radius = 0.5 m
+anchor(stone)
+show "Anchored object:", stone
+show "Anchored:", stone.anchored
+unanchor(stone)
+move(stone, 2 m)
+show "After unanchoring and moving:", stone.pos

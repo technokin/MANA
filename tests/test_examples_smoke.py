@@ -30,7 +30,7 @@ def invoke_cli(path: Path, monkeypatch) -> tuple[int, str, str]:
 
 def test_all_public_examples_parse_and_run():
     examples = sorted((ROOT / "examples").glob("*.mana"))
-    assert len(examples) == 15
+    assert len(examples) == 67
     failures = []
     for example in examples:
         stdout, stderr = StringIO(), StringIO()
@@ -71,7 +71,7 @@ def test_collision_example_applies_impact_damage():
 
 
 def test_failed_release_prints_error_and_does_not_crash_runner(monkeypatch):
-    status, stdout, stderr = invoke_cli(ROOT / "tests" / "release_failure_test.mana", monkeypatch)
+    status, stdout, stderr = invoke_cli(ROOT / "tests" / "fixtures" / "release_failure_test.mana", monkeypatch)
     assert status == 0, stderr
     assert "[RELEASE impossible_spell] ERROR:" in stdout
     assert "Traceback" not in stderr

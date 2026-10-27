@@ -1,0 +1,13 @@
+# mana.toward() is independent of the Air element.
+load geometry2d
+
+stone = create Earth
+mana.toward(
+    stone,
+    destination = geometry2d.point(10 m, 0 m),
+    strength = 60 N,
+    duration = 0.5 s
+)
+advance_time(0.2 s, timestep=0.01 s)
+show "Stone position:", stone.pos
+show "Stone velocity:", stone.vel

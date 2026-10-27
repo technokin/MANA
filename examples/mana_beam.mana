@@ -1,0 +1,24 @@
+# The beam is evaluated by the runtime; the Visualiser only draws the result.
+load geometry2d
+
+practice_target = tgset:
+    hp = 100
+    max_hp = 100
+    defence = 0
+    pos = geometry2d.point(12 m, 0 m)
+    collision_radius = 0.4 m
+
+spell focused_beam():
+    result = mana.emit(
+        power = 800 W,
+        duration = 0.5 s,
+        range = 5 m,
+        beam_radius = 0.5 m,
+        position = geometry2d.point(10 m, 0 m),
+        direction = geometry2d.direction(1, 0)
+    )
+    incant result
+
+tgset(practice_target):
+    release(focused_beam)
+show "Beam target temperature:", practice_target.temp

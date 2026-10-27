@@ -61,7 +61,7 @@ Update `exports` in the manifest to list only the names that users are meant to 
 
 Only top-level function definitions, `load` statements, and `skip` are accepted in the entry file. This prevents a library from running arbitrary top-level spell code merely because it was imported. Export names must exist as top-level definitions.
 
-Exports are accessed through the library namespace, so a library may deliberately export a name such as `force` or `distance` without replacing MANA's global `force` or another library's `distance`. Calls remain distinct: `force(stone)` uses the global world operation, while `my_library.force(value)` calls the namespaced helper. Language keywords such as `load`, `skip`, and `spldef` cannot be used as library names or exported function names. A word absent from the MANA keyword table is not identified as a keyword.
+Exports are accessed through the library namespace, so a library may deliberately export a name such as `force` or `distance` without replacing MANA's global `force` or another library's `distance`. Calls remain distinct: `force(stone)` uses the global world operation, while `my_library.force(value)` calls the namespaced helper. Reserved forms such as `load`, `skip`, and legacy `spldef` cannot be used as library names or exported function names. The preferred `spell` declaration is contextual, so `spell` remains a legal ordinary identifier when it is not followed by a declaration-shaped argument list. A word absent from the MANA keyword table is not identified as a keyword.
 
 ## 3. Validate and build
 

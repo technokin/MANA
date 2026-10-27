@@ -20,6 +20,7 @@ CONTENT_TYPES = '''<?xml version="1.0" encoding="utf-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="vsixmanifest" ContentType="text/xml" />
   <Default Extension="json" ContentType="application/json" />
+  <Default Extension="js" ContentType="application/javascript" />
   <Default Extension="md" ContentType="text/markdown" />
   <Default Extension="txt" ContentType="text/plain" />
   <Default Extension="xml" ContentType="text/xml" />
@@ -32,8 +33,8 @@ MANIFEST_TEMPLATE = '''<?xml version="1.0" encoding="utf-8"?>
   <Metadata>
     <Identity Language="en-US" Id="mana-language" Version="__VERSION__" Publisher="mana-language" />
     <DisplayName>MANA Language Support</DisplayName>
-    <Description xml:space="preserve">Syntax highlighting, comments, indentation, and snippets for MANA .mana source files.</Description>
-    <Tags>programming languages;mana;magic</Tags>
+    <Description xml:space="preserve">Write and run MANA .mana programs with syntax colours, contextual inline completions, periodic-table material suggestions and a focused Run action. Pair with MANA Magic Visualiser for the second editor toolbar action.</Description>
+    <Tags>programming languages;mana;magic;inline completions;world engine;periodic table</Tags>
     <Categories>Programming Languages</Categories>
     <GalleryFlags>Public</GalleryFlags>
     <Properties>
@@ -45,8 +46,9 @@ MANIFEST_TEMPLATE = '''<?xml version="1.0" encoding="utf-8"?>
   <Dependencies />
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
-    <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" />
-    <Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" />
+    <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/images/mana-icon.png" />
     <Asset Type="Microsoft.VisualStudio.Services.VSIXPackage" Path="extension.vsixmanifest" Addressable="true" />
   </Assets>
 </PackageManifest>
@@ -66,9 +68,9 @@ def validate_icon(path: Path) -> None:
 def build(check_only: bool = False) -> Path:
     required = [
         EXTENSION / "package.json",
+        EXTENSION / "extension.js",
         EXTENSION / "language-configuration.json",
         EXTENSION / "syntaxes" / "mana.tmLanguage.json",
-        EXTENSION / "snippets" / "mana.json",
         EXTENSION / "README.md",
         EXTENSION / "LICENSE.txt",
     ]
@@ -89,6 +91,14 @@ def build(check_only: bool = False) -> Path:
     else:
         package.pop("icon", None)
 
+    readme_text = (EXTENSION / "README.md").read_text(encoding="utf-8")
+    if len(readme_text.strip()) < 500:
+        raise ValueError("MANA Language Support README is too short to provide useful extension details")
+    if "## Features" not in readme_text or "## World-engine language helpers" not in readme_text or "## Install from VSIX" not in readme_text:
+        raise ValueError("MANA Language Support README is missing its feature, world-engine, or installation sections")
+    if 'Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true"' not in MANIFEST_TEMPLATE:
+        raise ValueError("MANA Language Support manifest must publish extension/README.md as its Details asset")
+
     if check_only:
         if not OUTPUT.is_file():
             raise FileNotFoundError(f"VSIX is missing: {OUTPUT.relative_to(ROOT)}")
@@ -100,8 +110,17 @@ def build(check_only: bool = False) -> Path:
                 raise RuntimeError("VSIX package version mismatch")
             if bool(built.get("icon")) != has_icon:
                 raise RuntimeError("VSIX icon metadata does not match the available branding asset")
-            if has_icon and f"extension/{ICON_PACKAGE_PATH}" not in archive.namelist():
+            names = set(archive.namelist())
+            if has_icon and f"extension/{ICON_PACKAGE_PATH}" not in names:
                 raise RuntimeError("VSIX is missing the configured icon image")
+            if "extension/README.md" not in names:
+                raise RuntimeError("VSIX is missing extension/README.md for the Details page")
+            readme = archive.read("extension/README.md").decode("utf-8")
+            manifest_text = archive.read("extension.vsixmanifest").decode("utf-8")
+            if 'Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true"' not in manifest_text:
+                raise RuntimeError("VSIX Details asset must point to extension/README.md")
+            if "## Features" not in readme or "## World-engine language helpers" not in readme or "## Install from VSIX" not in readme:
+                raise RuntimeError("VSIX README is missing its feature, world-engine, or installation sections")
         print(f"Verified {OUTPUT.relative_to(ROOT)}")
         return OUTPUT
 
@@ -114,6 +133,10 @@ def build(check_only: bool = False) -> Path:
             if not path.is_file():
                 continue
             relative = path.relative_to(EXTENSION)
+            # The project-level branding file is the canonical icon. Skip a
+            # source-tree copy here because the build writes it once below.
+            if relative.as_posix() == ICON_PACKAGE_PATH:
+                continue
             if relative.as_posix() == "package.json":
                 archive.writestr(
                     "extension/package.json",
@@ -132,8 +155,9 @@ def build(check_only: bool = False) -> Path:
             "[Content_Types].xml",
             "extension.vsixmanifest",
             "extension/package.json",
+            "extension/extension.js",
             "extension/syntaxes/mana.tmLanguage.json",
-            "extension/snippets/mana.json",
+            "extension/README.md",
         ):
             if required_name not in names:
                 raise RuntimeError(f"VSIX is missing {required_name}")
@@ -144,6 +168,12 @@ def build(check_only: bool = False) -> Path:
             raise RuntimeError("VSIX icon metadata does not match the available branding asset")
         if has_icon and f"extension/{ICON_PACKAGE_PATH}" not in names:
             raise RuntimeError("VSIX is missing the configured icon image")
+        readme = archive.read("extension/README.md").decode("utf-8")
+        manifest_text = archive.read("extension.vsixmanifest").decode("utf-8")
+        if 'Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true"' not in manifest_text:
+            raise RuntimeError("VSIX Details asset must point to extension/README.md")
+        if "## Features" not in readme or "## World-engine language helpers" not in readme or "## Install from VSIX" not in readme:
+            raise RuntimeError("VSIX README is missing its feature, world-engine, or installation sections")
     print(f"Built and verified {OUTPUT.relative_to(ROOT)} ({OUTPUT.stat().st_size} bytes)")
     return OUTPUT
 

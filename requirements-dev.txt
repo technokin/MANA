@@ -1,4 +1,7 @@
 # Optional maintainer/test tools; not required to run MANA programs.
+# Exact direct pins make CI changes deliberate; pip-audit reviews the resolved tree.
 -r requirements.txt
-pytest>=8
-ruff>=0.8
+pytest==9.1.1
+ruff==0.17.1
+pyflakes==4.0.3
+pip-audit==2.10.1

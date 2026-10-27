@@ -555,3 +555,94 @@ def test_unsupported_words_use_plain_not_identified_diagnostics():
             run_source(source, filename="unsupported_word.mana")
         assert f"'{word}' is not identified" in caught.value.message
         assert not any(token_name in caught.value.message for token_name in ("IDENT", "NEWLINE", "KW_FOR"))
+
+
+def test_unknown_name_hints_only_suggest_mana_words_and_documented_aliases():
+    for word, expected in (("range", "span"), ("len", "length"), ("True", "true"), ("False", "false")):
+        with pytest.raises(MagicLangError) as error:
+            run_source(f"answer = {word}\n", filename="hint.mana")
+        assert error.value.hint == f"Did you mean '{expected}'?"
+
+    for word in ("range", "try", "continue", "print", "break", "None"):
+        with pytest.raises(MagicLangError) as error:
+            run_source(f"answer = {word}\n", filename="python-word.mana")
+        if word != "range":
+            assert error.value.hint is None
+        else:
+            assert error.value.hint == "Did you mean 'span'?"
+
+    with pytest.raises(MagicLangError) as typo:
+        run_source("answer = heet\n", filename="typo.mana")
+    assert typo.value.hint == "Did you mean 'heat'?"
+
+
+def test_library_builder_syntax_error_says_unexpected_end_of_line(tmp_path, capsys):
+    from tools.library_builder import main as library_builder_main
+
+    folder = tmp_path / "broken_library"
+    folder.mkdir()
+    (folder / "mana-library.json").write_text(
+        json.dumps({"format": "manalib", "format_version": 1, "name": "broken_library",
+                    "version": "1.0.0", "description": "test", "entry": "main.mana",
+                    "exports": ["broken"]}), encoding="utf-8")
+    (folder / "main.mana").write_text("def broken(value):\n    incant value *\n", encoding="utf-8")
+    exit_code = library_builder_main(["validate", str(folder)])
+    output = capsys.readouterr().err
+    assert exit_code != 0
+    assert "unexpected end of line" in output
+    assert "unexpected the end of the line" not in output
+
+
+def test_language_grammar_highlights_geometry_libraries_and_weave():
+    project_root = Path(__file__).resolve().parents[1]
+    grammar_path = project_root / "tools" / "vscode-extension" / "syntaxes" / "mana.tmLanguage.json"
+    grammar = json.loads(grammar_path.read_text(encoding="utf-8"))
+    serialized = json.dumps(grammar)
+    assert "geometry2d" in serialized
+    assert "vector3d" in serialized
+    assert "weave" in serialized
+
+
+def test_ci_runs_lint_and_builds_both_extensions():
+    project_root = Path(__file__).resolve().parents[1]
+    workflow = (project_root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "python -m ruff check magiclang tests tools mana.py" in workflow
+    assert "python -m pyflakes magiclang" in workflow
+    assert "python tools/vscode/build_mana_vsix.py" in workflow
+    assert "python tools/vscode/build_mana_visualiser_vsix.py" in workflow
+
+
+def test_default_object_templates_do_not_share_mutable_state():
+    from magiclang.runtime import MagicObject
+
+    first = MagicObject("Earth")
+    second = MagicObject("Earth")
+    assert first.properties == second.properties
+    assert first.properties["stabilizers"] is not second.properties["stabilizers"]
+    assert first.properties["energy_sources"] is not second.properties["energy_sources"]
+    assert first.properties["forbidden_ops"] is not second.properties["forbidden_ops"]
+    first.properties["stabilizers"].append("Earth")
+    first.properties["forbidden_ops"].add("move")
+    assert second.properties["stabilizers"] == []
+    assert second.properties["forbidden_ops"] == set()
+
+
+def test_reserved_identifier_lookup_is_cached_and_complete():
+    runtime = Runtime()
+    assert "create" in runtime.RESERVED_IDENTIFIERS
+    assert "weave" in runtime.RESERVED_IDENTIFIERS
+    assert "geometry2d" in runtime.RESERVED_IDENTIFIERS
+    assert runtime.RESERVED_IDENTIFIERS is Runtime.RESERVED_IDENTIFIERS
+
+
+def test_registered_dimension_labels_skip_fallback_formatter(monkeypatch):
+    """Keep a hot-path formatting mistake from returning in large object runs."""
+    import magiclang.units as units
+
+    def unexpected_fallback(_exponents):
+        raise AssertionError("registered SI dimensions must use their cached label")
+
+    monkeypatch.setattr(units, "_format_dimension", unexpected_fallback)
+    assert str(units.KG) == "kg"
+    assert str(units.M) == "m"
+    assert str(units.ENERGY) == "J"

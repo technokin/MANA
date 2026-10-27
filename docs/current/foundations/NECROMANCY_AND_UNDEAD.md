@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 
 MANA separates reanimating an existing body from writing a spell that constructs or summons an undead being. They can both involve Necro mana and ordinary object manipulation, but they are not the same operation.
 
@@ -34,7 +34,7 @@ For example, the following is a structural sketch to explain responsibility. It 
 load planes
 load necromancy
 
-spldef summon_skeleton():
+spell summon_skeleton():
     planes.invoke("Necro")
     frame = create Earth
     frame = transform(frame, "solid")
@@ -52,7 +52,7 @@ Expected output:
 [POST summon_skeleton] created Earth (Earth, 1 kg; create Earth)
 [POST summon_skeleton] executed transform(frame, 'solid')
 [POST summon_skeleton] spell completed
-[POST summon_skeleton] mana cost: 0.1 mana
+[POST summon_skeleton] mana appraisal: 0.1 mana
 [POST summon_skeleton] created: frame (Earth, 1 kg)
 ```
 

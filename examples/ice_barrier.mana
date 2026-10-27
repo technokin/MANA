@@ -1,0 +1,10 @@
+# This creates an Ice object and gives it a supported barrier-like shape.
+load planes
+planes.invoke("Ice")
+
+ice_wall = create Ice
+shape(ice_wall, wall)
+ice_wall.collision_radius = 0.8 m
+anchor(ice_wall)
+show "Barrier shape:", ice_wall.shape
+show "Barrier anchored:", ice_wall.anchored

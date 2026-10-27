@@ -1,0 +1,8 @@
+# Shadow requires invocation before a direct Shadow object can be used.
+load planes
+planes.invoke("Shadow")
+
+mark = create Shadow
+shape(mark, spiral)
+show "Shadow marker:", mark
+show "Material label:", mark.material

@@ -7,7 +7,7 @@ from magiclang.lexer import Lexer
 from magiclang.parser import Parser
 from magiclang.physics import PLANCK_TEMPERATURE_K, Vector3
 from magiclang.runtime import Runtime, MagicObject
-from magiclang.units import ENERGY, KG, K, M, VELOCITY, Quantity
+from magiclang.units import ENERGY, KG, K, VELOCITY, Quantity
 
 
 def run(source):
@@ -21,7 +21,13 @@ def assert_energy_ledger(obj):
     assert properties["energy"].dimension == ENERGY
     assert properties["thermal_energy"].dimension == ENERGY
     assert properties["kinetic_energy"].dimension == ENERGY
-    expected = properties["thermal_energy"] + properties["kinetic_energy"] + properties.get("released_energy", Quantity(0, ENERGY))
+    expected = (
+        properties.get("thermal_energy", Quantity(0, ENERGY))
+        + properties.get("kinetic_energy", Quantity(0, ENERGY))
+        + properties.get("released_energy", Quantity(0, ENERGY))
+        + properties.get("mana_energy", Quantity(0, ENERGY))
+        + properties.get("bound_energy", Quantity(0, ENERGY))
+    )
     assert properties["energy"].value == pytest.approx(expected.value, rel=1e-12, abs=1e-9)
 
 

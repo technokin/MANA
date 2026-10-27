@@ -1,0 +1,16 @@
+# A woven barrier uses ambient mana to take a chosen shape.
+load geometry2d
+
+spell training_shield():
+    shield = weave mana:
+        shape = barrier
+        radius = 1 m
+        energy = 2200 J
+        collidable = true
+        anchored = true
+        position = geometry2d.point(4 m, 0 m)
+    incant shield
+
+post(training_shield, visual)
+release(training_shield)
+show "Shield in the world:", active_objects()

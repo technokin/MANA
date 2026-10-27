@@ -1,0 +1,5 @@
+# after advances virtual time before executing its block.
+show "Before the delay."
+after 0.1 s:
+    show "The delayed action ran."
+show "After the delay."

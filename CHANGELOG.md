@@ -1,14 +1,119 @@
 # Changelog
 
-## v1.0.0 — First public 1.0 release
+This changelog records changes since the public GitHub `v1.0.0` source tag. The project version is 2.0.0. The release workflow publishes the matching `v2.0.0` tag only after its configured Linux/Windows and Python-version quality matrix passes.
 
-- Declared the current MANA language/runtime implementation as the v1.0.0 public release while documenting known implementation boundaries rather than promising unfinished systems.
-- Kept MANA programs in `.mana` source files and Python as the current implementation runtime; no third-party runtime packages are required.
-- Removed the custom Grimoire IDE and its custom-IDE build components from the distributable project; retained the Python runner, examples, libraries, tests, documentation, and VS Code Language Support extension.
-- Added the MANA logo to the GitHub README and packaged VS Code extension.
-- Clarified runtime versus development requirements, added Ruff configuration guidance, and retained `.editorconfig` for consistent editor behaviour.
-- Reorganized contribution guidance and release-facing documentation while preserving historical audit reports and changelog entries.
-- Release verification: the exact test and packaging results are recorded in `docs/archive/audits/release_reports/RELEASE_V1_0_0_REPORT.md`.
+## [2.0.0]
+
+MANA 2.0.0 is a major expansion of the existing language, libraries, 2D world simulation, Visualiser, examples, and development tools. It does **not** add a full 3D world.
+
+
+### Visual Lab, adaptive graphics, bug fixes, and additional examples
+
+MANA 2.0.0 consolidates the following Visualiser, runtime, documentation, and example improvements.
+
+- Made the travelling spell a first-class scene object: the rendered body keeps its recorded spell identity, visible form, orientation, and label independently from its trail and impact effects. Added a spell-anatomy inspector that seeks through the available lifecycle trace without inventing operations absent from recordings.
+- Added the Visual Lab with 32 colour themes, 18 backdrops, 15 spell-body treatments, 13 trail styles, 14 glyph grammars, 12 complete-look recipes, and seven independently configurable colour channels. User overrides now flow through the corresponding renderer layers.
+- Removed user-facing graphics-quality tiers. The renderer now uses one adaptive policy, retaining a readable spell silhouette while simplifying expensive decorative detail under sustained load. Added a four-million-pixel canvas backing-store ceiling, bounded event-parse cache, off-screen culling, reusable per-frame position maps, and hidden-view idle pausing.
+- Motion-path bounds are cached once per recording instead of rescanning recorded waypoints on each frame or interaction; the cache is replaced when a new recording is loaded. Corrected reduced-motion preference transitions, rejected malformed/non-finite/out-of-policy recording coordinates across fit/draw/selection/effect paths, improved large-world camera fitting, and retained contact character cues for older recordings when a validated entity position is available.
+- Hardened version synchronisation so current labels can be updated without rewriting historical references. Release workflow tag routing now accepts version-shaped tags but checks an exact match to `VERSION`, and release notes are rendered from the matching current changelog section.
+- Corrected documentation navigation, current-report labels, and the release archive requirements. Current documentation remains separated from historical audit reports; archived records are preserved rather than silently rewritten as current results.
+- Added five new end-to-end examples: `preview_commit_boundary.mana`, `plane_path_lifecycle.mana`, `kinetic_thermal_ledger.mana`, `selective_two_target_cast.mana`, and `impact_handler_counter.mana`. They cover preview rollback versus committed release, one-way plane-path lifecycle, combined heat/motion accounting, external target selection, and runtime-reported impacts.
+- Added focused regression tests that assert runtime state for those examples, in addition to the all-example execution smoke test. The source now contains 67 runnable `.mana` examples.
+
+### Visualiser — new optional 2D tool
+
+- Added a separate Visualiser extension for Visual Studio Code. It is optional; MANA programs can still be checked and run without installing it.
+- Added a large scene view with pan and zoom, entity selection, double-click focus, touch/pen/mouse panning, and a dedicated Character view that recentres on the selected being.
+- Added illustrative 2D silhouettes for humanoids, dragons, dinosaurs, birds, serpents, ants, minotaurs, and slimes. Where anatomy information is available, the viewer uses it to improve the depiction and the read-only inspection panel.
+- Fixed the main steering-spell problem: moving effects now follow recorded intermediate world positions rather than drawing a straight line between the start and end. Motion uses recorded world timestamps when available, so bends and uneven timing are retained.
+- Added different visual treatments for the four base elements and other supported effect categories: flames, water ribbons and droplets, ice shards, branched lightning, earth/metal fragments, flowing air, plant-like life effects, shadow/death tendrils, and geometric mana seals.
+- Improved the presentation of beams, radial bursts, impacts, summoning and reanimation, shaped mana constructs, transformations, body-state changes, magnetic effects, smoke, and flares. The viewer displays recorded events; it does not decide whether a spell succeeds.
+- Added bounded recording/replay, reduced-motion support, more robust handling of malformed recording events, and a runnable steering-firebolt example.
+- Improved character movement cues, facing direction, casting presentation, and brief collision reactions when the recording contains a real contact.
+- Made the travelling spell itself a first-class scene layer, separate from trails and impact FX: moving spell bodies use the recorded spell identity where available, recognisable form silhouettes, directional alignment, and a spell-name label. The independent **Spell form** toggle keeps the difference visible.
+- Added a **Spell anatomy** inspector with cast status, observed stages, bounded operation trace and click-to-seek replay rows. It reports the recording rather than fabricating source-level spell details that were never captured.
+- Capped high-detail spell-body rendering at 96 visible bodies per frame and culled fully off-screen projectile tracks when their recent trail is also outside the view; replay data and physics results remain untouched.
+
+### Language and spell authoring
+
+- Added `spell name():` as a natural spelling for defining a spell. Existing `spldef` spell definitions remain supported.
+- Changed pure-mana construct creation to use `weave mana`. The old `create Mana` form now gives a migration message; ordinary elemental creation is unchanged.
+- Added the native `weather` statement, including local weather areas that affect objects within a selected radius, expire as world time advances, and participate in trial/rollback versus committed execution.
+- Added a more natural matter-conjuring form with named options for material, mass, shape, initial movement, anchoring, collision, bounce, friction, and drag. Existing runtime safety budgets still apply.
+- Clarified that mana figures shown in reports are accounting and appraisal information, not a finite personal pool that must be replenished before each cast.
+
+### Geometry, movement, and 2D world engine
+
+- Added `geometry2d.rotate()` and `geometry2d.scale()` helpers, including unit-preserving vector scaling.
+- Added `vector3d.rotate()` with a documented X-then-Y-then-Z angle order, plus dimension-checked interpolation and midpoint helpers. These are calculation tools only; they do not create a 3D simulated world.
+- Expanded general movement support through anatomy-aware physical profiles and `physiology.propel()`, with explicit physical and arcane movement modes, direction checks, movement/energy accounting, and a speed cap for massive bodies.
+- Improved large-world collision performance using spatial grouping and ordered candidate checks instead of repeatedly testing every object pair. Added bounded handling for oversized paths and work limits so extreme scenes fail safely rather than consume unbounded time or memory.
+- Reduced long-run energy-ledger growth by grouping continuous environmental and motion accounting during each time-advance operation while retaining the overall energy totals and input/output counters.
+- Hardened physics edge cases involving extreme coordinates, non-finite values, swept movement bounds, repeated time steps, and invalid mixed world settings. World configuration changes are applied together or rejected without leaving a half-updated configuration.
+- Improved object-creation performance through cached default properties and creation-cost values. The stress benchmark now checks that the requested work really completed and remains within the supported object limit.
+
+### New libraries and expanded catalogues
+
+- Added libraries for anatomy, physiology, arcana, armory/equipment, materials and metals, periodic-element data, and world/weather operations. These complement the existing language, mana, geometry, plane, summoning, and necromancy systems.
+- Expanded the anatomy catalogue to **91 body-plan templates**, **991 named structure records**, and **23 body-system categories**. The human template includes 691 addressable structures across more detailed nervous, circulatory, respiratory, digestive, renal, endocrine, immune, and joint records.
+- Added templates covering more dinosaurs and other prehistoric animals, western and eastern dragons, minotaur, ant castes, and slime, alongside human and other creature forms.
+- Added custom anatomy definitions, body-system declarations, multi-template creature composition, configurable merge choices, movement declarations, physical-size overrides, and anatomy audit warnings. The limits remain separate: up to 1,024 tracked structures per body and 512 user-defined structure definitions.
+- Added per-template starting estimates for mass, dimensions, density, volume, and 2D collision radius. These are game-scale model values, not claims of complete biological simulation or certified scientific measurements.
+- Consolidated the stock materials catalogue into **407 unique profiles**, including the **118 periodic elements**, with a shared property layout, ten broad material families, search/category/state access, and family summaries.
+- Expanded materials for alloys, minerals, terrain feedstock, glass and ceramics, polymers and composites, organic and biological feedstock, textiles, process fluids, and fictional crafting materials. Estimated properties are labelled as model/gameplay values where appropriate.
+- Standardised material and equipment-name matching across the libraries, so equivalent names using spaces, underscores, or hyphens resolve consistently. Runtime-defined materials are included in category-wide searches.
+- Added general creature propulsion and support for different life-support structures, including invertebrate-style body plans, rather than assuming every living creature must use a vertebrate brain-and-heart arrangement.
+- Improved editor suggestions and references for the new libraries and current geometry helpers.
+
+### Documentation, examples, and developer workflow
+
+- Expanded the runnable `.mana` example collection from 15 files in the public v1.0.0 snapshot to **67 examples**. The collection now covers language basics, elements, materials, matter creation, weather, movement, collision, targeting, mana constructs, anatomy, and Visualiser recordings.
+- Added or expanded guides for the Visualiser, anatomy, comparative anatomy, physiology, materials and equipment, library compatibility, weather and matter, geometry, project layout, stress testing, and future project direction.
+- Added a consolidated project audit, world-engine stress report, release verification report, and clearer lists of implemented and unsupported behaviour.
+- Improved automated example checks, generated references and indexes, version consistency checks, and package validation. Moved a release-failure test input to the fixtures folder and excluded generated caches and stale installers from the clean source package.
+- Added a release workflow that checks the version, runs the configured quality gates, builds the source archive and both Visual Studio Code extensions, and attaches the downloads when the matching version tag is published.
+- Updated the language extension's syntax support, completion suggestions, help text, starter material, and documentation for the added language features and libraries.
+- Replaced the old single-extension installer in the source package with the current **2.0.0 language-support and Visualiser installers**. The runtime remains usable without either extension.
+
+### Compatibility and scope
+
+- MANA scripts remain `.mana` files, and Python remains the implementation runtime. The custom Grimoire IDE was already absent from the public v1.0.0 release and remains absent.
+- The world simulation remains **2D**, with planar collisions and 2D movement. Three-dimensional vector helpers are for calculation/interoperation only.
+- The Visualiser displays recorded scenes and events; it is not a live world editor and dragging objects in it does not change the real simulation.
+- Character illustrations are procedural 2D drawings, not rigged 3D models. A visual category does not guarantee a fully simulated physical, chemical, biological, or magical process.
+- Full fluid simulation, comprehensive chemistry, complete biological systems, and autonomous creature intelligence remain outside the scope of this release. Older recordings cannot provide motion detail that was never recorded.
+
+### Documentation integrity and release-readiness audit
+
+- Corrected generated API links for names containing underscores. The generator now preserves valid characters in GitHub heading IDs, and a regression test checks that heading links in the current documentation resolve.
+- Corrected a mislabeled historical audit reference in the component reference page.
+- Moved two old pre-release audit snapshots out of `docs/current/` and into `docs/archive/audits/release_reports/`, then updated the index, version-sync exclusions, generated glossary usage index, and historical links. The current documentation index now links all 65 current documentation pages.
+- Fixed the version synchroniser so a line mentioning current documentation and then a historical version cannot rewrite that old version by mistake. Added regression tests for this case and the new archive paths.
+- Updated the pinned Ruff version to 0.17.1 and refreshed the pinned `actions/setup-python` version to 7.1.0 after checking upstream release records. The audit snapshot dated 2026-10-15 remains unchanged as a historical record.
+- Changed the release workflow so public release creation waits for all eight Linux/Windows × Python 3.12–3.15 verification jobs. Moved tag validation into a small cross-platform helper and added tests for incorrect or missing tags.
+- Made the publishing step safe to rerun: if a release entry already exists, the workflow updates its notes and replaces the release assets instead of failing at release creation. Removed unnecessary developer-tool installation from the artifact-only publishing job.
+- Repeated a targeted safety-pattern scan across 54 Python source files; no direct uses of `eval`, `exec`, `shell=True`, `os.system`, or pickle deserialization were found. The Visualiser renderer does not use `innerHTML`. These searches are not a full security proof or a substitute for dependency auditing.
+- Expanded the root README's feature inventory to include the materials, armory, anatomy, physiology, arcana, weather, and matter libraries, and added direct links to the specialist guides.
+- Improved the release checklist so it regenerates documentation outputs before checking them and includes the same full Python lint and dependency-audit commands used by release CI.
+- Reviewed links across all 124 Markdown files; no broken local file links were found. The test suite also verifies local heading anchors across the Markdown set.
+
+### Baseline verification recorded at the initial 2.0.0 snapshot (historical)
+
+- Full project test suite: **480 passed** (the public v1.0.0 report recorded 316 passed).
+- Visualiser-focused tests: **36 passed**.
+- All **62** shipped MANA examples passed both CLI syntax checks and the example smoke checks.
+- Python compilation, JavaScript syntax checks, generated-documentation checks, version checks, local documentation link and heading-anchor checks, extension packaging checks, and source archive integrity checks passed in the available environment.
+- The Visualiser webview harness exercised a recorded scene containing a steering spell.
+- Ruff, Pyflakes, and the dependency audit were not verified locally because the optional tools were unavailable and the package index could not be reached. The configured release workflow runs the quality gates on GitHub and gates publication on the full supported-platform matrix; hosted results still need to complete after upload.
+- These results describe the source snapshot and local checks. They do not, by themselves, claim that a GitHub tag or public 2.0.0 release has already been published.
+
+## [1.0.0] — First public stable release
+
+- Published the Python-hosted MANA interpreter and `.mana` source language as the v1.0.0 baseline.
+- Removed the custom Grimoire IDE before this release, retaining the runtime, examples, libraries, documentation, tests, and optional VS Code language-support extension.
+- Included the language's spell definitions, elemental operations, 2D physics, mana controls, plane/pathway registry, summoning, necromancy, 2D geometry helpers, and 3D vector calculations.
+- Added the public-facing project README, separate introduction, contribution guidance, logo integration, release documentation, and a clean source-package workflow.
+- The published v1.0.0 verification report recorded 316 passing tests. The world remained 2D; the 3D vector library was a calculation layer, not a 3D world engine.
 
 ## Pre-v1.0 project organization update (historical)
 
@@ -16,9 +121,9 @@
 - Kept the Python MANA interpreter, `.mana` source files, examples, libraries, tests, documentation, and VS Code extension.
 - Reworked the root README into a GitHub landing page with accurate Python/license/runtime requirements; kept `MANA_INTRO.md` as a separate conceptual introduction and added `CONTRIBUTING.md` and `tests/README.md`.
 - Replaced the IDE-specific Windows build workflow with cross-platform Python test CI, added a current-file syntax-check task, and moved Ruff settings from an otherwise unnecessary `pyproject.toml` to `ruff.toml`.
-- Prepared optional VS Code icon packaging from `assets/branding/mana-icon.png`; the actual logo was added with the v1.0.0 release.
+- Prepared optional VS Code icon packaging from `assets/branding/mana-icon.png`; the logo was added to the v1.0.0 source snapshot.
 - Recorded the checks and outstanding verification items in [`PROJECT_ORGANIZATION_REPORT_V0_10_14.md`](docs/archive/audits/release_reports/PROJECT_ORGANIZATION_REPORT_V0_10_14.md).
-- At the time of this organization update, the project remained at 0.10.14. The later v1.0.0 release is recorded above.
+- At the time of this organization update, the project remained at 0.10.14. A later source snapshot identifies itself as v1.0.0; creating a Git tag and publishing a GitHub release are separate steps.
 
 ## v0.10.14 audit-fix follow-up (no version bump)
 

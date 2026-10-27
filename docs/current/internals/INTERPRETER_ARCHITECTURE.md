@@ -2,7 +2,7 @@
 
 **Page kind:** Explanation  
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Audience:** readers who want to understand how source code becomes a simulated spell.
 
 MANA is a standalone source language implemented in Python at present. The interpreter is implemented in Python; `.mana` files are parsed and executed according to MANA’s own grammar and runtime rules. The interpreter has a small language front end, a runtime, and specialised element, unit, energy and physics modules.
@@ -41,7 +41,7 @@ The token categories currently include:
 | Layout | `NEWLINE`, `INDENT`, `DEDENT`, `EOF` | Lines and nested blocks. |
 | Grouping | parentheses, brackets, comma, dot, colon | Calls, lists, attributes, and block headers. |
 | Operators | `+`, `-`, `*`, `/`, `%`, `**`, comparisons | Arithmetic and comparisons. |
-| Keywords | `def`, `spldef`, `load`, `incant`, `tgset`, `if`, `while`, `for`, `create`, `skip`, `simul`, timer/event words | Reserved grammatical forms. |
+| Declarations and keywords | `def`, legacy token `spldef`, contextual `spell`, `load`, `incant`, `tgset`, `if`, `while`, `for`, `create`, `skip`, `simul`, timer/event words | `spell name(...):` is recognized contextually; `spldef` remains reserved for compatibility. |
 
 `load` and `skip` are MANA keywords. Use `incant value` to supply a definition result, `load` to load libraries, and `skip` as a no-operation statement. A definition exits with `incant`, optionally supplying a value.
 

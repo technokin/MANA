@@ -5,6 +5,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: mana-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
@@ -14,14 +21,25 @@ jobs:
         python-version: ['3.12', '3.13', '3.14', '3.15']
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install development requirements
         run: python -m pip install -r requirements-dev.txt
-      - name: Build and verify VS Code extension
-        run: python tools/vscode/build_mana_vsix.py
+      - name: Build and verify VS Code extensions
+        run: |
+          python tools/vscode/build_mana_vsix.py
+          python tools/vscode/build_mana_visualiser_vsix.py
+          node --check tools/vscode-extension/extension.js
+          node --check tools/mana-visualiser-extension/extension.js
+          node --check tools/mana-visualiser-extension/media/viewer.js
+      - name: Audit development dependency tree
+        run: python -m pip_audit --strict -r requirements-dev.txt
+      - name: Lint Python source and tests
+        run: |
+          python -m ruff check magiclang tests tools mana.py
+          python -m pyflakes magiclang
       - name: Run regression and stress tests
         run: python -m pytest -q
       - name: Verify version labels
@@ -33,3 +51,10 @@ jobs:
           python tools/generate_error_catalogue.py --check
       - name: Syntax-check an example MANA program
         run: python mana.py --check examples/fireball.mana
+      - name: Check representative MANA examples
+        run: |
+          python mana.py --check examples/fireball.mana
+          python mana.py --check examples/fireball_contact.mana
+          python mana.py --check examples/mana_constructs.mana
+          python mana.py --check examples/preview_then_release.mana
+          python mana.py --check examples/return_recall.mana

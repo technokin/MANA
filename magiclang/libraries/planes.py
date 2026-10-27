@@ -22,7 +22,7 @@ ELEMENTAL_ENERGY_KINDS = frozenset({
     "Death", "Underworld", "Holy", "Shadow", "Void",
 })
 _INTERNAL_ENERGY_KIND_LABELS = frozenset({
-    "necro:reanimate", "necro:reanimate_many",
+    "necro:reanimate", "necro:reanimate_many", "necro:lichify",
 })
 
 

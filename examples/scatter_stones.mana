@@ -1,0 +1,12 @@
+# A loop can create a small group without a special scatter keyword.
+load geometry2d
+
+spell scatter():
+    for i in span(5):
+        shard = create Earth
+        shape(shard, point)
+        velocity(shard, geometry2d.direction(1, 0) * 12 m/s)
+    incant 1
+
+release(scatter)
+show "Created stones:", length(active_objects())

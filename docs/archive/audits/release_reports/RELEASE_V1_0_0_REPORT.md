@@ -1,4 +1,6 @@
-# MANA v1.0.0 Release Verification Report
+# MANA v1.0.0 Source Verification Report
+
+> Historical report for the pre-audit source snapshot. Despite the filename used in earlier versions of this document, this file does not establish that a GitHub tag or release was published. The owner’s audit states that no tag or release exists; publication remains a separate, uncompleted step. The audit remediation report records current verification.
 
 **Release version:** `1.0.0`  
 **Release tag convention:** `v1.0.0`  
@@ -37,7 +39,7 @@ The following checks passed in the available Linux environment:
 
 ## Known implementation boundary
 
-This release does not claim that every planned world-simulation or magic subsystem is complete. The current implementation status and `NOT_SUPPORTED_YET.md` page remain the authoritative guide to documented boundaries. The 1.0 version identifies the published language/runtime baseline, not a claim that every future design idea is already implemented.
+This release does not claim that every planned world-simulation or magic subsystem is complete. The current implementation status and `NOT_SUPPORTED_YET.md` page remain the authoritative guide to documented boundaries. The 1.0 version identifies the source snapshot, not a claim that a Git tag or GitHub release has been published, and not a claim that every future design idea is already implemented.
 
 ## Follow-up correction after first GitHub Actions run
 

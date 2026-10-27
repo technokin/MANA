@@ -1,4 +1,4 @@
-# `summoning` Library — MANA v1.0.0
+# `summoning` Library — MANA v2.0.0
 
 **Page kind:** Reference  
 
@@ -57,4 +57,38 @@ Returns a `BeingRecord`. The source can be omitted for a built-in being that has
 
 ## Scope and limits
 
-The current engine can manifest beings only in the Mortal Plane. Other planes have no simulated world space yet. Summoning does not implement AI or combat decisions, and it does not automatically tame an unassigned result. The transfer is represented in MANA's internal ledger; it does not consume a finite mana pool. Errors use MANA's standard error system and receive the source file and line from the runtime.
+The current engine can manifest beings only in the Mortal Plane. Other planes have no simulated world space yet. A runtime-wide safety cap allows at most **256 active summoned beings** at once; returned beings no longer count. The cap is independent of how many ordinary objects appear before them in the runtime or whether the Visualiser is installed. Summoning does not implement AI or combat decisions, and it does not automatically tame an unassigned result. The transfer is represented in MANA's internal ledger; it does not consume a finite mana pool. Errors use MANA's standard error system and receive the source file and line from the runtime.
+
+## Native language syntax
+
+For ordinary spell source, use the native `summon` expression rather than spelling out the library call. The plane pathway must already be open, and the being must exist in the catalogue or in a registered custom-being record.
+
+```mana
+load planes
+planes.open_path("Wild Realm", "Mortal Plane")
+
+spell call_griffin():
+    griffin = summon "Griffin" from "Wild Realm"
+    incant griffin
+
+appraise call_griffin
+cast call_griffin
+```
+
+Expected output:
+
+```text
+[APPRAISAL call_griffin] inputs: no parameters
+[APPRAISAL call_griffin] planar energy transfer: 293150 J (Wild Realm -> Mortal Plane)
+[APPRAISAL call_griffin] created Griffin (Being, 1 kg; summoned from Wild Realm)
+[APPRAISAL call_griffin] executed summon('Griffin', 'Wild Realm')
+[APPRAISAL call_griffin] spell completed
+[APPRAISAL call_griffin] mana appraisal: 0 mana
+[APPRAISAL call_griffin] created: Griffin (Being, 1 kg)
+[CAST call_griffin] spell committed
+[CAST call_griffin] mana appraisal: 0 mana
+```
+
+The `summon` expression returns the particular summoned instance and can be assigned to a variable. The quoted form is clear and supports labels containing spaces; a bare catalogue name such as `summon Griffin` is also accepted. Use a parenthesised expression when the name or source is computed, for example `summon (chosen_being) from (chosen_plane)`. Optional `position=...` and `requirements=[...]` arguments are supported after a comma. Unknown or duplicated options are syntax errors. The older `summoning.bring(...)` form remains available for advanced library use.
+
+`conjure` and `summon` are deliberately not synonyms: conjure makes a physical object from a material description; summon brings an already-defined being through a valid pathway. A metal statue conjured in the shape of a griffin is not a living griffin merely because its shape resembles one.

@@ -2,10 +2,18 @@
 
 **Page kind:** Reference  
 
-**Version:** 1.0.0
-This reference covers behaviour implemented in the v1.0.0 interpreter. Square brackets in signatures mean optional arguments.
+**Version:** 2.0.0
+This reference covers behaviour implemented in the v2.0.0 interpreter. Square brackets in signatures mean optional arguments.
 
 ## A. Definitions and execution commands
+
+### `appraise spell_name` — preview a spell without committing
+
+The preferred v2 trial command executes a named spell, produces its appraisal report, and restores world state afterward. Use it when you want to inspect an outcome without committing it. The legacy `post(spell_name)` command remains supported when its optional text/visual reporting modes are needed.
+
+### `cast spell_name` — cast and commit a spell
+
+The preferred v2 execution command runs a named spell and commits its supported world-state changes. If execution fails, the runtime restores the prior state. The legacy `release(spell_name)` command remains supported.
 
 ### `def name(parameters):` — define a normal calculation function
 
@@ -27,12 +35,14 @@ Expected output:
 
 **Arguments and error cases:** Parameters must be valid, unique identifiers. Required parameters must precede parameters with defaults. A direct helper call that attempts world-changing operations raises a MANA error.
 
-### `spldef name():` — define a spell
+### `spell name():` — define a spell
 
-A `spldef` body is executed through the standalone `post(spell)` or `release(spell)` statement. It does not run by directly calling it as a value.
+A `spell` body is executed through standalone `appraise spell` or `cast spell` statements. It does not run by directly calling it as a value. The legacy `post(spell)` and `release(spell)` forms remain supported.
+
+The sample uses the legacy `post` form so its established report output remains explicit. New code should prefer `appraise` or `cast`.
 
 ```mana
-spldef warm_stone():
+spell warm_stone():
     stone = create Earth
     heat(stone, 100 K)
     incant stone
@@ -57,18 +67,18 @@ Expected output:
 [POST warm_stone] stone.temp: 293.15 K -> 393.15 K (heat)
 [POST warm_stone] stone.thermal_energy: 293150 J -> 393150 J (heat)
 [POST warm_stone] spell completed
-[POST warm_stone] mana cost: 100000 mana
+[POST warm_stone] mana appraisal: 100000 mana
 [POST warm_stone] created: stone (Earth, 1 kg)
 ```
 
-**Arguments and error cases:** A spell definition accepts no parameters or the single `element` selector described below. Use `post` for a trial and `release` to commit the spell's world changes.
+**Arguments and error cases:** A spell definition accepts no parameters or the single `element` selector described below. Use `appraise` for a trial and `cast` to commit supported effects; legacy `post` and `release` forms remain supported.
 
-### `spldef name(element):` — define a base-element spell template
+### `spell name(element):` — define a base-element spell template
 
 The single `element` parameter selects one of the four fundamental types: `Fire`, `Water`, `Earth`, or `Air`.
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -109,7 +119,7 @@ Expected output:
 [POST fire_ball] ball.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(300, 0, 0) [kg*m/s] (velocity)
 [POST fire_ball] ball.vel: Vector3(0, 0, 0) [m/s] -> Vector3(300, 0, 0) [m/s] (velocity)
 [POST fire_ball] spell completed
-[POST fire_ball] mana cost: 545000 mana
+[POST fire_ball] mana appraisal: 545000 mana
 [POST fire_ball] created: ball (Fire, 1 kg)
 ```
 
@@ -124,7 +134,7 @@ Changes the second positional argument of a matching operation call in a configu
 **Runnable example:**
 
 ```mana
-spldef e_ball(element):
+spell e_ball(element):
     ball = create element
     shape(ball, circle)
     heat(ball, 500 K)
@@ -166,7 +176,7 @@ Expected output:
 [POST fire_ball] ball.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(600, 0, 0) [kg*m/s] (velocity)
 [POST fire_ball] ball.vel: Vector3(0, 0, 0) [m/s] -> Vector3(600, 0, 0) [m/s] (velocity)
 [POST fire_ball] spell completed
-[POST fire_ball] mana cost: 1.68e+06 mana
+[POST fire_ball] mana appraisal: 1.68e+06 mana
 [POST fire_ball] created: ball (Fire, 1 kg)
 ```
 
@@ -179,7 +189,7 @@ The older `spell.tune = parameter: value` syntax is removed. A tuned value must 
 Does nothing, makes no world change, and consumes no mana. Use `skip`, not `skip()`, as a temporary placeholder for an unfinished block.
 
 ```mana
-spldef future_spell():
+spell future_spell():
     skip
 ```
 
@@ -228,10 +238,13 @@ show stone.mass
 
 ### `Mana` — pure-mana type selector
 
-`Mana` is the registered type selector accepted by `create`, like `Fire`, `Water`, `Earth`, and `Air`. The lowercase `mana` name is a separate built-in namespace for constructing pure-mana effects and applying element-independent control. A bare `create Mana` makes a massless zero-mana-energy construct; use `mana.form(...)` when you want a construct with finite effect energy and a collision radius.
+`weave mana` is the language operation for shaping a pure-mana construct. Its settings are written in an indented block. The lowercase `mana` namespace also exposes `mana.form(...)` for code that wants to configure a construct through a helper call. `create Mana` is rejected because mana is shaped, not created.
 
 ```mana
-orb = mana.form("sphere", energy=750 J, radius=0.15 m)
+orb = weave mana:
+    shape = sphere
+    energy = 750 J
+    radius = 0.15 m
 velocity(orb, 25 m/s)
 show orb.mana_energy
 ```
@@ -324,16 +337,16 @@ Expected output:
 3000 m
 ```
 
-### `post(spell_name)` — trial command
+### `post(spell_name[, text|visual])` — legacy trial command
 
-Runs one named definition or configured spell instance. The runtime prints its inputs and step-by-step trace, then restores world state. It displays changes, created objects, hits, rules, mana-cost readouts, and errors where present.
+Legacy alias for `appraise spell_name`. Runs one named spell definition or configured spell instance, then restores world state. The default `post(spell)` and explicit `post(spell, text)` print the normal report. `post(spell, visual)` retains the hypothetical movement, magic effects and contact events in an active Visualiser recording so the trial can be replayed as a scene. It remains a preview: no world changes are committed. The command does not launch the Visualiser itself.
 
-It must be a standalone command. `trial = post(spell)` and `post(spell, 300 m/s)` are invalid. The host runtime receives a `SpellResult` record for tests and tools; MANA source cannot assign that record.
+It must be a standalone command. `trial = post(spell)`, `post(spell, 300 m/s)`, and `release(spell, visual)` are invalid. Only the values `text` and `visual` are accepted as the second argument to `post`. The host runtime receives a `SpellResult` record for tests and tools; MANA source cannot assign that record.
 
 **Runnable example:**
 
 ```mana
-spldef warm_stone():
+spell warm_stone():
     stone = create Earth
     heat(stone, 100 K)
     incant stone
@@ -358,18 +371,18 @@ Expected output:
 [POST warm_stone] stone.temp: 293.15 K -> 393.15 K (heat)
 [POST warm_stone] stone.thermal_energy: 293150 J -> 393150 J (heat)
 [POST warm_stone] spell completed
-[POST warm_stone] mana cost: 100000 mana
+[POST warm_stone] mana appraisal: 100000 mana
 [POST warm_stone] created: stone (Earth, 1 kg)
 ```
 
-### `release(spell_name)` — fire command
+### `release(spell_name)` — legacy fire command
 
-Runs one named definition or configured instance and commits the resulting world changes. It accepts exactly one spell name and has no inline argument overrides. It is also standalone: `result = release(spell)` and `release(spell, 300 m/s)` are invalid. On a failure, the runtime prints an error and restores prior world state.
+Legacy alias for the primary `cast spell_name` command. Runs one named definition or configured instance and commits the resulting world changes. It accepts exactly one spell name and has no inline argument overrides. It is also standalone: `result = release(spell)` and `release(spell, 300 m/s)` are invalid. On a failure, the runtime prints an error and restores prior world state.
 
 **Runnable example:**
 
 ```mana
-spldef warm_stone():
+spell warm_stone():
     stone = create Earth
     heat(stone, 100 K)
     incant stone
@@ -505,6 +518,90 @@ Expected output:
 
 Returns the real square root of a non-negative plain number or dimensionless quantity. Negative input raises `PhysicsErrorML`; incompatible units raise `UnitErrorML`; unsupported value types raise `TypeErrorML`.
 
+### `conjure(material[, mass][, position][, shape][, name][, density][, state])` — create physical material
+
+Creates an ordinary material object such as `"metal"`, `"steel"`, `"wood"`, `"glass"`, or `"stone"`. It is distinct from `create Fire` (an elemental manifestation) and `summoning.bring(...)` (a catalogue being). The material must have a registered reference density, or the caller must provide `density=...`; mass defaults to 1 kg and position defaults a short distance in front of the caster.
+
+```mana
+load geometry2d
+spell make_metal_orb():
+    orb = conjure("metal", mass=2 kg, position=geometry2d.point(3 m, 0 m), shape=sphere)
+    incant orb
+
+release(make_metal_orb)
+```
+
+**Arguments and error cases:** `material` is a non-empty material name, not an elemental type value. `mass` must be positive and no greater than the engine's supported bound. `position` must be a planar position in metres. `shape` must be a supported MANA shape. Custom materials need a positive `density` with density units. Pure mana remains the domain of `weave mana`.
+
+### `summon(being[, source_plane][, position][, requirements])` — bring a catalogue being through a plane route
+
+The native spelling is `guardian = summon "Griffin" from "Wild Realm"`; parenthesised expressions can provide a computed being or plane name. It returns the particular summoned instance and can be used inside a spell with `appraise` (record a non-committing trial) or `cast` (commit a successful result). The being must exist in the built-in or registered being catalogue and a valid path from its home plane to the Mortal Plane must already be open. This operation does not manufacture a being from material and does not consume a personal mana reserve; transfers and calculated effort are recorded. Optional `position=...` selects the arrival position, and `requirements=[...]` supplies the declared conditions. `summoning.bring(...)` remains supported for explicit library use.
+
+```mana
+load planes
+planes.open_path("Wild Realm", "Mortal Plane")
+spell call_griffin():
+    griffin = summon "Griffin" from "Wild Realm"
+    incant griffin
+appraise call_griffin
+cast call_griffin
+```
+
+Expected output:
+
+```text
+[APPRAISAL call_griffin] inputs: no parameters
+[APPRAISAL call_griffin] planar energy transfer: 293150 J (Wild Realm -> Mortal Plane)
+[APPRAISAL call_griffin] created Griffin (Being, 1 kg; summoned from Wild Realm)
+[APPRAISAL call_griffin] executed summon('Griffin', 'Wild Realm')
+[APPRAISAL call_griffin] spell completed
+[APPRAISAL call_griffin] mana appraisal: 0 mana
+[APPRAISAL call_griffin] created: Griffin (Being, 1 kg)
+[CAST call_griffin] spell committed
+[CAST call_griffin] mana appraisal: 0 mana
+```
+
+**Arguments and error cases:** Unknown beings, absent routes, invalid positions, unknown options, and duplicate options fail with MANA errors. The engine currently manifests summons in the Mortal Plane; other planes do not yet host independently simulated world spaces.
+
+### `transmute(target, material[, preserve_mass=true][, density][, state])` — change material composition
+
+Changes the composition of an existing material object while preserving its object identity and position. By default its mass stays constant; volume and collision radius are adjusted to the chosen material density. With `preserve_mass=false`, volume stays constant and mass changes to match the new density. `density=` allows a custom material without a built-in reference density.
+
+### `transfigure(target, form[, scale=1.0])` — change represented form
+
+Changes the form rendered for an existing object. Supported aliases include `wizard`/`humanoid`, `knight`/`statue`, `bird`/`raven`, `snake`/`serpent`, `wolf`/`beast`, `golem`, `sphere`, `cube`, `pillar`, `wall`, `shield`, `ring`, and `crystal`. Optional `scale` changes the object's physical scale as well as its visual representation; the default leaves dimensions unchanged. The object is not replaced by a summoned creature.
+
+### `world` — inspect and configure physical world laws
+
+`world` is an automatically available namespace for global simulation defaults, not a spell or optional library. `world.current()` returns a serialisable snapshot of global gravity, air density, default restitution and friction, and the drag/thermal/phase/wetting switches. `world.laws()` reports the implemented rules and their active status. `world.configure(gravity=..., air_density=..., restitution=..., friction=..., drag=..., thermal_exchange=..., phase_changes=..., wetting=...)` changes only the supplied values; the rest are retained. Gravity must be an acceleration vector in the 2D x-y plane, air density must be between 0 and 100 kg/m³, restitution between 0 and 1, and friction between 0 and 2. `world.reset()` restores defaults. `world.set_gravity`, `world.set_air_density`, `world.set_restitution`, and `world.set_friction` are one-setting convenience controls. Per-object `restitution` and `friction` values override the world defaults. Global law changes are world state and must be executed in top-level code or committed/trial spells, not in a pure helper. See [World Weather and Matter](../libraries/WORLD_WEATHER_AND_MATTER.md) for the rule boundaries.
+
+### `periodic` — read-only periodic table and material reference
+
+`periodic` is automatically available and contains 118 catalogue records. `periodic.lookup("Fe")` or `periodic.lookup("iron")` returns the element record; `periodic.by_number(26)` uses atomic number; `periodic.all()` returns the full catalogue; `periodic.search("noble gas")` filters name, symbol or category. `periodic.density(value)`, `periodic.melting_point(value)`, `periodic.boiling_point(value)`, `periodic.symbol(value)`, `periodic.name(value)`, and `periodic.count` provide read-only access to registered reference data. Some densities/transition values are estimated or unavailable. This is a material catalogue, not a chemical-reaction or nuclear-transmutation solver.
+
+### `weather.configure(kind="rain", ...)` / `weather.set(...)` — set world atmosphere
+
+Weather is a world environment, not a spell catalogue. `weather` is available as a standard namespace without `load weather`. Presets are `clear`, `rain`, `snow`, `storm`, `blizzard`, `heatwave`, `sandstorm`, `fog`, `wind`, `ashfall`, `aurora`, and `custom`. Any preset can be overridden or combined with parameters: `intensity` (0–1), `precipitation` (`none`, `rain`, `snow`, `dust`, `ash`, `hail`), `wind_speed` (m/s), `wind_direction` (compass direction or planar vector), `temperature` (K), `humidity`, `clouds`, `fog`, `heat` (−1–1), `lightning` (0–1), and optional `duration` (seconds). A `custom` configuration preserves unspecified atmosphere values so controls can be combined.
+
+```mana
+weather.configure("custom", precipitation="rain", intensity=0.8,
+                  wind_speed=8 m/s, wind_direction="northwest",
+                  temperature=280 K, humidity=0.9,
+                  clouds=0.85, fog=0.2, duration=12 s)
+advance_time(2 s)
+show weather.current()
+```
+
+Expected output:
+
+```text
+{'kind': 'custom', 'intensity': 0.8, 'precipitation': 'rain', 'wind_speed_mps': 8.0, 'wind_x_mps': -5.656854249492381, 'wind_y_mps': 5.656854249492381, 'wind_direction_name': 'northwest', 'wind': 0.4, 'wind_direction': -0.7071067811865476, 'temperature_k': 280.0, 'humidity': 0.9, 'clouds': 0.85, 'fog': 0.2, 'heat': 0.0, 'lightning': 0.0, 'started_at': 0.0, 'until': 12.0, 'duration': 12.0, 'indefinite': False}
+```
+
+Convenience controls compose from the same environment state instead of defining one function/spell per weather type: `weather.wind(speed, direction, intensity=..., duration=...)`, `weather.precipitation(kind, intensity=..., duration=...)`, `weather.temperature(value, duration=...)`, `weather.humidity(value, duration=...)`, `weather.fog(density, duration=...)`, `weather.clouds(coverage, duration=...)`, `weather.heat(value, duration=...)`, `weather.lightning(intensity, duration=...)`, and `weather.clear()`. `weather.current()` returns a copy of the current parameters. Weather without a duration remains active until replaced or cleared.
+
+**Simulation boundary:** wind drag uses each object's mass, exposed area and drag coefficient; rain/snow/hail wet materials and can extinguish burning objects; dust/ash add a temporary surface-coating value; ambient temperature exchanges heat with matter. Cloud appearance, fog density, lightning visuals and aurora are visual environment effects, not a fluid-dynamics or global illumination solver. All world-object physics remains 2D.
+
 ## C. Shape, position, and movement
 
 Advanced geometry helpers such as explicit directions, distances, angles, and manual trajectory control are not global functions. Import `geometry2d` and call them through that namespace; 3D calculations use `vector3d`.
@@ -539,7 +636,7 @@ Expected output:
 circle
 ```
 
-**Arguments and error cases:** `object` must be a magical object and `geometry` must be a built-in geometry label (text). The label does not create exact collision geometry.
+**Arguments and error cases:** `object` must be a magical object and `geometry` must be a text label in the shared MANA shape catalogue. Unknown labels raise a MANA error. The label does not create exact collision geometry; the current physics engine still uses circular collision bounds.
 
 ### `move(object, distance[, direction_vector])`
 
@@ -576,6 +673,25 @@ Expected output:
 
 ```text
 Vector3(5, 0, 0) [m/s]
+```
+
+### `impulse(object, momentum_vector)`
+
+Applies a non-zero planar impulse vector, changing the target's momentum and deriving a new velocity. The vector must have momentum dimensions (kg·m/s); use a unit-bearing expression built from `kg`, `m`, and `s` when authoring a vector. The target must be an active, unanchored physical world object with positive mass and valid velocity/energy state. The runtime uses the shared mechanics path, updates momentum and kinetic/total energy, and records the operation. A massive target remains strictly below the speed of light. This operation is a general mechanics primitive: jumps, knockback, launches, recoil and thrown-object effects can be composed from it rather than implemented as separate functions. The world engine remains 2D, and near-light collision response is not a validated relativistic solver.
+
+**Runnable example:**
+
+```mana
+load geometry2d
+stone = create Earth
+impulse(stone, geometry2d.direction(1, 0) * ((10 kg * 1 m) / (1 s)))
+show stone.vel
+```
+
+Expected output:
+
+```text
+Vector3(10, 0, 0) [m/s]
 ```
 
 ### `accelerate(object, acceleration)`
@@ -625,7 +741,7 @@ npc = tgset:
     defence = 10
     distance = 12 m
 
-spldef fireball():
+spell fireball():
     fire = create Fire
     shape(fire, circle)
     velocity(fire, 300 m/s)
@@ -655,10 +771,10 @@ Expected output:
 [POST fireball] fire.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(300, 0, 0) [kg*m/s] (velocity)
 [POST fireball] fire.vel: Vector3(0, 0, 0) [m/s] -> Vector3(300, 0, 0) [m/s] (velocity)
 [POST fireball] target selected: npc; simulating targeted motion for 0.0566667 s
-[POST fireball] collision: npc ↔ fire; impact energy 22500 J; 21600 J converted to heat
-[POST fireball] hit: fire hit npc; 215 HP damage; HP 35
+[POST fireball] collision: npc ↔ fire; impact energy 45000 J; 43200 J converted to heat
+[POST fireball] hit: fire hit npc; 250 HP damage; HP 0
 [POST fireball] spell completed
-[POST fireball] mana cost: 45000.1 mana
+[POST fireball] mana appraisal: 45000.1 mana
 [POST fireball] created: fire (Fire, 1 kg)
 [POST fireball] hits: npc
 ```
@@ -1378,7 +1494,7 @@ Supported expression operators:
 | Boolean | `and`, `or`, `not` |
 | Unary | `+value`, `-value`, `not value` |
 
-Library helper functions support positional arguments, named arguments, and parameter defaults. Ordinary MANA helper functions use `def` and may accept parameters for calculations. Spell definitions use `spldef` and accept either no parameters or the single `element` selector in `spldef name(element):`; general helper parameters/defaults are permitted in ordinary definitions and packaged library modules. Attribute reads/writes use dot notation, such as `stone.temp`. Only expressions defined by the MANA grammar are supported; unlisted syntax is not identified as a MANA construct.
+Library helper functions support positional arguments, named arguments, and parameter defaults. Ordinary MANA helper functions use `def` and may accept parameters for calculations. Spell definitions use `spell` and accept either no parameters or the single `element` selector in `spell name(element):`; `spldef` remains a compatible legacy alias. General helper parameters/defaults are permitted in ordinary definitions and packaged library modules. Attribute reads/writes use dot notation, such as `stone.temp`. Only expressions defined by the MANA grammar are supported; unlisted syntax is not identified as a MANA construct.
 
 ## J. Common failure categories
 
@@ -1416,3 +1532,16 @@ These are namespaced library functions. See the linked library guides for valida
 - `planes.invoke("Necro")` grants the invocation permission for the necromantic mana channel. The physical ledger source is recorded as Underworld. The transfer entries are accounting records, not energy added to a body or a spendable mana pool.
 
 See [Summoning](../libraries/SUMMONING_LIBRARY.md), [Necromancy](../libraries/NECROMANCY_LIBRARY.md), and [Planes](../libraries/PLANES_LIBRARY.md).
+
+## D. Materials, equipment, metal fields, and living bodies
+
+These built-in namespaces are loaded on first use and operate on the same world objects as the physics engine. They are not separate simulation worlds.
+
+- `materials` looks up `profile(name)`, searches `search(query)`, lists `all()`, checks `exists(name)`, and registers a world-local user-defined material with `define(name, density=..., composition=..., ...)`. Composition input uses element symbols and mass fractions, such as `composition="Fe:0.96,C:0.04"`. MANA derives a catalogue-based atomic-fraction estimate; it is not a chemistry solver.
+- `armory` exposes `blueprints()`, `inspect(item)`, `define(name, slot=..., material=..., ...)`, `equip(wearer, item)`, `unequip(wearer, item)`, `imbue(projectile, payload)`, `launch(wielder, projectile, target, ...)`, and `strike(wielder, target, weapon, ...)`. An item blueprint is a reusable design, not a physical object: `conjure sword, material=steel` creates the item. Equipped armour contributes to the runtime's supported damage mitigation; equipment is not a full skeletal animation or hitbox solver.
+- `metals` provides `control(target, direction, strength, duration=...)`, `field(center, strength, radius, polarity=..., duration=...)`, and `active_fields()`. The effect depends on an object's magnetic response. This is a simplified force model, not unrestricted control of every metal atom.
+- `physiology` exposes `organs()`, `systems()`, `forms()`, `define_form(...)`, `profile(target)`, `enhance(target, trait, factor=..., duration=...)`, `injure/heal(target, organ, ...)`, `injure_system/heal_system(target, system, ...)`, `blood_state(target)`, `manipulate_blood(target, mode, intensity=..., ...)`, `set_bleeding(target, rate_lps)`, `set_temperature(target, temperature)`, `set_toxicity(target, toxicity)`, `kill(target, cause=...)`, and `revive(target, vitality=..., restore_organs=...)`. It models a bounded fictional anatomy state; it is not medically accurate.
+- `anatomy` is the comparative anatomical reference and body-model binding library. It exposes `species()`, `search(query)`, `profile(species)`, `systems(species)`, `organs(species, system=...)`, `organ(name, species=...)`, `bones(species, region=...)`, `bone_list(species, region=...)`, `bone(name, species=...)`, `tissues(species)`, `cell_types(system=...)`, `blood(species)`, `define_organ(...)`, `define_species(...)`, `bind(target, species, preserve_injuries=...)`, `track(target, organ)`, and `inspect(target, organ=...)`. It supplies reference data and a per-entity structure map; `physiology` applies simulated state changes. Real-species summaries are intentionally incomplete, and fictional species are editable hypotheses.
+- `arcana` catalogues magical disciplines, not a promise that every named effect is implemented. Use `schools()`, `school(name)`, `search(query)`, `count()`, and `define(name, domains=..., patterns=..., limits=..., counters=..., status=...)` to inspect or add world-local design entries. These entries help organise and document spells; spell mechanics must still be implemented and tested separately.
+
+Use `shape()` for geometry, `transmute()` for composition, `transform()` for physical phase, and `transfigure()` for the supported entity-form system. Do not use those words interchangeably. See [Materials and Forging](../libraries/MATERIALS_AND_ARMORY.md) and [Physiology and Body Magic](../libraries/PHYSIOLOGY_LIBRARY.md).

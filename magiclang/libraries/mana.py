@@ -12,6 +12,7 @@ from typing import Any
 
 from ..errors import MagicErrorML, PhysicsErrorML, TypeErrorML, UnitErrorML
 from ..physics import Vector3, enforce_speed, kinetic_energy, momentum, require_2d_world_vector
+from ..shapes import DEFAULT_ANCHORED_MANA_SHAPES, DEFAULT_COLLIDABLE_MANA_SHAPES, SUPPORTED_SHAPES
 from ..units import (
     ACCELERATION, DENSITY, DIMENSIONLESS, ENERGY, FORCE, K, KG, M, M2, M3, POWER, S,
     VELOCITY, Quantity, JOULES_PER_MANA,
@@ -284,11 +285,14 @@ def build_library(runtime: Any) -> dict[str, Any]:
 
     def form(shape: str = "sphere", energy: Quantity = Quantity(DEFAULT_BURST_ENERGY_J, ENERGY),
              radius: Quantity = Quantity(DEFAULT_BURST_RADIUS_M, M), collidable: bool | None = None,
-             anchored: bool | None = None, position: Any = None):
+             anchored: bool | None = None, position: Any = None, name: str | None = None):
         """Form a pure-mana construct; optional position defaults 10 m ahead of the caster."""
         _reject_pure_helper_side_effect(runtime, "mana.form")
         if not isinstance(shape, str) or not shape.strip():
             raise TypeErrorML("mana.form() shape must be non-empty text")
+        normal_shape = shape.casefold()
+        if normal_shape not in SUPPORTED_SHAPES:
+            raise MagicErrorML(f"unsupported mana construct shape '{shape}'; choose a shape from the MANA shape catalogue")
         energy_q = _quantity(runtime, energy, ENERGY, "mana.form() energy")
         energy_j = _nonnegative(energy_q, "mana.form() energy")
         radius_q = _quantity(runtime, radius, M, "mana.form() radius")
@@ -298,14 +302,13 @@ def build_library(runtime: Any) -> dict[str, Any]:
         if anchored is not None and not isinstance(anchored, bool):
             raise TypeErrorML("mana.form() anchored must be true or false")
         center = _origin(runtime, position)
-        normal_shape = shape.casefold()
         is_barrier = normal_shape in {"barrier", "wall", "shield", "disc"}
-        is_collidable = collidable if collidable is not None else normal_shape in {"sphere", "ball", "projectile", "barrier", "wall", "shield", "disc"}
-        is_anchored = (is_barrier if anchored is None else anchored)
+        is_collidable = collidable if collidable is not None else normal_shape in DEFAULT_COLLIDABLE_MANA_SHAPES
+        is_anchored = (normal_shape in DEFAULT_ANCHORED_MANA_SHAPES if anchored is None else anchored)
         from ..runtime import MagicObject
         obj = runtime.require_object(MagicObject("Mana"), "mana.form")
         obj.properties.update({
-            "display_name": f"mana_{shape.casefold()}",
+            "display_name": name.strip() if isinstance(name, str) else f"mana_{shape.casefold()}",
             "object_kind": "mana_construct",
             "kind": normal_shape,
             "material": "PureMana",
@@ -329,6 +332,8 @@ def build_library(runtime: Any) -> dict[str, Any]:
             "construct": obj.properties["display_name"], "position_m": [center.x, center.y],
             "radius_m": radius_m,
         })
+        runtime._observe("magic.effect", effect="construct_formed", entity=runtime._visual_entity(obj),
+                         position=[center.x, center.y], shape=normal_shape)
         runtime.emit_event("mana_formed", obj, energy_q, center)
         return obj
 
@@ -358,6 +363,8 @@ def build_library(runtime: Any) -> dict[str, Any]:
             "recipient_count": len(recipients), "delivered_j": delivered,
             "unabsorbed_j": max(0.0, energy_j - delivered),
         })
+        runtime._observe("magic.effect", effect="burst", position=[center.x, center.y], radius_m=radius_m,
+                         recipients=len(recipients))
         runtime.emit_event("mana_burst", center, energy_q, radius_q)
         return {
             "effect": "burst", "energy_j": energy_j, "radius_m": radius_m,
@@ -422,6 +429,9 @@ def build_library(runtime: Any) -> dict[str, Any]:
             "beam_radius_m": beam_m, "recipient_count": len(recipients),
             "delivered_j": delivered, "unabsorbed_j": max(0.0, total_energy - delivered),
         })
+        runtime._observe("magic.effect", effect="beam", position=[start.x, start.y],
+                         direction=[direction_unit.x, direction_unit.y], range_m=range_m,
+                         radius_m=beam_m)
         runtime.emit_event("mana_emitted", start, direction_unit, power_q, duration_q)
         return {
             "effect": "emit", "power_w": power_w, "duration_s": duration_s,

@@ -1,0 +1,15 @@
+# The text preview and visual preview are trials. Only release commits the spell.
+load geometry2d
+
+spell test_spark():
+    spark = weave mana:
+        shape = point
+        radius = 0.2 m
+        energy = 400 J
+        position = geometry2d.point(2 m, 1 m)
+    incant spark
+
+post(test_spark)
+post(test_spark, visual)
+release(test_spark)
+show "Committed world objects:", active_objects()

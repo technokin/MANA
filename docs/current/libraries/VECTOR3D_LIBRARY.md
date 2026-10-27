@@ -2,7 +2,7 @@
 
 **Page kind:** Reference  
 
-**MANA version:** 1.0.0
+**MANA version:** 2.0.0
 **Import:** `load vector3d`
 
 This library makes standalone three-dimensional vector mathematics available in MANA. It does **not** create a 3D world: the main simulation, object movement, targeting, collisions, and world gravity remain restricted to the x-y plane. A vector with a nonzero z component cannot move a world object.
@@ -27,6 +27,9 @@ Every function is namespaced, such as `vector3d.cross(a, b)`. This avoids accide
 |---|---|
 | `magnitude(vector)` | Returns a plain number for dimensionless vectors, otherwise a `Quantity` using the vector's dimension. |
 | `normalize(vector)` | Returns a unit vector in the same direction. |
+| `rotate(vector, x=0, y=0, z=0)` | Rotates a vector by Euler angles in radians, applied in X, then Y, then Z order. Preserves units and does not mutate world objects. |
+| `lerp(a, b, amount)` | Interpolates or extrapolates between vectors with matching dimensions. The amount is dimensionless and is not clamped. |
+| `midpoint(a, b)` | Returns the midpoint of two vectors with matching dimensions. |
 | `dot(a, b)` | Returns the dot product with units composed from the input dimensions; unlike vector addition, the inputs do not need matching dimensions. |
 | `cross(a, b)` | Returns the vector cross product. |
 | `distance(a, b)` | Returns the Euclidean distance between two vectors with matching dimensions. |

@@ -5,7 +5,7 @@ import sys
 import traceback
 from pathlib import Path
 
-from magiclang.runner import run_file
+from magiclang.runner import read_mana_source, run_file
 from magiclang.lexer import Lexer
 from magiclang.parser import Parser
 from magiclang.errors import MagicLangError
@@ -14,6 +14,7 @@ from magiclang.errors import MagicLangError
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run or check a MANA source file.")
     parser.add_argument("--check", action="store_true", help="parse and validate the file without executing it")
+    parser.add_argument("--record", type=Path, help="record a magic-first Visualiser session as JSON Lines")
     parser.add_argument("file", type=Path, help="path to a .mana source file")
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
@@ -27,11 +28,16 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.check:
-            text = source.read_text(encoding="utf-8-sig")
+            text = read_mana_source(source)
             Parser(Lexer(text, str(source.resolve())).tokenize(), str(source.resolve())).parse()
             print(f"MANA check passed: {source}")
         else:
-            run_file(str(source))
+            runtime = None
+            try:
+                runtime = run_file(str(source), observe_file=args.record)
+            finally:
+                if runtime is not None:
+                    runtime.close_observer()
     except MagicLangError as exc:
         location = f"{exc.filename}:{exc.line}:{exc.column}" if exc.line is not None else exc.filename
         print(f"{exc.code} {type(exc).__name__}: {location}: {exc.message}", file=sys.stderr)

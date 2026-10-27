@@ -1,0 +1,109 @@
+{
+  "name": "mana-magic-visualiser",
+  "displayName": "MANA Magic Visualiser",
+  "description": "Explore recorded MANA magic in a spell-first 2D scene with custom looks, adaptive graphics, bounded memory use, and replay controls. Optional to the MANA runtime.",
+  "version": "2.0.0",
+  "publisher": "mana-language",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "mana",
+    "magic",
+    "world engine",
+    "physics",
+    "visualiser",
+    "replay",
+    "periodic table",
+    "materials",
+    "weather",
+    "scene explorer",
+    "object inspector",
+    "activity timeline",
+    "collision replay",
+    "world laws",
+    "keyboard controls"
+  ],
+  "activationEvents": [
+    "onCommand:manaVisualiser.runWithVisualiser",
+    "onCommand:manaVisualiser.openRecording"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "manaVisualiser.runWithVisualiser",
+        "title": "MANA Visualiser",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "manaVisualiser.openRecording",
+        "title": "MANA: Open Visualiser Recording",
+        "icon": "$(file-media)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "manaVisualiser.runWithVisualiser",
+          "when": "resourceExtname == .mana",
+          "group": "navigation@71"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "manaVisualiser.runWithVisualiser",
+          "when": "resourceExtname == .mana"
+        },
+        {
+          "command": "manaVisualiser.openRecording"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "MANA Magic Visualiser",
+      "properties": {
+        "manaVisualiser.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Python command used to run MANA. On systems where the command is python3 or py, set it here."
+        },
+        "manaVisualiser.reduceMotion": {
+          "type": "boolean",
+          "default": false,
+          "description": "Reduce the intensity of decorative scene animation."
+        },
+        "manaVisualiser.maximumRecordingMB": {
+          "type": "number",
+          "default": 25,
+          "minimum": 1,
+          "maximum": 25,
+          "description": "Maximum JSONL recording size accepted by the Visualiser (hard-capped at 25 MB)."
+        },
+        "manaVisualiser.startMaximised": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the Visualiser in an expanded editor group, like a dedicated scene window. Closing it restores the previous editor layout."
+        }
+      }
+    }
+  },
+  "icon": "images/mana-icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/technokin/MANA.git"
+  },
+  "homepage": "https://github.com/technokin/MANA#readme",
+  "bugs": {
+    "url": "https://github.com/technokin/MANA/issues"
+  },
+  "galleryBanner": {
+    "color": "#17191b",
+    "theme": "dark"
+  }
+}

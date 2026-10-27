@@ -142,6 +142,13 @@ def normalize(vector: Any) -> Vector3:
     return Vector3(ux, uy, 0, DIMENSIONLESS)
 
 
+def scale_vector(vector: Any, factor: Any) -> Vector3:
+    """Scale a 2D vector by a finite dimensionless factor, preserving units."""
+    value = _vector(vector)
+    amount = _number(factor, "scale factor")
+    return Vector3(value.x * amount, value.y * amount, 0, value.dimension)
+
+
 def perpendicular(vector: Any) -> Vector3:
     """Return a 90-degree counter-clockwise vector with the same units."""
     value = _vector(vector)
@@ -415,6 +422,8 @@ def build_library(runtime):
         "angle": angle,
         "angle_between": angle_between,
         "rotate_vector": rotate_vector,
+        "rotate": rotate_vector,
+        "scale": scale_vector,
         "normalize": normalize,
         "perpendicular": perpendicular,
         "dot": dot,

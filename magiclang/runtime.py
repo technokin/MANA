@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import copy
 import difflib
+import io
 import json
 import math
 import os
 import re
+import stat
 import sys
 import threading
 import traceback
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
 from itertools import count
 from dataclasses import dataclass, field, fields, is_dataclass
@@ -19,10 +22,15 @@ from .ast_nodes import (
     Program, Block, LoadLibrary, Literal, Name, ListLiteral, Attribute, Subscript, Unary,
     Binary, Call, Create, Assignment, ExpressionStatement, FunctionDef, Incant,
     TargetSet, TargetContext, If, While, For, Simul, Wait, After, Event, Every,
-    SpellModeStatement, TuneAssignment, SkipStatement,
+    SpellModeStatement, TuneAssignment, SkipStatement, WeaveMana, WeatherStatement,
 )
 from .elements import (
     ELEMENTS, FUNDAMENTAL_ELEMENTS, interaction, can_influence,
+)
+from .materials import (
+    ELEMENTS as CHEMICAL_ELEMENTS, ELEMENTAL_DENSITIES_KG_M3,
+    composition_for_material, phase_for_temperature, resolve_element, resolve_material, physical_material_profile,
+    MATERIAL_DENSITIES_KG_M3, MATERIAL_DEFAULT_STATES,
 )
 from .errors import MagicLangError, MagicErrorML, PhysicsErrorML, RuntimeErrorML, TypeErrorML, UnitErrorML
 from .physics import (
@@ -40,14 +48,30 @@ from .units import (
 )
 
 MAX_LOOP_ITERATIONS = 1_000_000
+MAX_EXECUTION_STATEMENTS = 250_000
+MAX_CUMULATIVE_ALLOCATION_UNITS = 500_000
+MAX_RUNTIME_CUMULATIVE_ALLOCATION_UNITS = 5_000_000
+MAX_RUNTIME_CUMULATIVE_OUTPUT_CHARS = 20_000_000
+MAX_SOURCE_LOCATION_ENTRIES = 300_000
+MAX_WORLD_OBJECTS_PER_EXECUTION = 10_000
+MAX_WORLD_OBJECTS_PER_RUNTIME = 20_000
+MAX_DISPLAY_CHARS = 100_000
+MAX_DISPLAY_ITEMS = 10_000
+MAX_DISPLAY_DEPTH = 32
+MAX_CUMULATIVE_OUTPUT_CHARS = 2_000_000
 MAX_FUNCTION_DEPTH = 25
 MAX_EXPRESSION_DEPTH = 256
 MAX_POWER_EXPONENT = 100_000
 MAX_INTEGER_RESULT_BITS = 1_000_000
 MAX_COLLECTION_SIZE = 1_000_000
+MAX_OBSERVER_BUFFER_RECORDS = 50_000
+MAX_OBSERVER_SNAPSHOTS_PER_ADVANCE = 200
+MAX_OBSERVER_ENTITIES = 300
+MAX_LIBRARY_ARCHIVE_BYTES = 2_000_000
 MAX_LIBRARY_ARCHIVE_MEMBERS = 128
 MAX_LIBRARY_UNCOMPRESSED_BYTES = 2_000_000
-MANA_EVENT_NAMES = {"impact", "collision", "damaged", "path_opened", "path_closed", "energy_arrived", "plane_created", "being_summoned", "being_returned", "being_tamed", "being_reanimated", "being_animated", "mana_formed", "mana_burst", "mana_emitted", "object_ignited"}
+MAX_LIBRARY_MANIFEST_BYTES = 64_000
+MANA_EVENT_NAMES = {"impact", "collision", "damaged", "path_opened", "path_closed", "energy_arrived", "plane_created", "being_summoned", "being_returned", "being_tamed", "being_reanimated", "being_animated", "being_died", "being_revived", "being_lichified", "being_reconstituted", "blood_changed", "mana_formed", "mana_burst", "mana_emitted", "object_ignited"}
 MAX_TIMER_FIRES_PER_ADVANCE = 100_000
 MAX_PERSISTENCE_SECONDS = 60.0
 # The four fundamental elements are created directly. Other direct elemental
@@ -94,7 +118,72 @@ RUNTIME_MANAGED_PROPERTIES = ENERGY_DERIVED_PROPERTIES | {
 }
 
 
+@contextmanager
+def _open_bounded_library_archive(path: Path, name: str):
+    """Read a size-bounded archive from a single regular-file descriptor.
+
+    The no-follow flag, where supported, prevents a symlink swap between the
+    path check and open. Passing an immutable bounded byte snapshot to zipfile
+    also prevents a concurrent writer from changing the archive mid-parse.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        fd = os.open(path, flags)
+    except OSError as exc:
+        raise RuntimeErrorML(
+            f"cannot safely open library '{name}': {exc.strerror or exc.__class__.__name__}"
+        ) from exc
+    try:
+        with os.fdopen(fd, "rb") as handle:
+            info = os.fstat(handle.fileno())
+            if not stat.S_ISREG(info.st_mode):
+                raise RuntimeErrorML(f"library '{name}' must be a regular .manalib file")
+            if info.st_size > MAX_LIBRARY_ARCHIVE_BYTES:
+                raise RuntimeErrorML(
+                    f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_BYTES:,}-byte compressed archive limit"
+                )
+            data = handle.read(MAX_LIBRARY_ARCHIVE_BYTES + 1)
+            if len(data) > MAX_LIBRARY_ARCHIVE_BYTES:
+                raise RuntimeErrorML(
+                    f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_BYTES:,}-byte compressed archive limit"
+                )
+    except OSError as exc:
+        raise RuntimeErrorML(
+            f"cannot safely read library '{name}': {exc.strerror or exc.__class__.__name__}"
+        ) from exc
+    try:
+        with zipfile.ZipFile(io.BytesIO(data), "r") as archive:
+            yield archive
+    except zipfile.BadZipFile as exc:
+        raise RuntimeErrorML(f"library '{name}' is not a valid .manalib archive") from exc
+
+
 _OBJECT_IDS = count(1)
+# Most world objects start from the same immutable defaults for their element.
+# Reuse those templates after the first construction, copying mutable containers
+# per object so lists/sets never leak state between entities.
+_OBJECT_DEFAULTS_CACHE: dict[str, dict[str, Any]] = {}
+_MUTABLE_DEFAULT_KEYS = ("stabilizers", "energy_sources", "local_energy_sources", "forbidden_ops")
+# ``create Element`` currently creates the default 1 kg material object. Cache
+# its conversion readout so mass creation does not allocate a new Quantity for
+# each iteration of a large spell. If default mass ever becomes configurable,
+# route that path back through matter_to_mana(obj.properties["mass"]).
+_DEFAULT_CREATION_MANA_COST = matter_to_mana(Quantity(1, KG)).value
+# Physical material values are centralised in magiclang.materials so conjuration,
+# transmutation, the periodic table, and equipment share one catalogue.
+
+
+def _clone_default_properties(properties: dict[str, Any]) -> dict[str, Any]:
+    """Copy a cached default map while isolating its mutable collection values.
+
+    The cached defaults are built only by ``MagicObject.__post_init__`` and
+    always contain these keys with their documented container types. Copying
+    them directly avoids repeated type-dispatch in the hot object-creation path.
+    """
+    clone = properties.copy()
+    for key in _MUTABLE_DEFAULT_KEYS:
+        clone[key] = properties[key].copy()
+    return clone
 
 
 @dataclass(slots=True)
@@ -104,6 +193,13 @@ class MagicObject:
     object_id: int = field(default_factory=lambda: next(_OBJECT_IDS), init=False)
 
     def __post_init__(self):
+        was_empty = not self.properties
+        if was_empty:
+            cached_defaults = _OBJECT_DEFAULTS_CACHE.get(self.element)
+            if cached_defaults is not None:
+                self.properties = _clone_default_properties(cached_defaults)
+                return
+
         is_element = self.element in ELEMENTS or self.element in PLANAR_ELEMENT_NAMES
         kind = (
             "mana_construct" if self.element == "Mana"
@@ -157,7 +253,8 @@ class MagicObject:
             # 0 m means derive the collision proxy from volume. A positive value
             # explicitly overrides it. Shape labels are not exact collider geometry.
             "collision_radius": Quantity(0, M),
-            "restitution": 0.2,
+            "restitution": None,
+            "friction": None,
             "collidable": True,
             "acceleration_persistent": True,
             "anchored": False,
@@ -202,7 +299,7 @@ class MagicObject:
         for key, value in defaults.items():
             # Runtime-owned nullable properties must exist even before a value
             # is assigned (for example, collapsed_into is None until collapse).
-            if value is not None or key == "collapsed_into":
+            if value is not None or key in {"collapsed_into", "restitution", "friction"}:
                 self.properties.setdefault(key, value)
         # Target profiles may add fields such as resist_light or range, but normal
         # elemental objects expose only defined properties. Mana is never stored.
@@ -247,9 +344,14 @@ class MagicObject:
             else:
                 self.properties["integrity"] = max(0.0, min(1.0, 1.0 - (energy_j / break_energy) ** (1.0 / 3.0)))
 
+        # Cache only objects created with no caller-supplied properties. Never
+        # cache custom target profiles, composites, split objects, or summon data.
+        if was_empty:
+            _OBJECT_DEFAULTS_CACHE[self.element] = _clone_default_properties(self.properties)
+
     def get(self, name: str):
         if name == "mana":
-            raise RuntimeErrorML("mana is not stored on objects; inspect the spell's mana cost readout")
+            raise RuntimeErrorML("mana is not stored on objects; inspect the spell's mana appraisal readout")
         if name not in self.properties:
             raise TypeErrorML(f"{self.element} object has no property '{name}'")
         return self.properties[name]
@@ -325,6 +427,7 @@ class SpellResult:
     """Execution record produced by release() or post()."""
     mode: str
     spell: str
+    presentation: str = "text"
     ok: bool = True
     committed: bool = False
     incant_value: Any = None
@@ -332,18 +435,19 @@ class SpellResult:
     affected: list[Any] = field(default_factory=list)
     changes: list[SpellChange] = field(default_factory=list)
     hits: list[Any] = field(default_factory=list)
-    mana_used: Any = None  # retained field name; represents a calculated cost readout
+    mana_used: Any = None  # retained field name; represents a calculated appraisal readout
     energy_transfers: list[dict[str, Any]] = field(default_factory=list)
     rules_fired: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     trace: list[str] = field(default_factory=list)
+    report_label: str | None = None
     _created_ids: set[int] = field(default_factory=set, repr=False)
 
     def __repr__(self):
         status = "ok" if self.ok else "failed"
         return (f"<SpellResult {self.spell!r} mode={self.mode} {status}, "
                 f"created={len(self.created)}, affected={len(self.affected)}, changes={len(self.changes)}, "
-                f"hits={len(self.hits)}, mana_cost_readout={self.mana_used}>")
+                f"hits={len(self.hits)}, mana_appraisal={self.mana_used}>")
 
 
 @dataclass(slots=True)
@@ -414,7 +518,7 @@ class EventRegistration:
 
 class Runtime:
     LANGUAGE_KEYWORDS = {
-        "def", "spldef", "load", "incant", "tgset", "if", "elif", "else", "while", "for", "in",
+        "def", "spldef", "load", "incant", "tgset", "weave", "if", "elif", "else", "while", "for", "in",
         "and", "or", "not", "true", "false", "create", "simul",
         "wait", "after", "every", "when", "skip", "tune",
     }
@@ -423,17 +527,18 @@ class Runtime:
         "energy", "temp", "pressure", "state", "material", "mana",
         "integrity", "integrity_break_energy", "integrity_energy", "stabilizers", "bound_energy",
         "rot", "scale", "anchored", "anchor_pos", "direction", "active", "released", "bound",
-        "collision_radius", "restitution", "collidable", "acceleration_persistent", "combustible",
+        "collision_radius", "restitution", "friction", "collidable", "acceleration_persistent", "combustible",
         "powderable", "ignition_temp", "kind", "hp", "max_hp", "defence",
     }
     BUILTIN_NAMES = {
-        "shape", "move", "heat", "cool", "accelerate", "decelerate", "velocity",
-        "detect", "release", "bind", "combine", "separate", "transform", "compress",
+        "shape", "move", "heat", "cool", "accelerate", "decelerate", "velocity", "impulse",
+        "detect", "release", "bind", "combine", "separate", "transform", "compress", "summon",
         "expand", "momentum", "kinetic_energy", "force", "pressure",
         "has_domain", "matter_to_mana", "mana_to_matter", "mana_to_energy",
         "energy_to_mana", "show", "post", "active_objects", "sqrt", "span", "length", "advance_time", "emit",
         "rotate", "scale", "push", "pull", "reflect", "split",
-        "anchor", "unanchor", "dispel", "last_collisions",
+        "anchor", "unanchor", "dispel", "last_collisions", "conjure", "transmute", "transfigure",
+        "weather", "periodic", "world", "materials", "armory", "metals", "physiology", "anatomy", "arcana",
         "point", "line", "ray", "segment", "circle", "round", "arc", "ellipse",
         "ring", "polygon", "beam", "wave", "disc", "spiral", "fan", "wall", "field",
         "dome", "cage", "chain", "tendril", "cone", "corridor", "c",
@@ -441,8 +546,15 @@ class Runtime:
         "heaven", "atlantis", "fae_paradise", "lineage_halls", "wild_realm",
         "summoning", "drafter", "necromancy", "mana", "Mana",
     }
+    # check_name() is called for every assignment and function parameter. Build
+    # this immutable lookup once instead of allocating and unioning several sets
+    # inside every loop iteration.
+    RESERVED_IDENTIFIERS = frozenset(
+        LANGUAGE_KEYWORDS | RESERVED_PROPERTIES | BUILTIN_NAMES | set(ELEMENTS)
+        | set(PLANAR_ELEMENT_NAMES) | {"Mana", "distance", "magnitude", "aim"}
+    )
 
-    def __init__(self, project_root: str | Path | None = None):
+    def __init__(self, project_root: str | Path | None = None, *, observe_file: str | Path | None = None):
         self.global_env = Environment(scope_boundary=True)
         self.project_root = Path(project_root).resolve() if project_root is not None else Path.cwd().resolve()
         self.library_root = self.project_root / "libraries"
@@ -454,11 +566,51 @@ class Runtime:
         self._mana_lock = threading.RLock()
         self.total_mana_used = 0.0  # calculated readout; never a spendable pool
         self.energy_ledger: list[dict[str, Any]] = []
+        # Continuous simulation exchanges are accumulated per advance_time call
+        # instead of storing one Python dict per object per 60 Hz substep.
+        self._continuous_energy_batch: dict[str, dict[str, dict[str, Any]]] | None = None
         self._planar_channels: dict[tuple[str, str], dict[str, Any]] = {}
         self.energy_input_j = 0.0
         self.energy_output_j = 0.0
         self.elapsed_virtual_time = 0.0
         self.last_collisions: list[dict[str, Any]] = []
+        # Environment is world state, not spell state. Weather controls update
+        # these parameters; advance_time applies them to physics and materials.
+        self.environment_state: dict[str, Any] = {
+            "kind": "clear", "intensity": 0.0, "precipitation": "none",
+            "wind_speed_mps": 0.0, "wind_x_mps": 0.0, "wind_y_mps": 0.0,
+            "wind_direction_name": "east", "wind": 0.0, "wind_direction": 1.0,
+            "temperature_k": 293.15, "humidity": 0.45, "clouds": 0.0, "fog": 0.0,
+            "heat": 0.0, "lightning": 0.0, "started_at": 0.0, "until": None,
+            "duration": None, "indefinite": True,
+        }
+        # Local climate zones overlay the global climate only inside their radius.
+        # Newest matching zones take precedence; expired zones are pruned during
+        # world stepping and state snapshots so preview/release remain transactional.
+        self.weather_regions: list[dict[str, Any]] = []
+        self._next_weather_region_id = 1
+        # Magnetism is a bounded world field, distinct from a one-shot push/pull.
+        self.magnetic_fields: list[dict[str, Any]] = []
+        self._next_magnetic_field_id = 1
+        # User-defined alloys and item forms belong to one world/runtime, never
+        # to process-global registries that could leak between projects.
+        self.custom_material_profiles: dict[str, dict[str, Any]] = {}
+        self.custom_item_blueprints: dict[str, dict[str, Any]] = {}
+        self.custom_body_forms: dict[str, dict[str, Any]] = {}
+        # Anatomy catalogues and user-defined species/structures are scoped to one Runtime.
+        self.custom_anatomy_species: dict[str, dict[str, Any]] = {}
+        self.custom_anatomy_organs: dict[str, dict[str, Any]] = {}
+        self.custom_anatomy_systems: dict[str, dict[str, Any]] = {}
+        self.custom_arcana_schools: dict[str, dict[str, Any]] = {}
+        # The global world-law settings are independent of individual spells.
+        # A zero-gravity default preserves MANA's established 2D world unless a
+        # project explicitly enables gravity through world.configure().
+        self.world_settings = {
+            "gravity": Vector3(0, 0, 0, ACCELERATION), "air_density_kg_m3": 1.225,
+            "default_restitution": 0.2, "friction_coefficient": 0.35, "drag_enabled": True,
+            "thermal_exchange_enabled": True, "phase_changes_enabled": True,
+            "wetting_enabled": True,
+        }
         self._spell_run_stack: list[SpellResult] = []
         self._spell_instance_stack: list[SpellInstance | None] = []
         self._target_context_stack: list[MagicObject] = []
@@ -466,8 +618,23 @@ class Runtime:
         self._pure_call_depth = 0
         self._stop_requested = threading.Event()
         self._source_locations: dict[int, tuple[str, int, int]] = {}
+        # Keep only the last few parsed programs for repeated embedded runs and
+        # diagnostics. Their source maps stay usable without retaining every
+        # historical editor buffer forever.
+        self._recent_programs: list[Program] = []
+        # Host applications may reuse a Runtime for many editor runs. These
+        # lifetime quotas stop repeated individually-small runs growing retained
+        # allocations/output indefinitely.
+        self._runtime_allocation_units = 0
+        self._runtime_output_chars = 0
         self._diagnostic_context = threading.local()
         self._evaluation_context = threading.local()
+        # Shared across nested functions, spells and loops for one top-level run.
+        # This prevents individually-small allocations or loops from multiplying
+        # into an unbounded process allocation. Runtime instances also have a
+        # lifetime world-object cap for repeated embedded executions.
+        self._budget_context = threading.local()
+        self._world_object_ids_seen: set[int] = set()
         self.trace_detail = os.environ.get("MANA_TRACE_DETAIL", "full").strip().lower()
         if self.trace_detail not in {"summary", "full"}:
             self.trace_detail = "summary"
@@ -479,7 +646,297 @@ class Runtime:
         from .libraries.mana import build_library as build_mana_library
         mana_namespace = LibraryNamespace("mana", build_mana_library(self), "built-in", ())
         self.global_env.set_local("mana", mana_namespace)
+        from .libraries.weather import build_library as build_weather_library
+        weather_namespace = LibraryNamespace("weather", build_weather_library(self), "built-in", ())
+        self.global_env.set_local("weather", weather_namespace)
+        from .libraries.periodic import build_library as build_periodic_library
+        periodic_namespace = LibraryNamespace("periodic", build_periodic_library(), "built-in", ())
+        self.global_env.set_local("periodic", periodic_namespace)
+        from .libraries.world import build_library as build_world_library
+        world_namespace = LibraryNamespace("world", build_world_library(self), "built-in", ())
+        self.global_env.set_local("world", world_namespace)
         self.caster_position = Vector3(0, 0, 0, M)
+        self.observer = None
+        self._observer_buffers: list[list[tuple[str, float, dict[str, Any]]]] = []
+        self._observer_buffer_drops: list[int] = []
+        if observe_file is not None:
+            from .observe import ObservationRecorder
+            self.observer = ObservationRecorder(Path(observe_file))
+            self._observe("session.started", source_version=(self.project_root / "VERSION").read_text(encoding="utf-8").strip() if (self.project_root / "VERSION").is_file() else "unknown")
+
+    def close_observer(self) -> None:
+        """Close an optional recording. No observer is created for normal runs."""
+        observer, self.observer = self.observer, None
+        if observer is not None:
+            observer.close()
+
+    def _observe(self, event_type: str, **payload) -> None:
+        """Queue or write a best-effort observation without changing world state."""
+        if self.observer is None:
+            return
+        if self._spell_run_stack:
+            current_result = self._spell_run_stack[-1]
+            payload.setdefault("mode", current_result.mode)
+            payload.setdefault("spell", current_result.spell)
+            if current_result.mode == "post":
+                payload.setdefault("presentation", current_result.presentation)
+        record = (event_type, self.elapsed_virtual_time, payload)
+        if self._observer_buffers:
+            buffer = self._observer_buffers[-1]
+            if len(buffer) >= MAX_OBSERVER_BUFFER_RECORDS:
+                self._observer_buffer_drops[-1] += 1
+                return
+            buffer.append(record)
+        else:
+            self.observer.write(*record)
+
+    def _finish_observer_buffer(
+        self,
+        records: list[tuple[str, float, dict[str, Any]]],
+        *,
+        commit: bool,
+        dropped: int = 0,
+    ) -> None:
+        """Commit bounded telemetry only when the surrounding simulation commits."""
+        if not commit or self.observer is None:
+            return
+        if self._observer_buffers:
+            parent = self._observer_buffers[-1]
+            available = max(0, MAX_OBSERVER_BUFFER_RECORDS - len(parent))
+            parent.extend(records[:available])
+            overflow = max(0, len(records) - available) + dropped
+            self._observer_buffer_drops[-1] += overflow
+            return
+        for record in records:
+            self.observer.write(*record)
+        if dropped:
+            self.observer.write(
+                "recording.notice",
+                self.elapsed_virtual_time,
+                {"message": "Some observation events were omitted to keep memory bounded.", "dropped_events": dropped},
+            )
+
+    def _begin_observer_buffer(self) -> list[tuple[str, float, dict[str, Any]]] | None:
+        """Start a nested telemetry transaction when recording is enabled."""
+        if self.observer is None:
+            return None
+        records: list[tuple[str, float, dict[str, Any]]] = []
+        self._observer_buffers.append(records)
+        self._observer_buffer_drops.append(0)
+        return records
+
+    def _end_observer_buffer(
+        self,
+        records: list[tuple[str, float, dict[str, Any]]] | None,
+        *,
+        keep_world_events: bool,
+    ) -> None:
+        """Finish a telemetry transaction, hiding changes from failed releases."""
+        if records is None or self.observer is None:
+            return
+        if not self._observer_buffers or self._observer_buffers[-1] is not records:
+            raise RuntimeErrorML("internal Visualiser observation buffer order is invalid")
+        self._observer_buffers.pop()
+        dropped = self._observer_buffer_drops.pop()
+        if not keep_world_events:
+            # Preserve the attempt and result for debugging, plus only the final
+            # snapshot after the runtime has restored the pre-cast world. Earlier
+            # contacts/effects from a failed release were never committed.
+            tail_snapshot = next(
+                (record for record in reversed(records)
+                 if record[0] == "scene.snapshot" and record[2].get("reason", "").startswith("after_")),
+                None,
+            )
+            records = [
+                record for record in records
+                if record[0] in {"spell.started", "spell.result", "spell.crashed", "preview.output"}
+                or record is tail_snapshot
+            ]
+        self._finish_observer_buffer(records, commit=True, dropped=dropped)
+
+    def _visual_entity(self, obj: MagicObject) -> dict[str, Any]:
+        props = obj.properties
+        position = props.get("pos")
+        pos = [float(position.x), float(position.y)] if isinstance(position, Vector3) else None
+        radius = props.get("collision_radius")
+        if isinstance(radius, Quantity) and radius.dimension == M:
+            radius_m = radius.value
+        else:
+            area = props.get("area")
+            radius_m = math.sqrt(max(0.0, area.value) / math.pi) if isinstance(area, Quantity) and area.dimension == M2 else 0.22
+        threshold = props.get("integrity_break_energy")
+        threshold_j = threshold.value if isinstance(threshold, Quantity) and threshold.value > 0 else 1.0e8
+        kinetic = props.get("kinetic_energy")
+        thermal = props.get("thermal_energy")
+        temp = props.get("temp")
+        released = props.get("released_energy")
+        bound = props.get("bound_energy")
+        woven = props.get("mana_energy")
+        # A visual-only intensity derived from the engine's calculated energy. For
+        # matter, ignore its ordinary starting heat so a cold stone does not glow
+        # just because it exists; velocity, extra heat, released energy and bound
+        # energy all contribute. Woven constructs use their own effect energy.
+        # The logarithmic curve is deliberately cosmetic and never affects physics.
+        energy_for_glow = 0.0
+        if obj.element == "Mana":
+            energy_for_glow = woven.value if isinstance(woven, Quantity) else 0.0
+        else:
+            if isinstance(kinetic, Quantity):
+                energy_for_glow += max(0.0, kinetic.value)
+            if isinstance(thermal, Quantity):
+                mass = props.get("mass")
+                mass_kg = mass.value if isinstance(mass, Quantity) and mass.dimension == KG else 0.0
+                baseline_temp = ELEMENT_START_TEMPERATURE_K.get(obj.element, 293.15)
+                baseline_heat = max(0.0, mass_kg * DEFAULT_SPECIFIC_HEAT_J_PER_KG_K * baseline_temp)
+                energy_for_glow += max(0.0, thermal.value - baseline_heat)
+            if isinstance(released, Quantity):
+                energy_for_glow += max(0.0, released.value)
+            if isinstance(bound, Quantity):
+                energy_for_glow += max(0.0, bound.value)
+        glow_denominator = math.log1p(max(1.0, threshold_j))
+        energy_glow = max(0.0, min(1.0, math.log1p(max(0.0, energy_for_glow)) / glow_denominator))
+        return {
+            "id": obj.object_id,
+            "name": str(props.get("display_name") or obj.element),
+            "element": obj.element,
+            "kind": str(props.get("object_kind", "material")),
+            "shape": str(props.get("shape", "circle")),
+            "visual_form": str(props.get("visual_form", "")),
+            "state": str(props.get("state", "solid")),
+            "material": str(props.get("material", obj.element)),
+            "position": pos,
+            "radius_m": float(radius_m),
+            "active": bool(props.get("active", True)),
+            "collidable": bool(props.get("collidable", True)),
+            "anchored": bool(props.get("anchored", False)),
+            "hp": props.get("hp"),
+            "max_hp": props.get("max_hp"),
+            "integrity": props.get("integrity"),
+            "energy_glow": energy_glow,
+            "temperature_k": temp.value if isinstance(temp, Quantity) and math.isfinite(temp.value) else None,
+            "mass_kg": props.get("mass").value if isinstance(props.get("mass"), Quantity) and props["mass"].dimension == KG else None,
+            "volume_m3": props.get("volume").value if isinstance(props.get("volume"), Quantity) and props["volume"].dimension == M3 else None,
+            "density_kg_m3": props.get("density").value if isinstance(props.get("density"), Quantity) and props["density"].dimension == DENSITY else None,
+            "wetness": float(props.get("wetness", 0.0)),
+            "dust_coating": float(props.get("dust_coating", 0.0)),
+            "kinetic_energy_j": kinetic.value if isinstance(kinetic, Quantity) and math.isfinite(kinetic.value) else None,
+            "thermal_energy_j": thermal.value if isinstance(thermal, Quantity) and math.isfinite(thermal.value) else None,
+            "tamed": bool(props.get("is_tamed", False)),
+            "summoned": bool(props.get("is_summoned", False)),
+            "undead": bool(props.get("is_undead", False)),
+            "living": bool(props.get("living", props.get("object_kind") == "being")),
+            "created_by_conjure": bool(props.get("created_by_conjure", False)),
+            "composition": props.get("composition"),
+            "atomic_number": props.get("atomic_number"),
+            "element_symbol": props.get("element_symbol"),
+            "melting_point_k": props.get("melting_point_k"),
+            "boiling_point_k": props.get("boiling_point_k"),
+            "estimated_material_data": bool(props.get("estimated_material_data", False)),
+            "visual_scale": float(props.get("visual_scale", 1.0)),
+            # Lightweight species metadata lets the optional visualiser choose
+            # a suitable generic silhouette without loading anatomy into the renderer.
+            "species": str(props.get("species", ""))[:120],
+            "anatomy_species_id": str(props.get("anatomy_species_id", ""))[:120],
+            "body_form": str(props.get("body_form", ""))[:120],
+            "skeleton_type": str(props.get("skeleton_type", ""))[:80],
+        }
+
+    def _observed_objects(self, limit: int | None = None) -> list[MagicObject]:
+        """Collect objects for a snapshot, optionally stopping at a safe upper bound."""
+        found: dict[int, MagicObject] = {}
+        seen: set[int] = set()
+
+        def has_room() -> bool:
+            return limit is None or len(found) < limit
+
+        def walk(value):
+            if not has_room() or value is None:
+                return
+            marker = id(value)
+            if marker in seen:
+                return
+            if isinstance(value, MagicObject):
+                found[value.object_id] = value
+                seen.add(marker)
+                return
+            if isinstance(value, dict):
+                seen.add(marker)
+                for item in value.values():
+                    if not has_room():
+                        break
+                    walk(item)
+            elif isinstance(value, (list, tuple, set)):
+                seen.add(marker)
+                for item in value:
+                    if not has_room():
+                        break
+                    walk(item)
+            elif isinstance(value, Environment):
+                seen.add(marker)
+                for item in value.values.values():
+                    if not has_room():
+                        break
+                    walk(item)
+            elif isinstance(value, FunctionValue):
+                seen.add(marker)
+                walk(value.closure)
+            elif isinstance(value, SpellInstance):
+                seen.add(marker)
+                walk(value.definition)
+                walk(value.element)
+                for item in value.tuned_operations.values():
+                    if not has_room():
+                        break
+                    walk(item)
+
+        # Prefer the objects already materialised in the world. With huge user
+        # scopes this avoids walking every historical variable just to draw a
+        # bounded snapshot.
+        walk(self.active_objects)
+        if len(found) < (limit if limit is not None else float("inf")):
+            walk(self.global_env)
+        return sorted(found.values(), key=lambda item: item.object_id)
+    def _observer_value(self, value):
+        if isinstance(value, MagicObject):
+            return {"entity_id": value.object_id, "name": self._object_label(value), "element": value.element}
+        if isinstance(value, Quantity):
+            return {"value": value.value, "unit": str(value.dimension)}
+        if isinstance(value, Vector3):
+            return {"vector": [value.x, value.y, value.z], "unit": str(value.dimension)}
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            return value
+        if isinstance(value, (list, tuple)):
+            return [self._observer_value(item) for item in value[:100]]
+        if isinstance(value, dict):
+            return {str(key): self._observer_value(item) for key, item in list(value.items())[:100]}
+        return str(value)[:300]
+
+    def _observe_scene(self, reason: str, *, mode: str | None = None, presentation: str | None = None) -> None:
+        if self.observer is None:
+            return
+        max_entities = MAX_OBSERVER_ENTITIES
+        # Collect one extra item to detect truncation without scanning a million
+        # objects on every snapshot. The displayed count is explicitly a lower
+        # bound when the collection stops early.
+        objects = self._observed_objects(limit=max_entities + 1)
+        truncated = len(objects) > max_entities
+        entities = [self._visual_entity(obj) for obj in objects[:max_entities]]
+        payload = {
+            "reason": reason,
+            "entities": entities,
+            "entity_count": len(objects),
+            "entity_count_exact": not truncated,
+            "truncated": truncated,
+            "environment": dict(self.environment_state),
+        }
+        # _run_spell_mode emits its final snapshot after restoring the world and
+        # popping the spell stack. Pass the presentation explicitly so playback
+        # can distinguish the real restored world from a visual-only preview.
+        if mode is not None:
+            payload["mode"] = mode
+        if presentation is not None:
+            payload["presentation"] = presentation
+        self._observe("scene.snapshot", **payload)
 
     def _install_builtins(self):
         builtins = {
@@ -490,6 +947,7 @@ class Runtime:
             "accelerate": self.op_accelerate,
             "decelerate": self.op_decelerate,
             "velocity": self.op_velocity,
+            "impulse": self.op_impulse,
             "detect": self.op_detect,
             "bind": self.op_bind,
             "combine": self.op_combine,
@@ -520,6 +978,10 @@ class Runtime:
             "unanchor": self.op_unanchor,
             "dispel": self.op_dispel,
             "last_collisions": self.op_last_collisions,
+            "conjure": self.op_conjure,
+            "summon": self.op_summon,
+            "transmute": self.op_transmute,
+            "transfigure": self.op_transfigure,
             "sqrt": self.op_sqrt,
             "span": self.safe_span,
             "length": self.safe_length,
@@ -533,6 +995,7 @@ class Runtime:
             "point", "line", "ray", "segment", "circle", "round", "arc", "ellipse",
             "ring", "polygon", "beam", "wave", "disc", "spiral", "fan", "wall",
             "field", "dome", "cage", "chain", "tendril", "cone", "corridor",
+            "sphere", "ball", "projectile", "barrier", "shield",
         ):
             self.global_env.set_local(name, name)
 
@@ -572,7 +1035,7 @@ class Runtime:
             ensure_dependencies(namespace.dependencies or builtin_dependencies.get(name, ()))
             return namespace
 
-        if name in {"geometry2d", "vector3d", "planes", "mana", "drafter", "summoning", "necromancy"} or name in builtin_dependencies:
+        if name in {"geometry2d", "vector3d", "planes", "mana", "weather", "periodic", "materials", "armory", "metals", "physiology", "anatomy", "arcana", "drafter", "summoning", "necromancy"} or name in builtin_dependencies:
             dependencies = builtin_dependencies.get(name, ())
             ensure_dependencies(dependencies)
             if name == "geometry2d":
@@ -586,6 +1049,33 @@ class Runtime:
                 namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
             elif name == "mana":
                 from .libraries.mana import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "weather":
+                from .libraries.weather import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "periodic":
+                from .libraries.periodic import build_library
+                namespace = LibraryNamespace(name, build_library(), "built-in", tuple(dependencies))
+            elif name == "materials":
+                from .libraries.materials import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "armory":
+                from .libraries.armory import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "metals":
+                from .libraries.metals import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "physiology":
+                from .libraries.physiology import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "anatomy":
+                from .libraries.anatomy import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "arcana":
+                from .libraries.arcana import build_library
+                namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
+            elif name == "world":
+                from .libraries.world import build_library
                 namespace = LibraryNamespace(name, build_library(self), "built-in", tuple(dependencies))
             elif name == "drafter":
                 from .libraries.drafter import build_library
@@ -619,16 +1109,27 @@ class Runtime:
                 "elemental_planes, hell, heaven, atlantis, fae_paradise, lineage_halls, and wild_realm. "
                 f"User libraries must be packaged as libraries/{name}.manalib"
             )
+        try:
+            resolved_library_root = self.library_root.resolve()
+            resolved_package = package_path.resolve(strict=True)
+        except OSError as exc:
+            raise RuntimeErrorML(f"cannot inspect library package '{name}': {exc.strerror or exc.__class__.__name__}") from exc
+        if resolved_package.parent != resolved_library_root:
+            raise RuntimeErrorML(f"library '{name}' must be a regular .manalib file inside the project libraries directory")
+        package_path = resolved_package
 
         self._libraries_loading.add(name)
         self._library_load_stack.append(name)
         try:
-            with zipfile.ZipFile(package_path, "r") as archive:
+            with _open_bounded_library_archive(package_path, name) as archive:
                 infos = archive.infolist()
                 if len(infos) > MAX_LIBRARY_ARCHIVE_MEMBERS:
                     raise RuntimeErrorML(
                         f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_MEMBERS}-member archive limit"
                     )
+                member_names = [info.filename for info in infos]
+                if len(member_names) != len(set(member_names)):
+                    raise RuntimeErrorML(f"library '{name}' contains duplicate archive member names")
                 total_uncompressed = sum(info.file_size for info in infos)
                 if total_uncompressed > MAX_LIBRARY_UNCOMPRESSED_BYTES:
                     raise RuntimeErrorML(
@@ -638,9 +1139,17 @@ class Runtime:
                 if bad_member is not None:
                     raise RuntimeErrorML(f"library package '{name}' is corrupt at {bad_member}")
                 try:
-                    manifest = json.loads(archive.read("mana-library.json").decode("utf-8-sig"))
-                except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-                    raise RuntimeErrorML(f"library '{name}' has no valid mana-library.json manifest") from exc
+                    manifest_info = archive.getinfo("mana-library.json")
+                    if manifest_info.file_size > MAX_LIBRARY_MANIFEST_BYTES:
+                        raise RuntimeErrorML(
+                            f"library '{name}' manifest exceeds the {MAX_LIBRARY_MANIFEST_BYTES:,}-byte safety limit"
+                        )
+                    manifest_bytes = archive.read("mana-library.json")
+                    manifest = json.loads(manifest_bytes.decode("utf-8-sig"))
+                except RuntimeErrorML:
+                    raise
+                except (KeyError, UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+                    raise RuntimeErrorML(f"library '{name}' has no valid or safely nested mana-library.json manifest") from exc
                 if not isinstance(manifest, dict):
                     raise RuntimeErrorML(f"library '{name}' manifest must be a JSON object")
                 if manifest.get("format") != "manalib" or manifest.get("format_version") != 1:
@@ -670,6 +1179,10 @@ class Runtime:
                 from .parser import Parser
                 program = Parser(Lexer(source, f"{package_path}!/{entry}").tokenize(),
                                  f"{package_path}!/{entry}", allow_library_parameters=True).parse()
+                if len(self._source_locations) + len(program.locations) > MAX_SOURCE_LOCATION_ENTRIES:
+                    raise RuntimeErrorML(
+                        f"runtime reached the source-location safety limit ({MAX_SOURCE_LOCATION_ENTRIES:,} entries)"
+                    )
                 self._source_locations.update(program.locations)
                 allowed = (FunctionDef, LoadLibrary, SkipStatement)
                 if any(
@@ -721,8 +1234,126 @@ class Runtime:
             raise RuntimeErrorML("execution stopped by user")
 
     def execute(self, program: Program) -> Any:
-        self._source_locations.update(program.locations)
-        return self.exec_block(Block(program.statements), self.global_env)
+        owns_budget = getattr(self._budget_context, "state", None) is None
+        if owns_budget:
+            self._budget_context.state = {
+                "statements": 0,
+                "allocations": 0,
+                "world_objects": 0,
+                "world_ids": set(),
+                "output_chars": 0,
+            }
+            self._recent_programs.append(program)
+            del self._recent_programs[:-4]
+            self._prune_source_locations()
+        try:
+            if len(self._source_locations) + len(program.locations) > MAX_SOURCE_LOCATION_ENTRIES:
+                self._prune_source_locations()
+                if len(self._source_locations) + len(program.locations) > MAX_SOURCE_LOCATION_ENTRIES:
+                    raise RuntimeErrorML(
+                        f"runtime reached the source-location safety limit ({MAX_SOURCE_LOCATION_ENTRIES:,} entries)"
+                    )
+            self._source_locations.update(program.locations)
+            if self.observer is not None:
+                self._observe("program.started", filename=program.filename)
+            result = self.exec_block(Block(program.statements), self.global_env)
+            if self.observer is not None:
+                self._observe_scene("program.completed")
+                self._observe("program.completed", filename=program.filename)
+            return result
+        finally:
+            if owns_budget:
+                self._budget_context.state = None
+                self._prune_source_locations()
+
+    def _prune_source_locations(self) -> None:
+        """Drop source maps for old snippets unless a retained MANA function needs them."""
+        live_ast_ids: set[int] = set()
+        seen: set[int] = set()
+
+        def walk(value: Any) -> None:
+            if value is None or isinstance(value, (str, bytes, int, float, bool)):
+                return
+            identity = id(value)
+            if identity in seen:
+                return
+            seen.add(identity)
+            if isinstance(value, Environment):
+                for child in value.values.values():
+                    walk(child)
+                walk(value.parent)
+                return
+            if isinstance(value, FunctionValue):
+                walk(value.body)
+                walk(value.defaults)
+                walk(value.closure)
+                return
+            if isinstance(value, SpellInstance):
+                walk(value.definition)
+                walk(value.tuned_operations)
+                return
+            if isinstance(value, LibraryNamespace):
+                walk(value.values)
+                return
+            if isinstance(value, MagicObject):
+                # Object properties are world data; a language function is not
+                # permitted as a property through normal assignment, so only
+                # inspect values defensively rather than traversing host internals.
+                walk(value.properties)
+                return
+            if isinstance(value, dict):
+                for child in value.values():
+                    walk(child)
+                return
+            if isinstance(value, (list, tuple, set, frozenset)):
+                for child in value:
+                    walk(child)
+                return
+            if is_dataclass(value) and value.__class__.__module__.endswith(".ast_nodes"):
+                live_ast_ids.add(identity)
+                for item in fields(value):
+                    walk(getattr(value, item.name))
+
+        walk(self.global_env)
+        walk(self._library_namespaces)
+        walk(self._recent_programs)
+        if self._source_locations:
+            self._source_locations = {
+                identity: location for identity, location in self._source_locations.items()
+                if identity in live_ast_ids
+            }
+
+    def _charge_allocation(self, amount: int, kind: str = "collection") -> None:
+        """Charge both per-run and runtime-lifetime container growth before allocation."""
+        if amount <= 0:
+            return
+        state = getattr(self._budget_context, "state", None)
+        if state is None:
+            return
+        updated = state["allocations"] + amount
+        runtime_updated = self._runtime_allocation_units + amount
+        if updated > MAX_CUMULATIVE_ALLOCATION_UNITS:
+            raise RuntimeErrorML(
+                f"program exceeded the cumulative allocation safety limit "
+                f"({MAX_CUMULATIVE_ALLOCATION_UNITS:,} {kind} units)"
+            )
+        if runtime_updated > MAX_RUNTIME_CUMULATIVE_ALLOCATION_UNITS:
+            raise RuntimeErrorML(
+                f"runtime exceeded its cumulative allocation safety limit "
+                f"({MAX_RUNTIME_CUMULATIVE_ALLOCATION_UNITS:,} {kind} units)"
+            )
+        state["allocations"] = updated
+        self._runtime_allocation_units = runtime_updated
+
+    def _charge_statement(self) -> None:
+        state = getattr(self._budget_context, "state", None)
+        if state is None:
+            return
+        state["statements"] += 1
+        if state["statements"] > MAX_EXECUTION_STATEMENTS:
+            raise RuntimeErrorML(
+                f"program exceeded the execution statement budget ({MAX_EXECUTION_STATEMENTS:,})"
+            )
 
     def exec_block(self, block: Block, env: Environment):
         result = None
@@ -732,6 +1363,7 @@ class Runtime:
 
     def exec_stmt(self, stmt, env):
         self._check_stop_requested()
+        self._charge_statement()
         previous = getattr(self._diagnostic_context, "location", None)
         location = self._source_locations.get(id(stmt))
         if location is not None:
@@ -767,7 +1399,11 @@ class Runtime:
             if not isinstance(spell, (FunctionValue, SpellInstance)):
                 raise TypeErrorML(f"{stmt.mode}({stmt.spell.name}) expects a named spell or configured spell instance, not {type(spell).__name__}")
             # The record is available to host tools; MANA source cannot assign it.
-            return self.op_post(spell) if stmt.mode == "post" else self.op_release(spell)
+            if stmt.mode == "appraise":
+                return self.op_appraise(spell, presentation=stmt.presentation)
+            if stmt.mode == "cast":
+                return self.op_cast(spell)
+            return self.op_post(spell, presentation=stmt.presentation) if stmt.mode == "post" else self.op_release(spell)
 
         if isinstance(stmt, TuneAssignment):
             spell = self.eval_expr(stmt.spell, env)
@@ -791,6 +1427,18 @@ class Runtime:
             spell.tuned_operations[(stmt.operation, stmt.target_name)] = value
             return value
 
+        if isinstance(stmt, WeatherStatement):
+            if self._pure_call_depth:
+                raise MagicErrorML("weather changes world state; place the statement inside a spell and use post() or release()")
+            namespace = env.get("weather")
+            if not isinstance(namespace, LibraryNamespace):
+                raise RuntimeErrorML("the built-in weather rules are unavailable")
+            configure = namespace.values.get("configure")
+            if not callable(configure):
+                raise RuntimeErrorML("the built-in weather.configure operation is unavailable")
+            kwargs = {name: self.eval_expr(value, env) for name, value in stmt.fields}
+            return configure(stmt.kind, **kwargs)
+
         if isinstance(stmt, FunctionDef):
             if stmt.library_function:
                 # Library helpers live behind an explicit namespace, so their
@@ -803,7 +1451,7 @@ class Runtime:
             for param in stmt.params:
                 self.check_name(param)
             if stmt.is_spell and stmt.params and stmt.params != ["element"]:
-                raise TypeErrorML("spell definitions accept no parameters or one base-element selector: use 'spldef name(element):'")
+                raise TypeErrorML("spell definitions accept no parameters or one base-element selector: use 'spell name(element):'")
             env.assign(stmt.name, FunctionValue(
                 stmt.params, stmt.body, env, stmt.name, stmt.defaults,
                 library_function=stmt.library_function, is_spell=stmt.is_spell,
@@ -812,6 +1460,31 @@ class Runtime:
 
         if isinstance(stmt, SkipStatement):
             return None
+
+        if isinstance(stmt, WeaveMana):
+            if self._pure_call_depth:
+                raise MagicErrorML("a directly called definition cannot weave mana; use post() or release()")
+            allowed = {"shape", "radius", "energy", "position", "collidable", "anchored"}
+            unknown = sorted({name for name, _ in stmt.fields} - allowed)
+            if unknown:
+                raise TypeErrorML("unknown weave setting(s): " + ", ".join(unknown) + "; supported settings are " + ", ".join(sorted(allowed)))
+            from .shapes import SUPPORTED_SHAPES
+            kwargs = {
+                name: (value.name.casefold() if name == "shape" and isinstance(value, Name)
+                       else self.eval_expr(value, env))
+                for name, value in stmt.fields
+            }
+            kwargs["name"] = stmt.name
+            mana_namespace = env.get("mana")
+            form = mana_namespace.values.get("form") if isinstance(mana_namespace, LibraryNamespace) else None
+            if form is None:
+                raise RuntimeErrorML("the built-in mana construct helper is unavailable")
+            obj = form(**kwargs)
+            self.assign(Name(stmt.name), obj, env)
+            if self.observer is not None:
+                self._observe("entity.changed", entity=self._visual_entity(obj), operation="weave")
+                self._observe("activity", label=f"Wove {self._object_label(obj)}", action="weave")
+            return obj
 
         if isinstance(stmt, Assignment):
             value = self.eval_expr(stmt.value, env)
@@ -893,6 +1566,20 @@ class Runtime:
                 distance_value = target.properties.get("distance")
                 if isinstance(distance_value, Quantity) and distance_value.value > 0:
                     target.properties["pos"] = Vector3(distance_value.value, 0, 0, M)
+            # Combat/distance target profiles remain fixed unless the author opts
+            # out with anchored = false. tgset also defines ordinary materials
+            # (for example a rock to push), and those must remain movable.
+            is_target_profile = (
+                target.properties.get("kind", "target") == "target"
+                or "distance" in explicit_fields
+                or any(name in {"hp", "max_hp", "defence"} or name.startswith("resist_")
+                       for name in explicit_fields)
+            )
+            if is_target_profile and "anchored" not in explicit_fields:
+                target.properties["anchored"] = True
+            target.properties["anchor_pos"] = target.properties.get("pos")
+            if is_target_profile:
+                target.properties.setdefault("targetable", True)
             # tgset can represent target profiles as well as ordinary manipulable
             # matter. Recalculate density and energy after custom mass/volume/temp
             # values have been assigned so wood and rock profiles remain coherent.
@@ -997,9 +1684,17 @@ class Runtime:
     def assign(self, target, value, env):
         if isinstance(target, Name):
             self.check_name(target.name)
-            if isinstance(value, MagicObject) and value.properties.get("display_name") in (None, value.element):
-                # Give trace reports the source-level name when an object is assigned.
+            renamed_object = False
+            previous_label = None
+            if isinstance(value, MagicObject) and (
+                value.properties.get("display_name") in (None, value.element)
+                or (value.properties.get("object_kind") == "mana_construct"
+                    and str(value.properties.get("display_name", "")).startswith("mana_"))
+            ):
+                # Named constructs and material objects use the source-level variable name.
+                previous_label = self._object_label(value)
                 value.properties["display_name"] = target.name
+                renamed_object = previous_label != target.name
             if isinstance(value, MagicObject) and value.properties.get("is_summoned", False):
                 # Naming the result tames this particular summoned instance.
                 # Preserve its first stable name when the same object is aliased.
@@ -1009,6 +1704,14 @@ class Runtime:
             if isinstance(value, SpellInstance):
                 value.name = target.name
             env.assign(target.name, value)
+            # _record_created() happens before this assignment is known. Emit a
+            # rename record so a replay shows the source-level name, not an
+            # implementation label like "mana_disc".
+            if renamed_object and self.observer is not None and self._spell_run_stack:
+                self._observe(
+                    "entity.changed", entity=self._visual_entity(value), operation="name",
+                    previous_name=previous_label, new_name=target.name,
+                )
             return
         if isinstance(target, Attribute):
             if self._pure_call_depth:
@@ -1076,16 +1779,23 @@ class Runtime:
             try:
                 return env.get(expr.name)
             except RuntimeErrorML as exc:
-                candidates = set(self.LANGUAGE_KEYWORDS) | set(self.BUILTIN_NAMES)
-                scope = env
-                while scope is not None:
-                    candidates.update(scope.values)
-                    scope = scope.parent
-                matches = difflib.get_close_matches(expr.name, sorted(candidates), n=1, cutoff=0.65)
-                if matches:
-                    exc.hint = f"Did you mean '{matches[0]}'?"
+                documented_equivalents = {"range": "span", "len": "length", "True": "true", "False": "false"}
+                unsupported_python_words = {"try", "continue", "print", "break", "None", "import", "return", "pass"}
+                if expr.name in documented_equivalents:
+                    exc.hint = f"Did you mean '{documented_equivalents[expr.name]}'?"
+                elif expr.name not in unsupported_python_words:
+                    from .shapes import SUPPORTED_SHAPES
+                    candidates = (set(self.LANGUAGE_KEYWORDS) | set(self.BUILTIN_NAMES)) - set(SUPPORTED_SHAPES)
+                    scope = env
+                    while scope is not None:
+                        candidates.update(set(scope.values) - set(SUPPORTED_SHAPES))
+                        scope = scope.parent
+                    matches = difflib.get_close_matches(expr.name, sorted(candidates), n=1, cutoff=0.74)
+                    if matches:
+                        exc.hint = f"Did you mean '{matches[0]}'?"
                 raise
         if isinstance(expr, ListLiteral):
+            self._charge_allocation(len(expr.items), "list-item")
             return [self.eval_expr(item, env) for item in expr.items]
         if isinstance(expr, Subscript):
             container = self.eval_expr(expr.obj, env)
@@ -1112,13 +1822,15 @@ class Runtime:
                     raise MagicErrorML(
                         f"create expects a registered element type; '{element_name}' is not an element selector"
                     )
+            if element_name == "Mana":
+                raise MagicErrorML("mana is woven, not created; use `construct = weave mana` and add settings beneath `weave mana:` if needed")
             self._require_element_invocation(element_name)
             # MagicObject initializes a coherent energy and integrity baseline;
             # do not recompute that same baseline a second time here.
             obj = MagicObject(element_name)
             # Creation costs only the matter-manifestation rate, not its starting heat/motion energy.
             # Pure mana is a field/energy construct, not manifested matter.
-            creation_cost = 0.0 if element_name == "Mana" else matter_to_mana(obj.properties["mass"]).value
+            creation_cost = _DEFAULT_CREATION_MANA_COST
             obj.properties["creation_mana_cost"] = creation_cost
             if element_name != "Mana":
                 self.charge_mana(creation_cost, reason=f"create {element_name}", target=obj)
@@ -1237,7 +1949,7 @@ class Runtime:
         if isinstance(callee, FunctionValue):
             if callee.is_spell:
                 bound_values = self._bind_function_arguments(callee, args, kwargs)
-                # An element-parameterized spldef call configures an instance; it
+                # An element-parameterized spell-template call configures an instance; it
                 # never executes the spell body during configuration.
                 if callee.params == ["element"]:
                     return SpellInstance(callee, bound_values[0])
@@ -1246,7 +1958,7 @@ class Runtime:
                 )
             bound_values = self._bind_function_arguments(callee, args, kwargs)
             # `def` and library helpers are pure calculation functions. World
-            # operations remain restricted to spldef bodies run through post/release.
+            # operations remain restricted to spell bodies run through appraise/cast (or legacy post/release).
             self._pure_call_depth += 1
             try:
                 return self._execute_definition(callee, bound_values)
@@ -1336,15 +2048,19 @@ class Runtime:
         try:
             if op == "+":
                 if isinstance(left, str) and isinstance(right, str):
-                    if len(left) + len(right) > MAX_COLLECTION_SIZE:
+                    result_size = len(left) + len(right)
+                    if result_size > MAX_COLLECTION_SIZE:
                         raise RuntimeErrorML(
                             f"string result exceeds the MANA size limit ({MAX_COLLECTION_SIZE} characters)"
                         )
+                    self._charge_allocation(result_size, "string-character")
                 elif isinstance(left, list) and isinstance(right, list):
-                    if len(left) + len(right) > MAX_COLLECTION_SIZE:
+                    result_size = len(left) + len(right)
+                    if result_size > MAX_COLLECTION_SIZE:
                         raise RuntimeErrorML(
                             f"list result exceeds the MANA size limit ({MAX_COLLECTION_SIZE} items)"
                         )
+                    self._charge_allocation(result_size, "list-item")
                 result = left + right
             elif op == "-":
                 result = left - right
@@ -1354,9 +2070,14 @@ class Runtime:
                     repeated, multiplier = left, right
                 elif isinstance(right, (str, list)) and isinstance(left, int) and not isinstance(left, bool):
                     repeated, multiplier = right, left
-                if repeated is not None and multiplier > 0 and len(repeated) * multiplier > MAX_COLLECTION_SIZE:
-                    kind = "string characters" if isinstance(repeated, str) else "list items"
-                    raise RuntimeErrorML(f"repeated {kind} exceed the MANA size limit ({MAX_COLLECTION_SIZE})")
+                if repeated is not None:
+                    result_size = len(repeated) * max(0, multiplier)
+                    if result_size > MAX_COLLECTION_SIZE:
+                        kind = "string characters" if isinstance(repeated, str) else "list items"
+                        raise RuntimeErrorML(f"repeated {kind} exceed the MANA size limit ({MAX_COLLECTION_SIZE})")
+                    self._charge_allocation(
+                        result_size, "string-character" if isinstance(repeated, str) else "list-item"
+                    )
                 result = left * right
             elif op == "/":
                 result = left / right
@@ -1414,9 +2135,28 @@ class Runtime:
             return obj.get(name)
         if isinstance(obj, dict) and name in obj:
             return obj[name]
-        if hasattr(obj, name) and not name.startswith("_"):
-            return getattr(obj, name)
-        raise TypeErrorML(f"object has no property '{name}'")
+        # Only expose explicitly documented, read-only fields from small library
+        # data records. Never expose general Python methods such as list.extend,
+        # str.format, function.__globals__, or host-object internals.
+        safe_record_fields = {
+            ("magiclang.libraries.planar_registry", "PlaneReference"): {
+                "id", "name", "category", "data_library", "parent_plane", "is_region", "qualified_name",
+            },
+            ("magiclang.libraries.plane_data", "BeingRecord"): {
+                "name", "kind", "home_plane", "element", "summoning_requirements", "hp", "max_hp",
+                "defence", "attack", "resistance", "is_being_record",
+            },
+            ("magiclang.materials", "ElementRecord"): {
+                "atomic_number", "symbol", "name", "density_kg_m3", "standard_state", "category",
+                "estimated_density", "melting_point_k", "boiling_point_k",
+            },
+        }
+        key = (type(obj).__module__, type(obj).__name__)
+        if name in safe_record_fields.get(key, ()) and not name.startswith("_"):
+            value = getattr(obj, name)
+            if not callable(value):
+                return value
+        raise TypeErrorML(f"object has no MANA property '{name}'")
 
     def set_attr(self, obj, name, value):
         """Assign one property atomically, including energy/integrity side effects."""
@@ -1505,6 +2245,14 @@ class Runtime:
                 raise TypeErrorML("restitution must be a finite number between 0 and 1")
             if not 0 <= value <= 1:
                 raise PhysicsErrorML("restitution must be between 0 and 1")
+        if name == "friction":
+            if isinstance(value, Quantity):
+                if value.dimension != DIMENSIONLESS:
+                    raise UnitErrorML("friction must be dimensionless")
+                value = value.value
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)) or not 0 <= float(value) <= 2:
+                raise TypeErrorML("friction must be between 0 and 2")
+            value = float(value)
         if name == "collidable" and not isinstance(value, bool):
             raise TypeErrorML("collidable must be true or false")
         old = obj.properties[name]
@@ -1612,6 +2360,9 @@ class Runtime:
         elif name == "combustible":
             if not isinstance(value, bool):
                 raise TypeErrorML("target combustible must be true or false")
+        elif name == "anchored":
+            if not isinstance(value, bool):
+                raise TypeErrorML("target anchored must be true or false")
         elif name == "powderable":
             if not isinstance(value, bool):
                 raise TypeErrorML("target powderable must be true or false")
@@ -1641,6 +2392,14 @@ class Runtime:
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
                 raise TypeErrorML("target restitution must be between 0 and 1")
             value = float(value)
+        elif name == "friction":
+            if isinstance(value, Quantity):
+                if value.dimension != DIMENSIONLESS:
+                    raise UnitErrorML("target friction must be dimensionless")
+                value = value.value
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)) or not 0 <= float(value) <= 2:
+                raise TypeErrorML("target friction must be between 0 and 2")
+            value = float(value)
         elif name == "collidable":
             if not isinstance(value, bool):
                 raise TypeErrorML("target collidable must be true or false")
@@ -1653,8 +2412,13 @@ class Runtime:
         self.require_property(target, "shape", "shape")
         if not isinstance(geometry, str):
             raise TypeErrorML("shape() expects a built-in geometry name")
+        from .shapes import SUPPORTED_SHAPES
+        geometry = geometry.casefold()
+        if geometry not in SUPPORTED_SHAPES:
+            raise MagicErrorML(f"unsupported shape '{geometry}'; choose a shape from the MANA shape catalogue")
         self.charge_operation(target, "shape", kwargs, 1.0)
         target.properties["shape"] = geometry
+        self._observe("entity.changed", entity=self._visual_entity(target), operation="shape", shape=geometry)
         return target
 
     def op_move(self, target, distance, direction=None, **kwargs):
@@ -1696,6 +2460,7 @@ class Runtime:
         cost = delta.value * target.properties["mass"].value * DEFAULT_SPECIFIC_HEAT_J_PER_KG_K / JOULES_PER_MANA
         target.properties["temp"] = new_temp
         self.update_energy(target)
+        self._apply_material_phase_law(target)
         if target.properties.get("combustible", False) and not target.properties.get("burning", False):
             ignition = target.properties.get("ignition_temp", Quantity(573.15, K))
             if isinstance(ignition, Quantity) and ignition.dimension == K and new_temp.value >= ignition.value:
@@ -1725,6 +2490,7 @@ class Runtime:
         cost = delta.value * target.properties["mass"].value * DEFAULT_SPECIFIC_HEAT_J_PER_KG_K / JOULES_PER_MANA
         target.properties["temp"] = Quantity(new_temp, K)
         self.update_energy(target)
+        self._apply_material_phase_law(target)
         delta_energy = self.object_energy_j(target) - old_energy
         self.record_energy_delta("cool", target, delta_energy, source="surroundings (heat removed)")
         self.charge_operation(target, "cool", kwargs, cost)
@@ -1765,6 +2531,64 @@ class Runtime:
         target.properties["acc"] = new_acc
         target.properties["force"] = new_force
         target.properties["acceleration_persistent"] = True
+        return target
+
+    def op_impulse(self, target, impulse, **kwargs):
+        """Apply a physical impulse vector (change in momentum) to an object.
+
+        This is a general mechanics primitive, not a jump/attack-specific helper.
+        The impulse uses kg*m/s, adds to the object's current relativistic momentum,
+        then derives a sub-light-speed velocity for a massive object.
+        """
+        target = self.require_object(target, "impulse")
+        self.require_active_object(target, "impulse")
+        for prop in ("vel", "mass", "energy", "kinetic_energy", "thermal_energy"):
+            self.require_property(target, prop, "impulse")
+        if target.properties.get("anchored", False):
+            raise MagicErrorML("cannot apply an impulse to an anchored object; call unanchor() first")
+        if not isinstance(impulse, Vector3):
+            raise TypeErrorML("impulse() expects a momentum vector, for example vector3d.direction(1, 0, 0) * (10 kg*m/s)")
+        if impulse.dimension != MOMENTUM:
+            raise UnitErrorML(f"impulse() vector must use {MOMENTUM}")
+        impulse = require_2d_world_vector(impulse, "impulse() vector")
+        impulse_size = impulse.magnitude()
+        if impulse_size <= 0:
+            raise PhysicsErrorML("impulse() vector must be non-zero")
+        mass = self.as_quantity(target.properties["mass"], KG, "impulse() target mass")
+        mass_kg = float(mass.value)
+        if not math.isfinite(mass_kg) or mass_kg <= 0:
+            raise PhysicsErrorML("impulse() requires a target with positive finite mass")
+
+        old_energy = self.object_energy_j(target)
+        old_kinetic = target.properties["kinetic_energy"]
+        old_velocity = target.properties["vel"]
+        if not isinstance(old_velocity, Vector3) or old_velocity.dimension != VELOCITY:
+            raise UnitErrorML("impulse() target velocity must be a velocity vector")
+        old_momentum = momentum(mass, old_velocity)
+        new_momentum = old_momentum + impulse
+        p_size = new_momentum.magnitude()
+        if p_size <= 0:
+            new_velocity = Vector3(0.0, 0.0, 0.0, VELOCITY)
+        else:
+            # Invert p = gamma*m*v without forming p**2 or (m*c)**2 directly.
+            # hypot avoids unnecessary overflow for very large yet finite impulses.
+            denominator = math.hypot(mass_kg * C, p_size)
+            factor = C / denominator
+            new_velocity = Vector3(*(component * factor for component in new_momentum.components), VELOCITY)
+        new_velocity = enforce_speed(new_velocity, massive=True)
+        new_kinetic = kinetic_energy(mass, new_velocity)
+        cost = abs(new_kinetic.value - old_kinetic.value) / JOULES_PER_MANA
+        target.properties["vel"] = new_velocity
+        target.properties["momentum"] = momentum(mass, new_velocity)
+        target.properties["kinetic_energy"] = new_kinetic
+        self.update_total_energy(target)
+        delta_energy = self.object_energy_j(target) - old_energy
+        self.record_energy_delta("impulse", target, delta_energy, source="applied impulse")
+        self.charge_operation(target, "impulse", kwargs, cost)
+        self._observe("entity.changed", entity=self._visual_entity(target), operation="impulse",
+                      impulse=impulse.components, velocity=new_velocity.components,
+                      speed_m_s=new_velocity.magnitude())
+        self._record_step(f"impulse applied to {self._object_label(target)}; speed={new_velocity.magnitude():g} m/s")
         return target
 
     def op_velocity(self, target, velocity, **kwargs):
@@ -1831,14 +2655,33 @@ class Runtime:
         return target.get(property_name)
 
     def op_release(self, spell):
-        """Fire one named spell and commit its changes; source syntax is standalone."""
+        """Commit a spell's changes; the legacy source command is release(spell)."""
         resolved = self._resolve_spell(spell, mode="release")
         return self._run_spell_mode("release", resolved)
 
-    def op_post(self, spell):
-        """Trial one named spell, print its trace, and roll back world changes."""
+    def op_cast(self, spell):
+        """Native-language synonym for release, with CAST-labelled records."""
+        resolved = self._resolve_spell(spell, mode="cast")
+        return self._run_spell_mode("release", resolved, report_label="CAST")
+
+    def op_appraise(self, spell, presentation: str = "text"):
+        """Appraise a spell by running a non-committing trial and retaining its report."""
+        if presentation not in {"text", "visual"}:
+            raise TypeErrorML("appraise presentation must be 'text' or 'visual'")
+        resolved = self._resolve_spell(spell, mode="appraise")
+        return self._run_spell_mode("post", resolved, presentation=presentation, report_label="APPRAISAL")
+
+    def op_post(self, spell, presentation: str = "text"):
+        """Trial one named spell and roll back world changes.
+
+        ``text`` is the normal report. ``visual`` retains hypothetical scene events
+        in an active recording so the optional Visualiser can replay the cast.
+        Neither presentation commits world changes or opens a viewer by itself.
+        """
+        if presentation not in {"text", "visual"}:
+            raise TypeErrorML("post presentation must be 'text' or 'visual'")
         resolved = self._resolve_spell(spell, mode="post")
-        return self._run_spell_mode("post", resolved)
+        return self._run_spell_mode("post", resolved, presentation=presentation)
 
     def _resolve_spell(self, candidate, *, mode: str):
         if isinstance(candidate, SpellInstance):
@@ -1867,13 +2710,20 @@ class Runtime:
             raise TypeErrorML(f"{mode}() accepts a spell name only, not a magical object; use object operations for objects")
         raise TypeErrorML(f"{mode}() expects one spell name")
 
-    def _run_spell_mode(self, mode: str, spell: FunctionValue | SpellInstance):
+    def _run_spell_mode(self, mode: str, spell: FunctionValue | SpellInstance, *, presentation: str = "text", report_label: str | None = None):
+        label = report_label or ("POST" if mode == "post" else "RELEASE")
         instance = spell if isinstance(spell, SpellInstance) else None
         definition = instance.definition if instance is not None else spell
         spell_name = instance.name if instance is not None else definition.name
-        result = SpellResult(mode=mode, spell=spell_name, mana_used=Quantity(0, MANA))
+        result = SpellResult(
+            mode=mode, spell=spell_name, presentation=presentation,
+            mana_used=Quantity(0, MANA), report_label=report_label or ("POST" if mode == "post" else "RELEASE"),
+        )
         snapshot_roots = [self.global_env, self.active_objects, spell, *self._target_context_stack]
         snapshot = self._snapshot_runtime_state(snapshot_roots)
+        observation_buffer = self._begin_observer_buffer()
+        if self.observer is not None:
+            self._observe("spell.started", spell=spell_name, mode=mode, presentation=presentation, committed=False)
         mana_before = self.total_mana_used
         ledger_before = len(self.energy_ledger)
         self._spell_run_stack.append(result)
@@ -1886,14 +2736,14 @@ class Runtime:
                         f"{name}={self._stable_value(value)}"
                         for name, value in zip(definition.params, normalized_args)
                     ) or "no parameters"
-                    print(f"[POST {spell_name}] inputs: {values}")
+                    print(f"[{label} {spell_name}] inputs: {values}")
                 result.incant_value = self._execute_definition(definition, normalized_args)
                 if self._target_context_stack:
                     self._resolve_targeted_motion(result, self._target_context_stack[-1])
                 result.ok = True
                 result.trace.append(f"spell {spell_name} completed")
                 if mode == "post":
-                    print(f"[POST {spell_name}] spell completed")
+                    print(f"[{label} {spell_name}] spell completed")
             except MagicLangError as exc:
                 active_location = getattr(self._diagnostic_context, "location", None)
                 if active_location is not None:
@@ -1903,13 +2753,18 @@ class Runtime:
                 result.errors.append(message)
                 result.trace.append(f"ERROR: {message}")
                 if mode == "post":
-                    print(f"[POST {spell_name}] ERROR: {message}")
+                    print(f"[{label} {spell_name}] ERROR: {message}")
                 elif mode == "release":
-                    print(f"[RELEASE {spell_name}] ERROR: {message}")
+                    print(f"[{label} {spell_name}] ERROR: {message}")
             except Exception as exc:
                 # Do not disguise interpreter defects as ordinary spell failures.
                 # Roll back this run, print diagnostics for library-hosted use, and re-raise.
                 self._restore_runtime_state(snapshot)
+                if self.observer is not None:
+                    self._observe("spell.crashed", spell=spell_name, mode=mode, error=str(exc)[:500])
+                    self._observe_scene("after_error", mode=mode, presentation=presentation)
+                    self._end_observer_buffer(observation_buffer, keep_world_events=False)
+                    observation_buffer = None
                 if not getattr(exc, "_mana_traceback_printed", False):
                     traceback.print_exc(file=sys.stderr)
                     try:
@@ -1923,19 +2778,27 @@ class Runtime:
             self._spell_run_stack.pop()
             self._spell_instance_stack.pop()
 
+        if mode == "release" and report_label == "CAST" and result.ok:
+            print(f"[{label} {spell_name}] spell committed")
+            print(f"[{label} {spell_name}] mana appraisal: {self._stable_value(result.mana_used)}")
         if mode == "post":
-            print(f"[POST {spell_name}] mana cost: {self._stable_value(result.mana_used)}")
+            print(f"[{label} {spell_name}] mana appraisal: {self._stable_value(result.mana_used)}")
             if result.created:
                 created_summary = []
                 for obj in result.created:
                     mass = obj.properties.get("mass")
                     mass_text = f", {self._stable_value(mass)}" if mass is not None else ""
                     created_summary.append(f"{self._object_label(obj)} ({obj.element}{mass_text})")
-                print(f"[POST {spell_name}] created: {', '.join(created_summary)}")
+                print(f"[{label} {spell_name}] created: {', '.join(created_summary)}")
             if result.hits:
-                print(f"[POST {spell_name}] hits: {', '.join(self._stable_value(x) for x in result.hits)}")
+                print(f"[{label} {spell_name}] hits: {', '.join(self._stable_value(x) for x in result.hits)}")
             if result.errors:
-                print(f"[POST {spell_name}] errors: {'; '.join(result.errors)}")
+                print(f"[{label} {spell_name}] errors: {'; '.join(result.errors)}")
+            if presentation == "visual" and self.observer is None:
+                print(
+                    f"[{label} {spell_name}] visual replay was requested, but no Visualiser recording is active; "
+                    "click the Visual button in VS Code or run with --record to view this non-committing preview"
+                )
 
         if mode == "post" or not result.ok:
             # Keep the hypothetical result for inspection while rolling back all
@@ -1960,6 +2823,15 @@ class Runtime:
                 if obj_id not in active_ids:
                     self.active_objects.append(obj)
                     active_ids.add(obj_id)
+        if self.observer is not None:
+            self._observe("spell.result", spell=result.spell, mode=result.mode, presentation=result.presentation, ok=result.ok,
+                          committed=result.committed, errors=list(result.errors), trace=result.trace[:2000],
+                          trace_truncated=len(result.trace) > 2000)
+            self._observe_scene("after_" + mode, mode=mode, presentation=presentation)
+            self._end_observer_buffer(
+                observation_buffer,
+                keep_world_events=((mode == "post" and presentation == "visual") or result.committed),
+            )
         return result
 
     def _resolve_targeted_motion(self, result: SpellResult, selected: MagicObject) -> None:
@@ -2008,24 +2880,52 @@ class Runtime:
         )
 
     def _record_step(self, detail: str):
+        if self.observer is not None:
+            location = getattr(self._diagnostic_context, "location", None)
+            payload = {"label": detail}
+            if location is not None:
+                payload.update(filename=location[0], line=location[1], column=location[2])
+            self._observe("activity", **payload)
         if not self._spell_run_stack:
             return
         result = self._spell_run_stack[-1]
         result.trace.append(detail)
         if result.mode == "post" and self.trace_detail == "full":
-            print(f"[POST {result.spell}] {detail}")
+            print(f"[{result.report_label or 'POST'} {result.spell}] {detail}")
 
     def _record_created(self, obj, reason: str = "created"):
-        if not isinstance(obj, MagicObject) or not self._spell_run_stack:
+        if not isinstance(obj, MagicObject):
+            return
+        object_key = obj.object_id
+        if object_key not in self._world_object_ids_seen:
+            if len(self._world_object_ids_seen) >= MAX_WORLD_OBJECTS_PER_RUNTIME:
+                raise RuntimeErrorML(
+                    f"runtime exceeded the world-object safety limit ({MAX_WORLD_OBJECTS_PER_RUNTIME:,})"
+                )
+            state = getattr(self._budget_context, "state", None)
+            if state is not None and object_key not in state["world_ids"]:
+                if state["world_objects"] >= MAX_WORLD_OBJECTS_PER_EXECUTION:
+                    raise RuntimeErrorML(
+                        f"program exceeded the world-object safety limit ({MAX_WORLD_OBJECTS_PER_EXECUTION:,})"
+                    )
+                state["world_objects"] += 1
+                state["world_ids"].add(object_key)
+            self._world_object_ids_seen.add(object_key)
+        if not self._spell_run_stack:
             return
         result = self._spell_run_stack[-1]
         if id(obj) in result._created_ids:
             return
         result._created_ids.add(id(obj))
         result.created.append(obj)
+        if self.observer is not None:
+            self._observe("entity.created", entity=self._visual_entity(obj), mode=result.mode, committed=False)
         mass = obj.properties.get("mass")
         mass_text = f", {self._stable_value(mass)}" if mass is not None else ""
-        self._record_step(f"created {self._object_label(obj)} ({obj.element}{mass_text}; {reason})")
+        if obj.element == "Mana":
+            self._record_step(f"{self._object_label(obj)} takes shape")
+        else:
+            self._record_step(f"created {self._object_label(obj)} ({obj.element}{mass_text}; {reason})")
 
     @staticmethod
     def _object_label(value: MagicObject) -> str:
@@ -2082,6 +2982,8 @@ class Runtime:
                         recorder.affected.append(obj)
                     self._record_step(repr(change))
                     changes_found += 1
+            if self.observer is not None:
+                self._observe("entity.changed", entity=self._visual_entity(obj), operation=op_name)
         if method == "op_combine" and isinstance(output, MagicObject):
             self._record_created(output, reason="combine result")
             rule = output.properties.get("interaction", "element interaction")
@@ -2209,7 +3111,21 @@ class Runtime:
             "energy_ledger": [dict(entry) for entry in self.energy_ledger],
             "energy_input_j": self.energy_input_j,
             "energy_output_j": self.energy_output_j,
+            "continuous_energy_batch": copy.deepcopy(self._continuous_energy_batch),
             "elapsed_virtual_time": self.elapsed_virtual_time,
+            "environment_state": dict(self.environment_state),
+            "weather_regions": copy.deepcopy(self.weather_regions),
+            "next_weather_region_id": self._next_weather_region_id,
+            "magnetic_fields": copy.deepcopy(self.magnetic_fields),
+            "next_magnetic_field_id": self._next_magnetic_field_id,
+            "custom_material_profiles": copy.deepcopy(self.custom_material_profiles),
+            "custom_item_blueprints": copy.deepcopy(self.custom_item_blueprints),
+            "custom_body_forms": copy.deepcopy(self.custom_body_forms),
+            "custom_anatomy_species": copy.deepcopy(self.custom_anatomy_species),
+            "custom_anatomy_organs": copy.deepcopy(self.custom_anatomy_organs),
+            "custom_anatomy_systems": copy.deepcopy(self.custom_anatomy_systems),
+            "custom_arcana_schools": copy.deepcopy(self.custom_arcana_schools),
+            "world_settings": dict(self.world_settings),
             "last_collisions": [dict(item) for item in self.last_collisions],
         }
 
@@ -2247,7 +3163,21 @@ class Runtime:
         self.energy_ledger = [dict(entry) for entry in snapshot["energy_ledger"]]
         self.energy_input_j = snapshot["energy_input_j"]
         self.energy_output_j = snapshot["energy_output_j"]
+        self._continuous_energy_batch = copy.deepcopy(snapshot.get("continuous_energy_batch"))
         self.elapsed_virtual_time = snapshot["elapsed_virtual_time"]
+        self.environment_state = dict(snapshot.get("environment_state", self.environment_state))
+        self.weather_regions = copy.deepcopy(snapshot.get("weather_regions", []))
+        self._next_weather_region_id = snapshot.get("next_weather_region_id", self._next_weather_region_id)
+        self.magnetic_fields = copy.deepcopy(snapshot.get("magnetic_fields", []))
+        self._next_magnetic_field_id = snapshot.get("next_magnetic_field_id", self._next_magnetic_field_id)
+        self.custom_material_profiles = copy.deepcopy(snapshot.get("custom_material_profiles", {}))
+        self.custom_item_blueprints = copy.deepcopy(snapshot.get("custom_item_blueprints", {}))
+        self.custom_body_forms = copy.deepcopy(snapshot.get("custom_body_forms", {}))
+        self.custom_anatomy_species = copy.deepcopy(snapshot.get("custom_anatomy_species", {}))
+        self.custom_anatomy_organs = copy.deepcopy(snapshot.get("custom_anatomy_organs", {}))
+        self.custom_anatomy_systems = copy.deepcopy(snapshot.get("custom_anatomy_systems", {}))
+        self.custom_arcana_schools = copy.deepcopy(snapshot.get("custom_arcana_schools", {}))
+        self.world_settings = dict(snapshot.get("world_settings", self.world_settings))
         self.last_collisions = [dict(item) for item in snapshot.get("last_collisions", [])]
         if snapshot.get("planar_registry_present"):
             current_registry = getattr(self, "_planar_registry", None)
@@ -2484,6 +3414,512 @@ class Runtime:
             restored.append(carrier)
         return restored
 
+    def op_summon(self, being, source_plane=None, *, position=None, requirements=None):
+        """Bring a catalogue being through its plane route using native MANA syntax."""
+        if self._pure_call_depth:
+            raise MagicErrorML("a directly called definition cannot summon a being; put the operation in a spell and use appraise or cast")
+        # Native summon is a language construct, so the common operation loads its
+        # required namespaces itself. Advanced callers may still use summoning.bring.
+        if not self.global_env.contains("planes"):
+            self.global_env.set_local("planes", self._load_library("planes"))
+        if not self.global_env.contains("summoning"):
+            self.global_env.set_local("summoning", self._load_library("summoning"))
+        namespace = self.global_env.get("summoning")
+        if not isinstance(namespace, LibraryNamespace):
+            raise RuntimeErrorML("the built-in summoning rules are unavailable")
+        bring = namespace.values.get("bring")
+        if not callable(bring):
+            raise RuntimeErrorML("the built-in summoning operation is unavailable")
+        return bring(being, source_plane, position=position, requirements=requirements)
+
+    def op_conjure(self, source, *, material=None, item=None, mass=None, position=None, shape=None, name=None,
+                   temperature=None, density=None, state=None, velocity=None, anchored=False,
+                   collidable=True, restitution=None, friction=None, drag_coefficient=None,
+                   length=None, width=None, thickness=None, durability=None, payload=None, **kwargs):
+        """Create physical matter, optionally using a reusable equipment blueprint.
+
+        ``conjure steel`` creates ordinary matter. ``conjure sword, material=steel``
+        creates the same physical matter with a reusable sword profile. Blueprint
+        metadata never substitutes for mass, material, collision, or world physics.
+        """
+        if self._pure_call_depth:
+            raise MagicErrorML("a directly called definition cannot conjure matter; use post() or release()")
+        if kwargs:
+            unknown = ", ".join(sorted(kwargs))
+            raise TypeErrorML(f"conjure() got unsupported option(s): {unknown}")
+        from .equipment import blueprint as get_blueprint, canonical_item
+        if isinstance(source, ElementTypeValue):
+            raise MagicErrorML("conjure() creates physical matter; use create for elemental manifestations and summoning for beings")
+        if not isinstance(source, str) or not source.strip():
+            raise TypeErrorML("conjure() source must be a material name or equipment blueprint")
+        def _item_key(value):
+            if not isinstance(value, str):
+                return None
+            standard = canonical_item(value)
+            if standard is not None:
+                return standard
+            custom_key = " ".join(value.casefold().replace("_", " ").replace("-", " ").split())
+            return custom_key if custom_key in self.custom_item_blueprints else None
+        def _item_blueprint(key):
+            if key in self.custom_item_blueprints:
+                return copy.deepcopy(self.custom_item_blueprints[key])
+            return get_blueprint(key)
+        if material is not None and (not isinstance(material, str) or not material.strip()):
+            raise TypeErrorML("conjure() material must be non-empty text")
+        if item is not None and (not isinstance(item, str) or not item.strip()):
+            raise TypeErrorML("conjure() item must be non-empty text")
+
+        source_name = " ".join(source.strip().split())
+        source_item = _item_key(source_name)
+        explicit_item = _item_key(item) if item is not None else None
+        if item is not None and explicit_item is None:
+            raise MagicErrorML(f"unknown equipment blueprint '{item}'; inspect armory.blueprints() for supported forms")
+        if source_item is not None and item is not None:
+            raise MagicErrorML("conjure() cannot specify an item blueprint both as its first word and item=...")
+        blueprint_name = source_item or explicit_item
+        blueprint_data = _item_blueprint(blueprint_name) if blueprint_name else None
+        if item is not None:
+            chosen_material = material if material is not None else source_name
+        elif source_item is not None:
+            chosen_material = material if material is not None else blueprint_data["material"]
+        else:
+            if material is not None:
+                raise MagicErrorML("material=... is only valid when conjuring an equipment blueprint; write 'conjure sword, material=steel'")
+            chosen_material = source_name
+
+        material_name = " ".join(chosen_material.strip().replace("_", " ").split())
+        element_record = resolve_element(material_name)
+        initial_material_key = " ".join(material_name.casefold().replace("-", " ").split())
+        custom_profile = self.custom_material_profiles.get(initial_material_key)
+        canonical_material = resolve_material(material_name)
+        if element_record is not None:
+            material_name = element_record.name
+        elif custom_profile is not None:
+            material_name = str(custom_profile["name"])
+        elif canonical_material is not None:
+            material_name = canonical_material
+        material_key = " ".join(material_name.casefold().replace("-", " ").split())
+        if material_key in {"mana", "pure mana", "puremana", "thermalrelease"}:
+            raise MagicErrorML("conjure() creates ordinary matter, not pure mana or released-energy carriers; use weave mana for mana constructs")
+        magical_names = {entry.casefold() for entry in (set(ELEMENTS) | set(PLANAR_ELEMENT_NAMES))}
+        if material_key in magical_names and material_key not in MATERIAL_DENSITIES_KG_M3 and element_record is None:
+            raise MagicErrorML("conjure() creates physical matter; use create for elemental manifestations and summoning for beings")
+        profile = (dict(custom_profile) if custom_profile is not None else physical_material_profile(material_name))
+        if element_record is not None and element_record.density_kg_m3 is None and density is None:
+            raise MagicErrorML(f"density for {element_record.name} is not registered; provide density=... explicitly")
+        if material_key not in MATERIAL_DENSITIES_KG_M3 and material_key not in self.custom_material_profiles and density is None:
+            choices = ", ".join(sorted(k for k in MATERIAL_DENSITIES_KG_M3 if k in {"steel", "iron", "aluminum", "wood", "stone", "glass", "titanium", "mithril", "adamant", "water"}))
+            raise MagicErrorML(f"conjure() has no density for '{material_name}'; provide density=... or use a registered material such as {choices}")
+        density_kg_m3 = (float(profile["density_kg_m3"]) if profile and profile.get("density_kg_m3") is not None
+                         else MATERIAL_DENSITIES_KG_M3.get(material_key, 1000.0))
+        if density is not None:
+            density_kg_m3 = self.as_quantity(density, DENSITY, "conjure() density").value
+        if not math.isfinite(density_kg_m3) or density_kg_m3 <= 0:
+            raise PhysicsErrorML("conjure() density must be finite and greater than zero")
+
+        default_mass = float(blueprint_data["mass_kg"]) if blueprint_data else 1.0
+        mass_q = Quantity(default_mass, KG) if mass is None else self.as_quantity(mass, KG, "conjure() mass")
+        if not math.isfinite(mass_q.value) or mass_q.value <= 0 or mass_q.value > 1e12:
+            raise PhysicsErrorML("conjure() mass must be greater than 0 and no more than 1e12 kg")
+        volume_value = mass_q.value / density_kg_m3
+        area_value = volume_value ** (2.0 / 3.0)
+        if not all(math.isfinite(v) and v > 0 for v in (volume_value, area_value)):
+            raise PhysicsErrorML("conjure() dimensions are outside the supported range")
+        if position is None:
+            position = Vector3(self.caster_position.x + 2.0, self.caster_position.y, 0, M)
+        if not isinstance(position, Vector3) or position.dimension != M:
+            raise UnitErrorML("conjure() position must be a 2D position measured in metres")
+        position = require_2d_world_vector(position, "conjure() position")
+        from .shapes import SUPPORTED_SHAPES
+        chosen_shape = shape if shape is not None else (blueprint_data["shape"] if blueprint_data else "sphere")
+        if not isinstance(chosen_shape, str) or chosen_shape.casefold() not in SUPPORTED_SHAPES:
+            raise MagicErrorML("conjure() shape must be a supported MANA shape")
+        chosen_shape = chosen_shape.casefold()
+        if not isinstance(anchored, bool) or not isinstance(collidable, bool):
+            raise TypeErrorML("conjure() anchored and collidable options must be true or false")
+        if velocity is None:
+            velocity = Vector3(0, 0, 0, VELOCITY)
+        if not isinstance(velocity, Vector3) or velocity.dimension != VELOCITY:
+            raise UnitErrorML("conjure() velocity must be a velocity vector, e.g. velocity=direction(1, 0) * (5 m/s)")
+        velocity = enforce_speed(require_2d_world_vector(velocity, "conjure() velocity"), massive=True)
+
+        def _physical_coefficient(value, default, label, maximum=2.5):
+            if value is None:
+                return default
+            if isinstance(value, bool) or not isinstance(value, (int, float, Quantity)):
+                raise TypeErrorML(f"conjure() {label} must be a finite number")
+            numeric = float(self.as_quantity(value, DIMENSIONLESS, f"conjure() {label}").value) if isinstance(value, Quantity) else float(value)
+            if not math.isfinite(numeric) or not 0 <= numeric <= maximum:
+                raise PhysicsErrorML(f"conjure() {label} must be between 0 and {maximum:g}")
+            return numeric
+
+        object_restitution = _physical_coefficient(restitution, float(self.world_settings.get("default_restitution", 0.2)), "restitution", 1.0)
+        object_friction = _physical_coefficient(friction, float(self.world_settings.get("friction_coefficient", 0.35)), "friction", 2.0)
+        object_drag = _physical_coefficient(drag_coefficient, 1.0, "drag_coefficient", 2.5)
+        temp_k = 293.15 if temperature is None else self.as_quantity(temperature, K, "conjure() temperature").value
+        if not math.isfinite(temp_k) or temp_k < 0 or temp_k > 1e7:
+            raise PhysicsErrorML("conjure() temperature must be between 0 K and 10000000 K")
+        state_value = (MATERIAL_DEFAULT_STATES.get(material_key, element_record.standard_state if element_record else "solid")
+                       if state is None else state)
+        if not isinstance(state_value, str) or state_value.casefold() not in {"solid", "liquid", "gas", "plasma", "powder"}:
+            raise MagicErrorML("conjure() state must be solid, liquid, gas, plasma, or powder")
+        if state is None:
+            phase = phase_for_temperature(material_name, temp_k, state_value)
+            if phase is not None:
+                state_value = phase
+        state_value = state_value.casefold()
+
+        def _dimension(value, field_name):
+            default = float(blueprint_data[f"{field_name}_m"]) if blueprint_data else None
+            if value is None:
+                return default
+            if not isinstance(value, Quantity) or value.dimension != M:
+                raise UnitErrorML(f"conjure() {field_name} must be a distance, e.g. {field_name}=0.8 m")
+            number = float(value.value)
+            if not math.isfinite(number) or not 1e-4 <= number <= 1000:
+                raise PhysicsErrorML(f"conjure() {field_name} must be between 0.0001 and 1000 metres")
+            return number
+
+        item_length, item_width, item_thickness = _dimension(length, "length"), _dimension(width, "width"), _dimension(thickness, "thickness")
+        if blueprint_data:
+            if item_length is None or item_width is None or item_thickness is None:
+                raise RuntimeErrorML("equipment blueprint is missing a physical dimension")
+            area_value = max(area_value, item_length * item_width)
+        if durability is not None:
+            if isinstance(durability, bool) or not isinstance(durability, (int, float)) or not math.isfinite(float(durability)) or not 0 < float(durability) <= 1e9:
+                raise PhysicsErrorML("conjure() durability must be greater than 0 and at most 1e9")
+            item_durability = float(durability)
+        else:
+            item_durability = float(blueprint_data["durability"]) if blueprint_data else None
+        if payload is not None:
+            if not isinstance(payload, str):
+                raise TypeErrorML("conjure() payload must be text")
+            payload = payload.strip().casefold().replace("_", " ")
+            if payload not in {"none", "binding", "net", "shock", "smoke", "flare", "anchor", "burst", "acid"}:
+                raise MagicErrorML("conjure() payload must be none, binding, shock, smoke, flare, anchor, burst, or acid")
+            if not blueprint_data or blueprint_data["slot"] != "projectile":
+                raise MagicErrorML("payload=... is supported only for projectile blueprints such as arrow, shock arrow, or smoke arrow")
+        elif blueprint_data:
+            payload = blueprint_data.get("payload", "none")
+
+        composition = (copy.deepcopy(profile.get("composition_record")) if profile.get("composition_record")
+                       else composition_for_material(material_name, element_record))
+        if profile is None:
+            profile = {"name": material_name, "density_kg_m3": density_kg_m3, "state": state_value,
+                       "category": "custom material", "hardness_index": 0.35, "toughness_index": 0.4,
+                       "strength_mpa": 100.0, "magnetic_response": 0.0, "electrical_conductivity": 0.2,
+                       "thermal_conductivity": 0.2, "combustible": False, "brittle": False,
+                       "corrosion_resistance": 0.4, "estimated": True, "source": "user-defined-density"}
+        else:
+            profile = dict(profile)
+            profile["density_kg_m3"] = density_kg_m3
+        category = str(profile.get("category", "")).casefold()
+        is_metal = ("metal" in category or "alloy" in category or float(profile.get("magnetic_response", 0.0)) > 0
+                    or material_key in {"iron", "steel", "stainless steel", "gold", "silver", "copper", "aluminum", "aluminium", "bronze", "brass", "lead", "tin", "titanium", "platinum", "mithril", "adamant"})
+        props = {
+            "object_kind": "material", "kind": "material", "material": material_name,
+            "display_name": (name.strip() if isinstance(name, str) and name.strip() else blueprint_name.title().replace(" ", " ") if blueprint_data else material_name.title()),
+            "mass": mass_q, "volume": Quantity(volume_value, M3), "area": Quantity(area_value, M2),
+            "density": Quantity(density_kg_m3, DENSITY), "pos": position,
+            "temp": Quantity(temp_k, K), "vel": velocity,
+            "shape": chosen_shape, "state": state_value,
+            "anchored": anchored, "collidable": collidable,
+            "restitution": object_restitution, "friction": object_friction,
+            "drag_coefficient": object_drag,
+            "collision_radius": Quantity(max(item_length, item_width, item_thickness) / 2.0 if blueprint_data else math.sqrt(area_value / math.pi), M),
+            "created_by_conjure": True, "living": False, "composition": composition,
+            "atomic_number": element_record.atomic_number if element_record else None,
+            "element_symbol": element_record.symbol if element_record else None,
+            "melting_point_k": element_record.melting_point_k if element_record else None,
+            "boiling_point_k": element_record.boiling_point_k if element_record else None,
+            "estimated_material_data": bool(profile.get("estimated", False)),
+            "material_properties": profile, "hardness_index": float(profile.get("hardness_index", 0.35)),
+            "toughness_index": float(profile.get("toughness_index", 0.4)), "strength_mpa": float(profile.get("strength_mpa", 100.0)),
+            "magnetic_response": float(profile.get("magnetic_response", 0.0)),
+            "electrical_conductivity": float(profile.get("electrical_conductivity", 0.0)),
+            "thermal_conductivity": float(profile.get("thermal_conductivity", 0.0)),
+            "combustible": bool(profile.get("combustible", False)), "brittle": bool(profile.get("brittle", False)),
+            "corrosion_resistance": float(profile.get("corrosion_resistance", 0.5)), "is_metal": is_metal,
+        }
+        if blueprint_data:
+            props.update({
+                "item_kind": "equipment" if blueprint_data["slot"] != "projectile" else "projectile",
+                "equipment_blueprint": blueprint_name,
+                "equipment_slot": blueprint_data["slot"],
+                "length_m": item_length, "width_m": item_width, "thickness_m": item_thickness,
+                "damage_multiplier": float(blueprint_data.get("damage_multiplier", 1.0)),
+                "armour_rating": float(blueprint_data.get("armour_rating", 0.0)),
+                "attack_style": blueprint_data.get("attack_style"), "launch_speed_m_s": blueprint_data.get("launch_speed_m_s"),
+                "payload": payload or "none", "durability": item_durability, "max_durability": item_durability,
+                "equipped_to": None,
+            })
+        elif item_durability is not None:
+            props["durability"] = item_durability
+            props["max_durability"] = item_durability
+        obj = MagicObject("Compound")
+        obj.properties.update(props)
+        self.update_energy(obj)
+        creation_cost = matter_to_mana(mass_q).value
+        obj.properties["creation_mana_cost"] = creation_cost
+        self.charge_mana(creation_cost, reason=f"conjure {material_name}", target=obj)
+        self.record_energy_delta(f"conjure {material_name}", obj, self.object_energy_j(obj), source="matter manifestation")
+        self._record_created(obj, reason=f"conjured {'equipment ' + blueprint_name if blueprint_data else 'material ' + material_name}")
+        self._observe("magic.effect", effect="construct_formed", entity=self._visual_entity(obj),
+                      position=[position.x, position.y], shape=chosen_shape, conjured=True,
+                      item=blueprint_name, material=material_name)
+        return obj
+
+    def op_transmute(self, target, material, *, preserve_mass=True, density=None, state=None, **kwargs):
+        """Change composition and refresh every material-derived world property.
+
+        By default mass is conserved and volume/shape dimensions scale with the
+        destination density. All user-controlled values are validated before
+        changing the object or recording the operation.
+        """
+        target = self.require_object(target, "transmute")
+        self.require_active_object(target, "transmute")
+        self.require_property(target, "material", "transmute")
+        if target.element in {"Mana", "ThermalRelease"}:
+            raise MagicErrorML("transmute() requires matter; woven mana and released-energy carriers are not materials")
+        if not isinstance(material, str) or not material.strip():
+            raise TypeErrorML("transmute() material must be a non-empty text name")
+        if not isinstance(preserve_mass, bool):
+            raise TypeErrorML("transmute() preserve_mass must be true or false")
+        if state is not None and (not isinstance(state, str) or state.casefold() not in {"solid", "liquid", "gas", "plasma", "powder"}):
+            raise MagicErrorML("transmute() state must be solid, liquid, gas, plasma, or powder")
+
+        material_name = " ".join(material.strip().replace("_", " ").split())
+        element_record = resolve_element(material_name)
+        initial_material_key = " ".join(material_name.casefold().replace("-", " ").split())
+        custom_profile = self.custom_material_profiles.get(initial_material_key)
+        canonical = resolve_material(material_name)
+        if element_record is not None:
+            material_name = element_record.name
+        elif custom_profile is not None:
+            material_name = str(custom_profile["name"])
+        elif canonical is not None:
+            material_name = canonical
+        material_key = " ".join(material_name.casefold().replace("-", " ").split())
+        profile = dict(custom_profile) if custom_profile is not None else physical_material_profile(material_name)
+        if density is not None:
+            density_value = self.as_quantity(density, DENSITY, "transmute() density").value
+        elif element_record is not None:
+            density_value = element_record.density_kg_m3
+        elif profile is not None:
+            density_value = profile.get("density_kg_m3")
+        else:
+            density_value = MATERIAL_DENSITIES_KG_M3.get(material_key)
+        if density_value is None:
+            raise MagicErrorML(f"transmute() has no registered density for '{material_name}'; provide density=... or use a registered material/periodic-table element")
+        if not math.isfinite(float(density_value)) or float(density_value) <= 0:
+            raise PhysicsErrorML("transmute() density must be finite and greater than zero")
+        density_value = float(density_value)
+
+        # Unknown-but-explicitly-densified materials are valid custom matter, but
+        # they receive a clearly estimated generic profile instead of stale data.
+        if profile is None:
+            profile = {
+                "name": material_name, "density_kg_m3": density_value, "state": "solid",
+                "category": "custom material", "hardness_index": 0.35,
+                "toughness_index": 0.40, "strength_mpa": 100.0,
+                "magnetic_response": 0.0, "electrical_conductivity": 0.2,
+                "thermal_conductivity": 0.2, "combustible": False, "brittle": False,
+                "corrosion_resistance": 0.4, "estimated": True,
+                "source": "user-defined-density",
+            }
+        else:
+            profile = dict(profile)
+            profile["density_kg_m3"] = density_value
+
+        old_energy = self.object_energy_j(target)
+        old_mass = self.as_quantity(target.properties.get("mass"), KG, "transmute() target mass")
+        old_volume = self.as_quantity(target.properties.get("volume"), M3, "transmute() target volume")
+        old_area = self.as_quantity(target.properties.get("area"), M2, "transmute() target area")
+        if old_mass.value <= 0 or old_volume.value <= 0 or old_area.value <= 0:
+            raise PhysicsErrorML("transmute() requires positive mass, volume, and area")
+        if preserve_mass:
+            new_mass = old_mass.value
+            new_volume = new_mass / density_value
+        else:
+            new_volume = old_volume.value
+            new_mass = new_volume * density_value
+        if not all(math.isfinite(v) and v > 0 for v in (new_volume, new_mass)):
+            raise PhysicsErrorML("transmute() result is outside the supported physical range")
+        scale = (new_volume / old_volume.value) ** (1.0 / 3.0)
+        new_area = max(new_volume ** (2.0 / 3.0), old_area.value * scale * scale)
+        new_state = state.casefold() if state is not None else MATERIAL_DEFAULT_STATES.get(material_key, profile.get("state", element_record.standard_state if element_record else "solid"))
+
+        # Record the operation only after every destination field is validated.
+        self.charge_operation(target, "transmute", kwargs, 1.0)
+        props = target.properties
+        old_hardness_index = max(0.05, float(props.get("hardness_index", 0.35)))
+        props["material"] = material_name
+        props["composition"] = (copy.deepcopy(profile.get("composition_record")) if profile.get("composition_record")
+                                 else composition_for_material(material_name, element_record))
+        props["atomic_number"] = element_record.atomic_number if element_record else None
+        props["element_symbol"] = element_record.symbol if element_record else None
+        props["melting_point_k"] = element_record.melting_point_k if element_record else None
+        props["boiling_point_k"] = element_record.boiling_point_k if element_record else None
+        props["estimated_material_data"] = bool(profile.get("estimated", False) or (element_record and element_record.estimated_density))
+        props["mass"] = Quantity(new_mass, KG)
+        props["volume"] = Quantity(new_volume, M3)
+        props["area"] = Quantity(new_area, M2)
+        props["density"] = Quantity(density_value, DENSITY)
+        props["state"] = new_state
+        props["material_properties"] = dict(profile)
+        props["hardness_index"] = float(profile.get("hardness_index", 0.35))
+        props["toughness_index"] = float(profile.get("toughness_index", 0.4))
+        props["strength_mpa"] = float(profile.get("strength_mpa", 100.0))
+        props["magnetic_response"] = float(profile.get("magnetic_response", 0.0))
+        props["electrical_conductivity"] = float(profile.get("electrical_conductivity", 0.0))
+        props["thermal_conductivity"] = float(profile.get("thermal_conductivity", 0.0))
+        props["combustible"] = bool(profile.get("combustible", False))
+        props["brittle"] = bool(profile.get("brittle", False))
+        props["corrosion_resistance"] = float(profile.get("corrosion_resistance", 0.5))
+        category = str(profile.get("category", "")).casefold()
+        props["is_metal"] = ("metal" in category or "alloy" in category or props["magnetic_response"] > 0
+                              or material_key in {"iron", "steel", "stainless steel", "gold", "silver", "copper", "aluminum", "bronze", "brass", "lead", "tin", "titanium", "platinum", "mithril", "adamant"})
+        for dim_name in ("length_m", "width_m", "thickness_m"):
+            dim_value = props.get(dim_name)
+            if isinstance(dim_value, (int, float)) and math.isfinite(float(dim_value)) and dim_value > 0:
+                props[dim_name] = float(dim_value) * scale
+        radius = props.get("collision_radius")
+        if isinstance(radius, Quantity) and radius.dimension == M and radius.value > 0:
+            props["collision_radius"] = Quantity(radius.value * scale, M)
+        if props.get("item_kind"):
+            hardness_scale = max(0.35, min(2.0, float(profile.get("hardness_index", 0.35)) / old_hardness_index))
+            if props.get("max_durability") is not None:
+                props["max_durability"] = max(1.0, float(props["max_durability"]) * math.sqrt(hardness_scale))
+                props["durability"] = min(float(props.get("durability", props["max_durability"])), props["max_durability"])
+        props["hardness_index_before_transmute"] = props["hardness_index"]
+        self.update_energy(target)
+        self._apply_material_phase_law(target)
+        self.record_energy_delta(f"transmute to {material_name}", target, self.object_energy_j(target) - old_energy, source="transmutation work")
+        self._observe("entity.changed", entity=self._visual_entity(target), operation="transmute", material=material_name)
+        self._observe("magic.effect", effect="transformation", operation="transmute", entity=self._visual_entity(target), material=material_name)
+        return target
+
+    def op_transfigure(self, target, form, *, scale=1.0, **kwargs):
+        """Change an object's represented form while retaining the same physical entity."""
+        target = self.require_object(target, "transfigure")
+        self.require_active_object(target, "transfigure")
+        self.require_property(target, "shape", "transfigure")
+        props = target.properties
+        body_state = str(props.get("life_state", "alive")).casefold()
+        is_living = (bool(props.get("living", False)) or props.get("object_kind") in {"being", "living"}
+                     or props.get("kind") in {"being", "living", "creature"}) and body_state != "dead"
+        is_conjured_matter = bool(props.get("created_by_conjure", False))
+        if not (is_living or is_conjured_matter):
+            raise MagicErrorML("transfigure() works on living beings or matter made by conjure(); use shape() to change ordinary object geometry")
+        if not isinstance(form, str) or not form.strip():
+            raise TypeErrorML("transfigure() form must be non-empty text")
+        form_key = " ".join(form.strip().casefold().split())
+        forms = {
+            "wizard": "humanoid", "mage": "humanoid", "person": "humanoid", "human": "humanoid",
+            "humanoid": "humanoid", "knight": "knight", "statue": "knight", "guard": "knight",
+            "bird": "bird", "raven": "bird", "eagle": "bird", "snake": "serpent", "serpent": "serpent",
+            "wolf": "beast", "hound": "beast", "beast": "beast", "golem": "golem", "critter": "beast",
+        }
+        # A named species profile is a complete body template, not just a visual
+        # label. Prefer an explicitly registered physiology form, then resolve a
+        # built-in/custom anatomy species so transfiguration can carry the full
+        # organ inventory, systems, traits and hybrid metadata into the entity.
+        anatomy_template = None
+        anatomy_species_key = None
+        if form_key in self.custom_body_forms:
+            forms[form_key] = form_key
+        else:
+            from .libraries.anatomy_data import SPECIES as ANATOMY_SPECIES, SPECIES_ALIASES
+            requested_species_key = form_key.replace(" ", "_")
+            candidate_key = self.custom_anatomy_species.get(requested_species_key)
+            if candidate_key is not None:
+                anatomy_species_key = requested_species_key
+                anatomy_template = candidate_key
+            else:
+                canonical = SPECIES_ALIASES.get(requested_species_key, SPECIES_ALIASES.get(form_key, requested_species_key))
+                if canonical in self.custom_anatomy_species:
+                    anatomy_species_key = canonical
+                    anatomy_template = self.custom_anatomy_species[canonical]
+                elif canonical in ANATOMY_SPECIES:
+                    anatomy_species_key = canonical
+                    anatomy_template = ANATOMY_SPECIES[canonical]
+            if isinstance(anatomy_template, dict):
+                profile = anatomy_template
+                from .libraries.anatomy import _movement_capabilities as infer_movement_capabilities
+                movement_capabilities = list(profile.get("movement_capabilities", [])) or infer_movement_capabilities(profile)
+                declared_mode = str(profile.get("movement_mode", "custom")).casefold()
+                if declared_mode in {"terrestrial", "flight-capable", "swim-capable", "slither-capable", "amphibious", "burrowing", "climbing", "gliding", "custom", "stationary"}:
+                    movement_mode = declared_mode
+                elif any("fly" in item or "flight" in item for item in movement_capabilities):
+                    movement_mode = "flight-capable"
+                elif any("swim" in item or "dive" in item for item in movement_capabilities):
+                    movement_mode = "swim-capable"
+                elif any("slither" in item for item in movement_capabilities):
+                    movement_mode = "slither-capable"
+                elif any("burrow" in item for item in movement_capabilities):
+                    movement_mode = "burrowing"
+                elif any("climb" in item for item in movement_capabilities):
+                    movement_mode = "climbing"
+                else:
+                    movement_mode = "custom"
+                anatomy_template = {
+                    "name": anatomy_species_key.replace("_", " "),
+                    "label": profile.get("label", anatomy_species_key.replace("_", " ").title()),
+                    "organs": list(profile.get("organ_names", [])),
+                    "systems": copy.deepcopy(profile.get("systems", {})),
+                    "movement_mode": movement_mode,
+                    "movement_capabilities": movement_capabilities,
+                    "trait_factors": copy.deepcopy(profile.get("traits", {})),
+                    "anatomy_species_id": anatomy_species_key,
+                    "components": copy.deepcopy(profile.get("components", [anatomy_species_key])),
+                    "component_profiles": copy.deepcopy(profile.get("component_profiles", [])),
+                    "component_sources": copy.deepcopy(profile.get("component_sources", {})),
+                    "composition_warnings": copy.deepcopy(profile.get("composition_warnings", [])),
+                    "skeleton_type": profile.get("skeleton", {}).get("type", "custom") if isinstance(profile.get("skeleton"), dict) else "custom",
+                    "thermoregulation": profile.get("thermoregulation", "custom"),
+                    "simulation": copy.deepcopy(profile.get("simulation", {})),
+                    "circulation": copy.deepcopy(profile.get("circulation", {})),
+                    "respiration": copy.deepcopy(profile.get("respiration", {})),
+                    "digestion": copy.deepcopy(profile.get("digestion", {})),
+                    "blood": copy.deepcopy(profile.get("blood", {})),
+                    "integument": copy.deepcopy(profile.get("integument", {})),
+                    "reproduction": copy.deepcopy(profile.get("reproduction", {})),
+                }
+                forms[form_key] = anatomy_species_key.replace("_", " ")
+        if form_key not in forms:
+            custom = ", ".join(sorted(self.custom_body_forms))
+            suffix = f" Custom forms: {custom}." if custom else ""
+            raise MagicErrorML("unsupported transfiguration form; choose humanoid, wizard, knight, bird, serpent, beast, or golem. Use physiology.define_form() or anatomy.define_species() to register a body form, or shape() for geometric forms." + suffix)
+        if isinstance(scale, Quantity) and scale.dimension != DIMENSIONLESS:
+            raise UnitErrorML("transfigure() scale must be dimensionless")
+        try:
+            scale_value = scale.value if isinstance(scale, Quantity) else float(scale)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise TypeErrorML("transfigure() scale must be a finite dimensionless number") from exc
+        if isinstance(scale, bool) or not math.isfinite(scale_value) or not 0.05 <= scale_value <= 20:
+            raise PhysicsErrorML("transfigure() scale must be between 0.05 and 20")
+        self.charge_operation(target, "transfigure", kwargs, 1.0)
+        # Transfiguration changes the entity's represented living/constructed form;
+        # the underlying collision geometry remains controlled by shape().
+        target.properties["visual_form"] = forms[form_key]
+        if is_living:
+            from .libraries.physiology import apply_transfigured_form
+            templates = copy.deepcopy(self.custom_body_forms)
+            if isinstance(anatomy_template, dict):
+                templates[forms[form_key]] = anatomy_template
+            apply_transfigured_form(target, forms[form_key], now=self.elapsed_virtual_time, templates=templates)
+        current_visual_scale = float(target.properties.get("visual_scale", 1.0))
+        target.properties["visual_scale"] = max(0.05, min(20.0, current_visual_scale * scale_value))
+        if abs(scale_value - 1.0) > 1e-12:
+            self.op_scale(target, scale_value)
+        if is_living and isinstance(anatomy_template, dict):
+            simulation = anatomy_template.get("simulation", {})
+            if isinstance(simulation, dict) and simulation.get("body_mass_kg") is not None:
+                self.apply_body_physical_profile(target, simulation, reset_temperature=True)
+        self._observe("magic.effect", effect="transformation", operation="transfigure",
+                      entity=self._visual_entity(target), form=forms[form_key])
+        return target
+
     def op_transform(self, target, state, **kwargs):
         target = self.require_object(target, "transform")
         self.require_property(target, "state", "transform")
@@ -2525,40 +3961,153 @@ class Runtime:
         # Internal terminal output uses the host runtime; Mana source calls show().
         if not isinstance(separator, str):
             raise TypeErrorML("show() separator must be text")
-        print(separator.join(self.display_value(value) for value in values))
+        chunks: list[str] = []
+        char_count = 0
+        for index, value in enumerate(values):
+            if index:
+                chunks.append(separator)
+                char_count += len(separator)
+            remaining = max(0, MAX_DISPLAY_CHARS - char_count)
+            if remaining <= 0:
+                chunks.append("…")
+                break
+            rendered = self.display_value(value)
+            if len(rendered) > remaining:
+                chunks.append(rendered[:remaining] + "…")
+                char_count += remaining + 1
+                break
+            chunks.append(rendered)
+            char_count += len(rendered)
+        line = "".join(chunks)
+        budget = getattr(self._budget_context, "state", None)
+        if budget is not None:
+            addition = len(line) + 1
+            output_total = budget["output_chars"] + addition
+            runtime_output_total = self._runtime_output_chars + addition
+            if output_total > MAX_CUMULATIVE_OUTPUT_CHARS:
+                raise RuntimeErrorML(
+                    f"program exceeded the cumulative output safety limit "
+                    f"({MAX_CUMULATIVE_OUTPUT_CHARS:,} characters)"
+                )
+            if runtime_output_total > MAX_RUNTIME_CUMULATIVE_OUTPUT_CHARS:
+                raise RuntimeErrorML(
+                    f"runtime exceeded its cumulative output safety limit "
+                    f"({MAX_RUNTIME_CUMULATIVE_OUTPUT_CHARS:,} characters)"
+                )
+            budget["output_chars"] = output_total
+            self._runtime_output_chars = runtime_output_total
+        if self.observer is not None and self._spell_run_stack and self._spell_run_stack[-1].mode == "post":
+            self._observe("preview.output", text=line[:2000], label="PREVIEW")
+        print(line)
         return None
 
     @staticmethod
     def display_value(value):
-        if isinstance(value, list):
-            return "[" + ", ".join(Runtime.display_value(item) for item in value) + "]"
-        if isinstance(value, int) and not isinstance(value, bool):
+        """Render values with shared character/item/depth budgets and cycle protection."""
+        parts: list[str] = []
+        state = {"chars": 0, "items": 0, "seen": set(), "truncated": False}
+
+        def emit(text: str) -> None:
+            if state["chars"] >= MAX_DISPLAY_CHARS:
+                state["truncated"] = True
+                return
+            remaining = MAX_DISPLAY_CHARS - state["chars"]
+            if len(text) > remaining:
+                parts.append(text[:remaining])
+                state["chars"] += remaining
+                state["truncated"] = True
+                return
+            parts.append(text)
+            state["chars"] += len(text)
+
+        def render(item, depth: int = 0, repr_mode: bool = False) -> None:
+            if state["chars"] >= MAX_DISPLAY_CHARS or state["items"] >= MAX_DISPLAY_ITEMS:
+                state["truncated"] = True
+                return
+            state["items"] += 1
+            if depth > MAX_DISPLAY_DEPTH:
+                emit("…")
+                return
+            if isinstance(item, SpellResult):
+                emit(f"SpellResult: {item.spell}\nmode: {item.mode}\nok: {item.ok}\ncommitted: {item.committed}\n")
+                for label, child in (
+                    ("incant_value", item.incant_value), ("created", item.created),
+                    ("affected", item.affected), ("changes", item.changes),
+                    ("hits", item.hits), ("mana_cost_readout", item.mana_used),
+                    ("rules_fired", item.rules_fired), ("errors", item.errors), ("trace", item.trace),
+                ):
+                    emit(f"{label}: ")
+                    render(child, depth + 1)
+                    emit("\n")
+                return
+            if isinstance(item, (list, tuple, dict, set)):
+                identity = id(item)
+                if identity in state["seen"]:
+                    emit("…" if not repr_mode else "'…'")
+                    return
+                state["seen"].add(identity)
+                is_mapping = isinstance(item, dict)
+                is_sequence = isinstance(item, (list, tuple))
+                if is_mapping:
+                    emit("{")
+                    iterable = item.items()
+                elif isinstance(item, set):
+                    emit("{" if item else "set()")
+                    iterable = ((v, None) for v in item)
+                else:
+                    emit("[" if isinstance(item, list) else "(")
+                    iterable = ((v, None) for v in item)
+                count_items = 0
+                try:
+                    for key, mapped in iterable:
+                        if count_items:
+                            emit(", ")
+                        if is_mapping:
+                            emit(repr(key) + ": ")
+                            render(mapped, depth + 1, True)
+                        else:
+                            render(key, depth + 1, isinstance(item, set) or repr_mode)
+                        count_items += 1
+                        if count_items >= MAX_DISPLAY_ITEMS or state["chars"] >= MAX_DISPLAY_CHARS:
+                            if len(item) > count_items:
+                                emit(", …")
+                                state["truncated"] = True
+                            break
+                    if isinstance(item, list):
+                        emit("]")
+                    elif isinstance(item, tuple):
+                        if len(item) == 1 and count_items == 1:
+                            emit(",")
+                        emit(")")
+                    elif isinstance(item, dict) or isinstance(item, set) and len(item) > 0:
+                        emit("}")
+                finally:
+                    state["seen"].discard(identity)
+                return
             try:
-                return str(value)
-            except ValueError as exc:
-                raise RuntimeErrorML("integer is too large to display; reduce its size before using show()") from exc
-        if isinstance(value, SpellResult):
-            fields = [
-                f"SpellResult: {value.spell}",
-                f"mode: {value.mode}",
-                f"ok: {value.ok}",
-                f"committed: {value.committed}",
-                f"incant_value: {Runtime.display_value(value.incant_value)}",
-                f"created: {Runtime.display_value(value.created)}",
-                f"affected: {Runtime.display_value(value.affected)}",
-                f"changes: {Runtime.display_value(value.changes)}",
-                f"hits: {Runtime.display_value(value.hits)}",
-                f"mana_cost_readout: {Runtime.display_value(value.mana_used)}",
-                f"rules_fired: {Runtime.display_value(value.rules_fired)}",
-                f"errors: {Runtime.display_value(value.errors)}",
-                f"trace: {Runtime.display_value(value.trace)}",
-            ]
-            return "\n".join(fields)
-        return str(value)
+                text = repr(item) if repr_mode else str(item)
+            except Exception:
+                text = f"<{type(item).__name__}>"
+            if isinstance(item, int) and not isinstance(item, bool):
+                # Python can reject extremely large decimal conversions depending
+                # on interpreter limits; emit a MANA error instead of a host trace.
+                try:
+                    text = str(item)
+                except ValueError as exc:
+                    raise RuntimeErrorML("integer is too large to display; reduce its size before using show()") from exc
+            emit(text)
+
+        render(value)
+        if state["truncated"] and state["chars"] < MAX_DISPLAY_CHARS:
+            emit("…")
+        return "".join(parts)
 
     def op_active_objects(self):
         """Return active object values known to the current runtime, without a renderer."""
-        return [obj for obj in self._collect_physics_objects() if obj.properties.get("active", True)]
+        objects = self._collect_physics_objects()
+        active_count = sum(1 for obj in objects if obj.properties.get("active", True))
+        self._charge_allocation(active_count, "world-object reference")
+        return [obj for obj in objects if obj.properties.get("active", True)]
 
     def op_last_collisions(self):
         """Return readable summaries of recent physical contacts for inspection."""
@@ -2921,8 +4470,8 @@ class Runtime:
 
     def charge_operation(self, target: MagicObject, operation: str, kwargs: dict[str, Any], default_cost: float):
         if "mana" in kwargs:
-            raise MagicErrorML("mana cost is calculated internally; do not pass mana= to an operation")
-        energy_costed = {"heat", "cool", "velocity", "push", "pull", "reflect"}
+            raise MagicErrorML("mana appraisal is calculated internally; do not pass mana= to an operation")
+        energy_costed = {"heat", "cool", "velocity", "impulse", "push", "pull", "reflect"}
         if operation.startswith("mana.control "):
             energy_costed.add(operation)
         if operation.startswith("mana.control "):
@@ -2938,13 +4487,13 @@ class Runtime:
 
     def record_mana_cost(self, amount: float, *, reason: str, target: MagicObject | None = None):
         if isinstance(amount, bool) or not isinstance(amount, (int, float)) or amount < 0:
-            raise MagicErrorML("mana cost readout must be a finite non-negative number")
+            raise MagicErrorML("mana appraisal readout must be a finite non-negative number")
         try:
             amount = float(amount)
         except (OverflowError, ValueError) as exc:
-            raise MagicErrorML("mana cost readout is outside the supported numeric range") from exc
+            raise MagicErrorML("mana appraisal readout is outside the supported numeric range") from exc
         if not math.isfinite(amount):
-            raise MagicErrorML("mana cost readout must be a finite non-negative number")
+            raise MagicErrorML("mana appraisal readout must be a finite non-negative number")
         with self._mana_lock:
             self.total_mana_used += amount
             if target is not None:
@@ -2982,23 +4531,83 @@ class Runtime:
         return entry
 
     def record_energy_delta(self, operation: str, target: MagicObject | None, delta_j: float, *, source: str):
-        """Record energy entering/leaving an object as an explicit ledger transfer."""
-        if abs(float(delta_j)) <= 1e-9:
+        """Record energy entering/leaving an object as an explicit ledger transfer.
+
+        Repeated continuous-physics updates are aggregated during ``advance_time``.
+        Counters still receive every exact delta; the readable ledger stores one
+        summary per operation/direction, preventing long simulations from growing
+        millions of redundant entries in memory.
+        """
+        try:
+            delta = float(delta_j)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise PhysicsErrorML("energy transfer must be a finite number") from exc
+        if not math.isfinite(delta):
+            raise PhysicsErrorML("energy transfer must be a finite number")
+        if abs(delta) <= 1e-9:
             return
-        amount = abs(float(delta_j))
-        label = self._object_label(target) if isinstance(target, MagicObject) else "world"
-        if delta_j > 0:
-            entry = {"operation": operation, "direction": "input", "source": source,
-                     "target": label, "amount_j": amount, "delta_j": float(delta_j)}
+        amount = abs(delta)
+        direction = "input" if delta > 0 else "output"
+        if delta > 0:
             self.energy_input_j += amount
         else:
-            entry = {"operation": operation, "direction": "output", "source": label,
-                     "target": source, "amount_j": amount, "delta_j": float(delta_j)}
             self.energy_output_j += amount
+
+        batch = self._continuous_energy_batch
+        batchable = operation in {
+            "physics integration", "wind work", "atmospheric thermal exchange",
+        }
+        if batch is not None and batchable:
+            detail = batch.setdefault(operation, {}).setdefault(
+                direction, {"amount_j": 0.0, "updates": 0, "source": source}
+            )
+            detail["amount_j"] += amount
+            detail["updates"] += 1
+            return
+
+        label = self._object_label(target) if isinstance(target, MagicObject) else "world"
+        if delta > 0:
+            entry = {"operation": operation, "direction": "input", "source": source,
+                     "target": label, "amount_j": amount, "delta_j": delta}
+        else:
+            entry = {"operation": operation, "direction": "output", "source": label,
+                     "target": source, "amount_j": amount, "delta_j": delta}
         self.energy_ledger.append(entry)
         if self._spell_run_stack:
-            direction = "input" if delta_j > 0 else "output"
             self._record_step(f"energy {direction}: {amount:g} J ({operation}; {source})")
+
+    def _flush_continuous_energy_batch(self, batch, *, duration: float, step_count: int) -> None:
+        """Commit compact summaries for exact continuous energy exchanges."""
+        for operation in sorted(batch):
+            for direction in ("input", "output"):
+                detail = batch[operation].get(direction)
+                if not detail or detail["amount_j"] <= 1e-9:
+                    continue
+                amount = float(detail["amount_j"])
+                source_name = str(detail["source"])
+                aggregate_label = f"world simulation ({detail['updates']} updates)"
+                if direction == "input":
+                    entry = {
+                        "operation": operation, "direction": direction,
+                        "source": source_name, "target": aggregate_label,
+                        "amount_j": amount, "delta_j": amount,
+                    }
+                else:
+                    entry = {
+                        "operation": operation, "direction": direction,
+                        "source": aggregate_label, "target": source_name,
+                        "amount_j": amount, "delta_j": -amount,
+                    }
+                entry.update({
+                    "aggregation": "advance_time", "duration_s": duration,
+                    "physics_steps": step_count, "updates": detail["updates"],
+                })
+                self.energy_ledger.append(entry)
+                if self._spell_run_stack:
+                    self._record_step(
+                        f"energy {direction}: {amount:g} J ({operation}; aggregated over "
+                        f"{detail['updates']} world updates)"
+                    )
 
     @staticmethod
     def object_energy_j(target: MagicObject) -> float:
@@ -3019,6 +4628,85 @@ class Runtime:
         if not math.isfinite(amount):
             raise MagicErrorML(f"{label} must be finite")
         return amount
+
+    def apply_body_physical_profile(self, target: MagicObject, simulation: dict[str, Any], *,
+                                    body_mass_kg: float | None = None,
+                                    reset_temperature: bool = False) -> dict[str, float]:
+        """Apply a validated anatomy template's coarse physical envelope to a being.
+
+        Anatomy references used to affect health metadata while leaving summoned
+        beings at the generic 1 kg default. This bridge makes body plans matter to
+        the existing 2D physical model without pretending that the circle collider
+        is a full articulated skeleton or locomotion solver.
+        """
+        target = self.require_object(target, "anatomy physical profile")
+        if not isinstance(simulation, dict):
+            return {}
+
+        def positive(name: str, fallback: float) -> float:
+            raw = simulation.get(name, fallback)
+            try:
+                value = float(raw)
+            except (TypeError, ValueError, OverflowError):
+                value = fallback
+            return value if math.isfinite(value) and value > 0 else fallback
+
+        mass_base = body_mass_kg if body_mass_kg is not None else positive("body_mass_kg", 70.0)
+        try:
+            mass_base = float(mass_base)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise PhysicsErrorML("body mass must be a positive finite number of kilograms") from exc
+        if not math.isfinite(mass_base) or mass_base <= 0 or mass_base > 1e12:
+            raise PhysicsErrorML("body mass must be greater than 0 and no greater than 1e12 kg")
+
+        density_base = positive("body_density_kg_m3", 990.0)
+        scale = target.properties.get("scale", 1.0)
+        try:
+            scale = float(scale)
+        except (TypeError, ValueError, OverflowError):
+            scale = 1.0
+        if not math.isfinite(scale) or scale <= 0:
+            scale = 1.0
+        if scale > 1e4:
+            raise PhysicsErrorML("current body scale is outside the supported physical-profile range")
+        scale_cubed = scale ** 3
+        mass = mass_base * scale_cubed
+        volume_base = positive("body_volume_m3", mass_base / density_base)
+        # A custom mass override keeps the selected body's approximate density;
+        # it does not retain a stale volume from the base species.
+        volume = (mass / density_base) if body_mass_kg is not None else volume_base * scale_cubed
+        if not math.isfinite(mass) or not math.isfinite(volume) or mass <= 0 or volume <= 0:
+            raise PhysicsErrorML("body physical dimensions exceed the supported numeric range")
+        radius_base = positive("collision_radius_m", max(0.01, (3.0 * volume_base / (4.0 * math.pi)) ** (1.0 / 3.0)))
+        radius = radius_base * scale
+        if not math.isfinite(radius) or radius <= 0:
+            raise PhysicsErrorML("body collision radius must be positive and finite")
+
+        props = target.properties
+        # Commit only after all profile values and derived quantities validate.
+        props["mass"] = Quantity(mass, KG)
+        props["volume"] = Quantity(volume, M3)
+        props["density"] = Quantity(mass / volume, DENSITY)
+        props["collision_radius"] = Quantity(radius, M)
+        props["area"] = Quantity(math.pi * radius * radius, M2)
+        props["body_base_mass_kg"] = mass_base
+        props["body_mass_kg"] = mass
+        props["body_density_kg_m3"] = mass / volume
+        props["body_volume_m3"] = volume
+        props["body_collision_radius_m"] = radius
+        dimensions = {}
+        for field_name in ("body_length_m", "body_width_m", "body_height_m"):
+            raw = simulation.get(field_name)
+            if isinstance(raw, (int, float)) and not isinstance(raw, bool) and math.isfinite(float(raw)) and float(raw) > 0:
+                dimensions[field_name.removeprefix("body_").removesuffix("_m")] = float(raw) * scale
+        props["body_dimensions_m"] = dimensions
+        body_temperature = simulation.get("body_temperature_c")
+        if reset_temperature and isinstance(body_temperature, (int, float)) and not isinstance(body_temperature, bool) and math.isfinite(float(body_temperature)):
+            props["body_temperature_c"] = float(body_temperature)
+            props["temp"] = Quantity(float(body_temperature) + 273.15, K)
+        self.update_energy(target)
+        return {"mass_kg": mass, "volume_m3": volume, "density_kg_m3": mass / volume,
+                "collision_radius_m": radius, **dimensions}
 
     def update_energy(self, target: MagicObject):
         """Recompute energy from canonical state; released energy retains its provenance."""
@@ -3093,7 +4781,13 @@ class Runtime:
         for name, factor in INTEGRITY_THERMAL_FACTORS.items():
             if name in stabilizer_set:
                 thermal_factor *= factor
-        score_j = (thermal_j * thermal_factor + kinetic_j + released_j + bound_j)
+        # An explicitly declared arcane movement envelope separates a being's
+        # bulk translational motion from stresses that damage its own structure.
+        # Relativistic kinetic energy remains in the energy ledger and collisions
+        # still use the actual velocity; only self-integrity scoring omits bulk
+        # translation while that magical mode is active.
+        integrity_kinetic_j = 0.0 if props.get("motion_energy_mode") == "arcane" else kinetic_j
+        score_j = (thermal_j * thermal_factor + integrity_kinetic_j + released_j + bound_j)
         if "Space" in stabilizer_set:
             score_j *= 0.80
 
@@ -3253,6 +4947,7 @@ class Runtime:
             "accelerate": {"acc", "force"},
             "decelerate": {"acc", "force"},
             "velocity": {"vel", "kinetic_energy", "energy"},
+            "impulse": {"vel", "momentum", "kinetic_energy", "energy"},
             "compress": {"pressure"},
             "expand": {"volume"},
             "transform": {"state"},
@@ -3371,8 +5066,8 @@ class Runtime:
     def advance_time(self, duration, *, timestep=None, gravity=None):
         """Advance virtual world time with deterministic physics steps and scheduled effects.
 
-        Gravity is an optional acceleration vector. No planetary gravity is assumed;
-        pass it explicitly, for example direction(0, -1, 0) * 9.81 m/s2.
+        Gravity defaults to the vector stored in world settings (zero unless configured).
+        Pass gravity explicitly to override it for one advance step.
         """
         seconds = self.to_seconds(duration)
         if not math.isfinite(seconds) or seconds < 0:
@@ -3387,7 +5082,7 @@ class Runtime:
                 f"physics timestep cannot exceed {MAX_TIMESTEP_SECONDS:g} s; smaller steps reduce missed collisions"
             )
         if gravity is None:
-            gravity_vector = Vector3(0, 0, 0, ACCELERATION)
+            gravity_vector = self.world_settings.get("gravity", Vector3(0, 0, 0, ACCELERATION))
         elif isinstance(gravity, Vector3) and gravity.dimension == ACCELERATION:
             gravity_vector = require_2d_world_vector(gravity, "advance_time() gravity")
         else:
@@ -3399,29 +5094,378 @@ class Runtime:
             )
 
         snapshot = self._snapshot_runtime_state([self.global_env, self.active_objects])
+        energy_batch_before = copy.deepcopy(self._continuous_energy_batch)
+        owns_energy_batch = self._continuous_energy_batch is None
+        if owns_energy_batch:
+            self._continuous_energy_batch = {}
         fires = [0]
         remaining = seconds
         pair_check_budget = MAX_COLLISION_PAIR_CHECKS_PER_ADVANCE // step_count
+        observer_buffer = self._begin_observer_buffer()
+        # Keep long advances replayable without retaining thousands of full-world
+        # snapshots in memory. Short advances retain the normal 10 Hz cadence.
+        snapshot_interval = max(0.1, seconds / (MAX_OBSERVER_SNAPSHOTS_PER_ADVANCE - 1))
+        next_observer_snapshot = self.elapsed_virtual_time + snapshot_interval
         try:
             for _ in range(step_count):
                 self._check_stop_requested()
                 step = min(dt, remaining)
-                step_world(self, step, gravity_vector, max_pair_checks=pair_check_budget)
+                # Collect the active world once per substep and share the list with
+                # motion, environment and energy refresh. Objects spawned by event
+                # handlers enter the next substep, when they first receive motion.
+                physics_objects = self._collect_physics_objects()
+                step_world(self, step, gravity_vector, max_pair_checks=pair_check_budget,
+                           objects=physics_objects)
+                self._apply_environment_step(step, physics_objects)
                 # Physics integration updates canonical energy outside language
                 # operations, so refresh integrity after every completed step.
-                for obj in self._collect_physics_objects():
+                for obj in physics_objects:
                     if obj.properties.get("active", True):
                         self.update_total_energy(obj)
                 self.elapsed_virtual_time += step
+                if any(obj.properties.get("body_model_initialized") for obj in physics_objects):
+                    from .libraries.physiology import advance_runtime as advance_physiology
+                    advance_physiology(self, step, physics_objects)
+                self._apply_timed_world_effects(step, physics_objects)
                 self._advance_planar_channels(step)
                 self._advance_schedulers_one_step(step, fires)
                 remaining = max(0.0, remaining - step)
                 self.timers = [timer for timer in self.timers if timer.active]
                 self.event_handlers = [handler for handler in self.event_handlers if handler.active]
-            return self.elapsed_virtual_time
+                # Recording samples at 10 Hz is enough for readable replay and
+                # bounds file growth; normal headless runs do no snapshot work.
+                if self.observer is not None and (
+                    self.elapsed_virtual_time + 1e-9 >= next_observer_snapshot or remaining <= 0
+                ):
+                    self._observe_scene("time_advance")
+                    next_observer_snapshot = self.elapsed_virtual_time + snapshot_interval
+            if owns_energy_batch:
+                self._flush_continuous_energy_batch(
+                    self._continuous_energy_batch or {}, duration=seconds, step_count=step_count
+                )
+                self._continuous_energy_batch = None
         except Exception:
             self._restore_runtime_state(snapshot)
+            self._continuous_energy_batch = energy_batch_before
+            if observer_buffer is not None:
+                self._end_observer_buffer(observer_buffer, keep_world_events=False)
             raise
+        else:
+            if observer_buffer is not None:
+                self._end_observer_buffer(observer_buffer, keep_world_events=True)
+            return self.elapsed_virtual_time
+
+    def _apply_material_phase_law(self, obj: MagicObject, *, observe: bool = True) -> bool:
+        """Apply the catalogue's simple temperature/phase rule to known materials.
+
+        This is a coarse 1-atm world rule, not a molecular simulation. Powder is an
+        aggregate form and is left alone; callers can explicitly choose it with
+        transform().
+        """
+        props = obj.properties
+        material = props.get("material")
+        temperature = props.get("temp")
+        if not self.world_settings.get("phase_changes_enabled", True):
+            return False
+        if not isinstance(material, str) or not isinstance(temperature, Quantity) or temperature.dimension != K:
+            return False
+        if props.get("burning", False) or props.get("state") in {"powder", "plasma"}:
+            return False
+        desired = phase_for_temperature(material, temperature.value, props.get("state"))
+        if desired is None or desired == props.get("state"):
+            return False
+        previous = props.get("state", "solid")
+        props["state"] = desired
+        if observe:
+            self._observe("entity.changed", entity=self._visual_entity(obj), operation="phase_change",
+                          from_state=previous, to_state=desired, material=material,
+                          temperature_k=temperature.value)
+        if self._spell_run_stack:
+            self._record_step(f"phase change: {self._object_label(obj)} {previous} -> {desired}")
+        return True
+
+    def _weather_for_object(self, obj: MagicObject, now: float) -> dict[str, Any]:
+        """Choose the newest active area weather covering this object's position."""
+        pos = obj.properties.get("pos")
+        if isinstance(pos, Vector3) and pos.dimension == M and abs(pos.z) <= 1e-12:
+            for region in reversed(self.weather_regions):
+                until = region.get("until")
+                if until is not None and float(until) <= now:
+                    continue
+                radius = region.get("radius_m")
+                cx, cy = region.get("center_x_m"), region.get("center_y_m")
+                if radius is None or cx is None or cy is None:
+                    continue
+                dx, dy = pos.x - float(cx), pos.y - float(cy)
+                if dx * dx + dy * dy <= float(radius) * float(radius):
+                    return region
+        return self.environment_state
+
+    def _apply_timed_world_effects(self, seconds: float, objects: list[MagicObject]) -> None:
+        """Advance bounded material fields and temporary physiological effects."""
+        if seconds <= 0:
+            return
+        now = self.elapsed_virtual_time
+        start = max(0.0, now - seconds)
+
+        # Expire contact effects exactly once and restore the object's original
+        # anchor state instead of assuming every bound target was movable.
+        for obj in objects:
+            props = obj.properties
+            restore = props.get("temporary_anchor_restore")
+            if isinstance(restore, dict) and float(restore.get("until", math.inf)) <= now + 1e-9:
+                props["anchored"] = bool(restore.get("anchored", False))
+                props.pop("temporary_anchor_restore", None)
+                props.pop("bound_until", None)
+                props.pop("bound", None)
+                self._observe("entity.changed", entity=self._visual_entity(obj), operation="temporary_anchor_expired")
+            for expiry_key, active_key in (("shocked_until", "shocked"), ("obscured_until", "obscured"),
+                                           ("illuminated_until", "illuminated"), ("corroded_until", "corroded")):
+                expiry = props.get(expiry_key)
+                if isinstance(expiry, (int, float)) and expiry <= now + 1e-9:
+                    props.pop(expiry_key, None)
+                    props.pop(active_key, None)
+                    self._observe("entity.changed", entity=self._visual_entity(obj), operation=f"{active_key}_expired")
+
+            enhancements = props.get("body_enhancements")
+            if isinstance(enhancements, list):
+                from .libraries.physiology import refresh_effective_properties
+                had_effects = bool(enhancements)
+                refresh_effective_properties(obj, now)
+                if had_effects and not enhancements:
+                    self._observe("entity.changed", entity=self._visual_entity(obj), operation="body_enhancements_expired")
+            regen = props.get("regeneration_rate_hp_s", 0.0)
+            hp, max_hp = props.get("hp"), props.get("max_hp")
+            if (isinstance(regen, (int, float)) and not isinstance(regen, bool) and regen > 0
+                    and isinstance(hp, (int, float)) and isinstance(max_hp, (int, float))
+                    and 0 < float(hp) < float(max_hp) and props.get("active", True)):
+                healed = min(float(max_hp) - float(hp), float(regen) * seconds)
+                if healed > 0:
+                    props["hp"] = float(hp) + healed
+                    props["last_healing"] = healed
+                    self._observe("entity.changed", entity=self._visual_entity(obj), operation="regeneration", healed=healed)
+
+        # Each active field contributes a bounded force with linear radial
+        # falloff. This is a gameplay magnetic model, not a Maxwell solver.
+        if self.magnetic_fields:
+            for field_record in self.magnetic_fields:
+                until = float(field_record.get("until", 0.0))
+                active_duration = min(seconds, max(0.0, until - start))
+                if active_duration <= 0 or until <= start:
+                    continue
+                center = field_record.get("center")
+                if not isinstance(center, Vector3) or center.dimension != M:
+                    continue
+                radius = float(field_record.get("radius_m", 0.0))
+                strength = float(field_record.get("strength_n", 0.0))
+                if radius <= 0 or strength <= 0:
+                    continue
+                polarity_sign = -1.0 if field_record.get("polarity") == "attract" else 1.0
+                for obj in objects:
+                    props = obj.properties
+                    if not props.get("active", True) or props.get("anchored", False) or obj.element in {"Mana", "ThermalRelease"}:
+                        continue
+                    response = props.get("magnetic_response", 0.0)
+                    mass = props.get("mass")
+                    pos = props.get("pos")
+                    vel = props.get("vel")
+                    if (not isinstance(response, (int, float)) or isinstance(response, bool) or response <= 0
+                            or not isinstance(mass, Quantity) or mass.value <= 0
+                            or not isinstance(pos, Vector3) or pos.dimension != M
+                            or not isinstance(vel, Vector3) or vel.dimension != VELOCITY):
+                        continue
+                    dx, dy = pos.x - center.x, pos.y - center.y
+                    distance = math.hypot(dx, dy)
+                    if distance <= 1e-9 or distance >= radius:
+                        continue
+                    radial = (1.0 - distance / radius) * min(1.0, float(response))
+                    force = min(1_000_000.0, strength * radial)
+                    accel = min(250.0, force / mass.value) * polarity_sign
+                    old_energy = self.object_energy_j(obj)
+                    next_velocity = enforce_speed(Vector3(
+                        vel.x + (dx / distance) * accel * active_duration,
+                        vel.y + (dy / distance) * accel * active_duration,
+                        0.0, VELOCITY,
+                    ), massive=True)
+                    props["vel"] = next_velocity
+                    props["kinetic_energy"] = kinetic_energy(mass, next_velocity)
+                    props["momentum"] = momentum(mass, next_velocity)
+                    self.update_total_energy(obj)
+                    delta = self.object_energy_j(obj) - old_energy
+                    self.record_energy_delta("magnetic field work", obj, delta, source=f"magnetic field:{field_record.get('id', 'unknown')}")
+            expired = [item for item in self.magnetic_fields if float(item.get("until", 0.0)) <= now + 1e-9]
+            if expired:
+                expired_ids = {item.get("id") for item in expired}
+                self.magnetic_fields = [item for item in self.magnetic_fields if item.get("id") not in expired_ids]
+                for item in expired:
+                    self._observe("world.changed", operation="magnetic_field_expired", field_id=item.get("id"))
+
+    def _apply_environment_step(self, seconds: float, objects: list[MagicObject]) -> None:
+        """Apply global and local weather to objects using the shared world rules."""
+        if seconds <= 0:
+            return
+        now = self.elapsed_virtual_time
+
+        for obj in objects:
+            props = obj.properties
+            if not props.get("active", True) or obj.element in {"Mana", "ThermalRelease"}:
+                continue
+            env = self._weather_for_object(obj, now)
+            until = env.get("until")
+            active_seconds = (min(seconds, max(0.0, float(until) - now))
+                              if until is not None else seconds)
+            if active_seconds <= 0:
+                continue
+
+            kind = env.get("kind", "clear")
+            temperature = float(env.get("temperature_k", 293.15))
+            wind_x = float(env.get("wind_x_mps", 0.0))
+            wind_y = float(env.get("wind_y_mps", 0.0))
+            precipitation = str(env.get("precipitation", "none"))
+            intensity = max(0.0, min(1.0, float(env.get("intensity", 0.0))))
+            is_wet = precipitation in {"rain", "snow", "hail"}
+            is_dry_fall = precipitation in {"dust", "ash"}
+            humidity = float(env.get("humidity", 0.45))
+            clouds = float(env.get("clouds", 0.0))
+            fog = float(env.get("fog", 0.0))
+            heat = float(env.get("heat", 0.0))
+            lightning = float(env.get("lightning", 0.0))
+            weather_active = (
+                kind != "clear" or intensity > 1e-9
+                or abs(temperature - 293.15) > 1e-9
+                or abs(wind_x) > 1e-9 or abs(wind_y) > 1e-9
+                or precipitation != "none" or abs(humidity - 0.45) > 1e-9
+                or abs(clouds) > 1e-9 or abs(fog) > 1e-9
+                or abs(heat) > 1e-9 or abs(lightning) > 1e-9
+            )
+            if not weather_active:
+                continue
+
+            # Capped interval keeps large time advances numerically stable.
+            dt = min(active_seconds, 5.0)
+            thermal_exposure = max(intensity, min(1.0, abs(temperature - 293.15) / 45.0))
+            thermal_fraction = (min(0.08, 0.025 * thermal_exposure * active_seconds)
+                                if self.world_settings.get("thermal_exchange_enabled", True) else 0.0)
+            wet_gain = (min(1.0, 0.12 * intensity * active_seconds)
+                        if self.world_settings.get("wetting_enabled", True) else 0.0)
+            drying = min(1.0, 0.015 * active_seconds)
+            dust_gain = min(1.0, 0.025 * intensity * active_seconds)
+            changed = False
+
+            if self.world_settings.get("drag_enabled", True) and not props.get("anchored", False) and (abs(wind_x) > 1e-9 or abs(wind_y) > 1e-9):
+                velocity = props.get("vel")
+                mass = props.get("mass")
+                area = props.get("area")
+                if (isinstance(velocity, Vector3) and velocity.dimension == VELOCITY
+                        and isinstance(mass, Quantity) and mass.value > 0
+                        and isinstance(area, Quantity) and area.value > 0):
+                    rx, ry = wind_x - velocity.x, wind_y - velocity.y
+                    relative_speed = math.hypot(rx, ry)
+                    if relative_speed > 1e-9:
+                        drag_coefficient = max(0.05, min(2.5, float(props.get("drag_coefficient", 1.0))))
+                        air_density = max(0.0, float(self.world_settings.get("air_density_kg_m3", 1.225)))
+                        wind_force = 0.5 * air_density * drag_coefficient * area.value * relative_speed * relative_speed
+                        acceleration = wind_force / mass.value
+                        wind_strength = max(intensity, min(1.0, math.hypot(wind_x, wind_y) / 20.0))
+                        delta_speed = min(relative_speed, acceleration * dt * wind_strength)
+                        if delta_speed > 0:
+                            next_velocity = enforce_speed(Vector3(
+                                velocity.x + rx / relative_speed * delta_speed,
+                                velocity.y + ry / relative_speed * delta_speed, 0, VELOCITY
+                            ), massive=True)
+                            if abs(next_velocity.x - velocity.x) > 1e-12 or abs(next_velocity.y - velocity.y) > 1e-12:
+                                old_kinetic = props.get("kinetic_energy", Quantity(0, ENERGY))
+                                old_kinetic_j = old_kinetic.value if isinstance(old_kinetic, Quantity) else 0.0
+                                props["vel"] = next_velocity
+                                props["kinetic_energy"] = kinetic_energy(mass, next_velocity)
+                                props["momentum"] = momentum(mass, next_velocity)
+                                self.record_energy_delta(
+                                    "wind work", obj, props["kinetic_energy"].value - old_kinetic_j,
+                                    source=f"weather field:{env.get('scope', 'world')}:{env.get('region_id', 'global')}",
+                                )
+                                changed = True
+
+            wetness = float(props.get("wetness", 0.0))
+            dust = float(props.get("dust_coating", 0.0))
+            if self.world_settings.get("wetting_enabled", True):
+                if is_wet:
+                    wetness = min(1.0, wetness + wet_gain)
+                    props["wetness"] = wetness
+                    if props.get("burning", False) and wetness >= 0.35:
+                        props["burning"] = False
+                        if props.get("state") == "burning":
+                            props["state"] = "solid"
+                        self._observe("entity.changed", entity=self._visual_entity(obj), operation="weather.extinguish")
+                        changed = True
+                elif wetness > 0:
+                    props["wetness"] = max(0.0, wetness - drying)
+                if is_dry_fall:
+                    props["dust_coating"] = min(1.0, dust + dust_gain)
+                elif dust > 0:
+                    props["dust_coating"] = max(0.0, dust - min(0.05, 0.005 * active_seconds))
+            if temperature > 0 and thermal_fraction > 0:
+                temp = props.get("temp")
+                mass = props.get("mass")
+                if isinstance(temp, Quantity) and temp.dimension == K and isinstance(mass, Quantity) and mass.value > 0:
+                    next_temp = max(0.0, temp.value + (temperature - temp.value) * thermal_fraction)
+                    if abs(next_temp - temp.value) > 1e-10:
+                        old_thermal = props.get("thermal_energy", Quantity(0, ENERGY))
+                        old_thermal_j = old_thermal.value if isinstance(old_thermal, Quantity) else 0.0
+                        props["temp"] = Quantity(next_temp, K)
+                        props["thermal_energy"] = Quantity(mass.value * DEFAULT_SPECIFIC_HEAT_J_PER_KG_K * next_temp, ENERGY)
+                        self.record_energy_delta(
+                            "atmospheric thermal exchange", obj,
+                            props["thermal_energy"].value - old_thermal_j,
+                            source=f"atmosphere:{env.get('scope', 'world')}:{env.get('region_id', 'global')}",
+                        )
+                        changed = True
+                        changed = self._apply_material_phase_law(obj) or changed
+            if changed:
+                self.update_total_energy(obj)
+
+        if (self.environment_state.get("until") is not None
+                and now + seconds >= float(self.environment_state["until"])):
+            self._expire_weather()
+
+        expired = [region for region in self.weather_regions
+                   if region.get("until") is not None and now + seconds >= float(region["until"])]
+        if expired:
+            expired_ids = {region.get("region_id") for region in expired}
+            self.weather_regions = [region for region in self.weather_regions
+                                    if region.get("region_id") not in expired_ids]
+            for region in expired:
+                self._observe("weather.changed", scope="area", action="expired",
+                              region_id=region.get("region_id"),
+                              center=[region.get("center_x_m"), region.get("center_y_m")],
+                              radius_m=region.get("radius_m"), kind=region.get("kind", "custom"))
+
+    def _expire_weather(self) -> None:
+        """End a timed weather condition exactly once."""
+        previous = self.environment_state
+        already_clear = (
+            previous.get("kind") == "clear"
+            and abs(float(previous.get("intensity", 0.0))) < 1e-9
+            and previous.get("precipitation", "none") == "none"
+            and abs(float(previous.get("wind_x_mps", 0.0))) < 1e-9
+            and abs(float(previous.get("wind_y_mps", 0.0))) < 1e-9
+            and abs(float(previous.get("temperature_k", 293.15)) - 293.15) < 1e-9
+            and abs(float(previous.get("humidity", 0.45)) - 0.45) < 1e-9
+            and abs(float(previous.get("clouds", 0.0))) < 1e-9
+            and abs(float(previous.get("fog", 0.0))) < 1e-9
+            and abs(float(previous.get("heat", 0.0))) < 1e-9
+            and abs(float(previous.get("lightning", 0.0))) < 1e-9
+        )
+        if already_clear:
+            return
+        self.environment_state = {
+            "kind": "clear", "intensity": 0.0, "precipitation": "none",
+            "wind_speed_mps": 0.0, "wind_x_mps": 0.0, "wind_y_mps": 0.0,
+            "wind_direction_name": "east", "wind": 0.0, "wind_direction": 1.0,
+            "temperature_k": 293.15, "humidity": 0.45, "clouds": 0.0, "fog": 0.0,
+            "heat": 0.0, "lightning": 0.0, "started_at": self.elapsed_virtual_time,
+            "until": None, "duration": None, "indefinite": True,
+        }
+        self._observe("weather.changed", weather=dict(self.environment_state))
 
     def _advance_planar_channels(self, seconds: float) -> None:
         """Transfer energy through active planar channels for one virtual-time step."""
@@ -3470,6 +5514,12 @@ class Runtime:
             self._emit_mana_warning(
                 f"unknown MANA event '{event_name}'; known events: {', '.join(sorted(MANA_EVENT_NAMES))}"
             )
+        else:
+            try:
+                self._observe("mana.event", name=event_name, args=[self._observer_value(arg) for arg in args])
+            except Exception:
+                # Observation is diagnostic only and must never change MANA execution.
+                pass
         fired = 0
         for registration in list(self.event_handlers):
             if registration.active and registration.name == event_name:
@@ -3509,9 +5559,7 @@ class Runtime:
         return len(value)
 
     def check_name(self, name: str, *, allow_mana_parameter: bool = False):
-        reserved = (self.LANGUAGE_KEYWORDS | self.RESERVED_PROPERTIES | self.BUILTIN_NAMES
-                    | set(ELEMENTS) | set(PLANAR_ELEMENT_NAMES) | {"Mana"})
         if allow_mana_parameter and name == "mana":
             return
-        if name in reserved or name in {"distance", "magnitude", "aim"}:
+        if name in self.RESERVED_IDENTIFIERS:
             raise RuntimeErrorML(f"'{name}' is reserved and cannot be used as an identifier")

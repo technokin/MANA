@@ -1,0 +1,12 @@
+# The event fires when the runtime crosses the target's configured ignition point.
+when object_ignited:
+    show "The runtime ignited a combustible object."
+
+wood_log = tgset:
+    material = "Wood"
+    combustible = true
+    ignition_temp = 573.15 K
+
+heat(wood_log, 300 K)
+show "Log state:", wood_log.state
+show "Log temperature:", wood_log.temp

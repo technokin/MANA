@@ -17,21 +17,23 @@ def run(source: str, *, filename: str = "mana-control-test.mana") -> Runtime:
     return runtime
 
 
-def test_mana_type_and_namespace_are_both_available():
-    runtime = run('''
-raw_mana = create Mana
-construct = mana.form()
-''')
-    raw = runtime.global_env.get("raw_mana")
+def test_mana_is_woven_and_the_lowercase_namespace_remains_available():
+    with pytest.raises(MagicErrorML, match="weave mana"):
+        run("raw_mana = create Mana\n")
+    runtime = run("""
+construct = weave mana
+legacy_api = mana.form()
+""")
     construct = runtime.global_env.get("construct")
-    assert raw.element == "Mana"
+    legacy_api = runtime.global_env.get("legacy_api")
     assert construct.element == "Mana"
     assert construct.properties["material"] == "PureMana"
-    assert construct.properties["mass"].value == 0
+    assert construct.properties["display_name"] == "construct"
     assert construct.properties["mana_energy"].value == pytest.approx(1000)
     assert construct.properties["pos"].x == pytest.approx(10)
     assert construct.properties["collision_radius"].value == pytest.approx(1)
-    assert runtime.total_mana_used == pytest.approx(1000)
+    assert legacy_api.element == "Mana"
+    assert runtime.total_mana_used == pytest.approx(2000)
 
 
 def test_mana_burst_and_emit_defaults_are_easy_to_call():

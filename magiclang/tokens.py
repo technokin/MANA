@@ -52,6 +52,7 @@ class TokenType(Enum):
     KW_TRUE = auto()
     KW_FALSE = auto()
     KW_CREATE = auto()
+    KW_WEAVE = auto()
     KW_SIMUL = auto()
     KW_WAIT = auto()
     KW_AFTER = auto()
@@ -78,6 +79,7 @@ KEYWORDS = {
     "true": TokenType.KW_TRUE,
     "false": TokenType.KW_FALSE,
     "create": TokenType.KW_CREATE,
+    "weave": TokenType.KW_WEAVE,
     "simul": TokenType.KW_SIMUL,
     "wait": TokenType.KW_WAIT,
     "after": TokenType.KW_AFTER,

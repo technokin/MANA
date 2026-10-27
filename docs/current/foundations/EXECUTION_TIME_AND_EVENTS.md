@@ -2,23 +2,26 @@
 
 **Page kind:** Explanation  
 
-**Current source version:** v1.0.0
+**Current source version:** v2.0.0
 **Related references:** [Language Specification](../language/LANGUAGE_SPEC.md), [Physics Engine](../physics/PHYSICS_ENGINE.md), [Function Reference](../reference/FUNCTION_REFERENCE.md)
 
 This chapter describes when code runs and when its world changes become permanent. A spell's source code, a trial execution, and a committed release are three different things.
 
 ## 1. Definitions do not execute just by being written
 
-MANA parses a program into statements and definitions. A `def` declaration defines an ordinary reusable helper. A `spldef` declaration defines a spell body. Neither declaration means the spell's world-changing effects have already happened.
+MANA parses a program into statements and definitions. A `def` declaration defines an ordinary reusable helper. A `spell` declaration defines a spell body; `spldef` remains a backward-compatible alias. Neither declaration means the spell's world-changing effects have already happened.
 
-`def` is meant for calculations and reusable logic that does not secretly mutate the world when directly called. World-changing actions belong in a `spldef`, executed under `post(...)` or `release(...)`. This separation lets a caller know whether it is asking for a value or asking the world to change.
+`def` is meant for calculations and reusable logic that does not secretly mutate the world when directly called. World-changing actions belong in a `spell` declaration, executed with `appraise` or `cast` (legacy `post(...)` and `release(...)` remain supported). This separation lets a caller know whether it is asking for a value or asking the world to change.
 
-## 2. `post` and `release`
+## 2. Trial and committed execution: `appraise` and `cast`
 
 | Form | Intent | Resulting world state |
 |---|---|---|
-| `post(my_spell)` | Trial a spell and inspect its report | World changes are rolled back after the trial. |
-| `release(my_spell)` | Execute a spell for real | Valid changes are committed. |
+| `appraise my_spell` | Trial a spell and record its report | World changes are rolled back after the trial. |
+| `post(my_spell)` / `post(my_spell, text)` | Legacy trial forms | World changes are rolled back after the trial. Text is the default. |
+| `post(my_spell, visual)` | Legacy visual trial form | World changes are rolled back; a viewer is shown only when recording is enabled and opened. |
+| `cast my_spell` | Execute a spell for real | Valid changes are committed. |
+| `release(my_spell)` | Legacy committed-execution form | Valid changes are committed. |
 
 The engine records step/operation information so the report can show what was created and changed. A `post` result is not a permanent object spawn: returned values may be detached/represented for reporting so the trial does not leave active objects behind. A failed `release` rolls back its transaction rather than partially committing whatever happened before the error.
 
@@ -34,8 +37,13 @@ npc = tgset:
     max_hp = 100
     distance = 10 m
 
-spldef pulse():
-    projectile = create Mana
+load geometry2d
+spell pulse():
+    projectile = weave mana:
+        shape = projectile
+        radius = 0.15 m
+        energy = 750 J
+        position = geometry2d.point(0 m, 0 m)
     velocity(projectile, 100 m/s)
     incant projectile
 
