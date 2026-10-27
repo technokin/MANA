@@ -6,9 +6,8 @@ MANA source execution and source editing are separate: Python runs the current i
 
 ## 1. Requirements
 
-- Python 3.12 or newer. GitHub Actions is configured to test Python 3.12, 3.13, 3.14, and 3.15.
+- Python 3.12 or newer.
 - No third-party packages for normal MANA execution; the interpreter currently uses the Python standard library only.
-- For tests and development checks, install `requirements-dev.txt`.
 
 Confirm Python is available from the project root:
 
@@ -28,7 +27,6 @@ py mana.py examples\fireball.mana
 ```powershell
 python mana.py examples\standalone_release.mana
 python mana.py --check examples\fireball.mana
-python -m pytest -q
 ```
 
 `--check` verifies lexing and syntax without executing program statements. It does not validate every runtime input or prove a spell will succeed.
@@ -63,9 +61,9 @@ The square MANA icon at `assets/branding/mana-icon.png` is included in both exte
 - **A custom library cannot load:** verify the project has the expected `libraries/` package directory and consult [Library Builder](../libraries/LIBRARY_BUILDER.md).
 
 
-## Development-only tooling
+## Project notes
 
-`requirements.txt` lists third-party packages needed by the MANA runtime; it currently has no package entries because the runtime uses the Python standard library. `requirements-dev.txt` installs optional test and lint tools. Pytest runs the tests, and Ruff checks Python source for common errors and style issues. Neither is required to run a `.mana` program. `.editorconfig` coordinates indentation, text encoding, and line endings across compatible editors; `ruff.toml` configures Ruff.
+`requirements.txt` is reserved for runtime third-party packages; it currently has no package entries because MANA uses the Python standard library. `.editorconfig` coordinates indentation, text encoding, and line endings across compatible editors. The source package does not include automated workflow files or a bundled test suite.
 
 ## Optional Magic Visualiser
 

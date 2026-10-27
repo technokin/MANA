@@ -98,8 +98,8 @@ These are checkpoints, not release dates.
 
 - Every public example parses and runs from the documented command line.
 - The parser, runtime, language grammar, snippets and reference all agree on keywords and settings.
-- Large spell runs have a measured benchmark and regression tests for world-state isolation.
-- The CI workflow runs the same lint, tests, extension packaging and generated-document checks that contributors are asked to run locally.
+- Large spell runs have documented resource limits and measurable performance targets.
+- The source distribution keeps interpreter use independent from release automation and optional editor packaging.
 
 ### Milestone B — A useful editor and Visualiser
 

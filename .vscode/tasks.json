@@ -5,26 +5,18 @@
       "label": "MANA: Run current file",
       "type": "process",
       "command": "python",
-      "args": ["${workspaceFolder}/mana.py", "${file}"],
-      "options": {"cwd": "${workspaceFolder}"},
+      "args": [
+        "${workspaceFolder}/mana.py",
+        "${file}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": [],
-      "group": {"kind": "build", "isDefault": true}
-    },
-    {
-      "label": "MANA: Check current file",
-      "type": "process",
-      "command": "python",
-      "args": ["${workspaceFolder}/mana.py", "--check", "${file}"],
-      "options": {"cwd": "${workspaceFolder}"},
-      "problemMatcher": []
-    },
-    {
-      "label": "MANA: Run tests",
-      "type": "process",
-      "command": "python",
-      "args": ["-m", "pytest", "-q"],
-      "options": {"cwd": "${workspaceFolder}"},
-      "problemMatcher": []
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }

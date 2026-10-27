@@ -115,13 +115,6 @@ All user-facing errors inherit from `MagicLangError` and include a filename and 
 
 `post` restores trial world state after success or failure. `release` commits successful changes and restores the previous state when the execution fails. A failed `advance_time` call is atomic and restores state to before that time advance.
 
-## 9. How to test a change
+## 9. Observing program behaviour
 
-Run the full suite from the project root:
-
-```powershell
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-```
-
-Run one source file with `python mana.py examples\targeted_fireball.mana`. Library load tests belong beside core language tests because load parsing, namespace lookup, execution and package validation cross multiple components. A user-facing feature is not considered complete merely because the relevant Python module compiles: test expected MANA behaviour through `.mana` source.
+Run a public example from the repository root with `python mana.py examples	argeted_fireball.mana`. Runtime messages and the Error Catalogue describe the interpreter behaviour exposed to MANA programs. Keep the relevant language guide and runnable examples aligned with intentional behaviour changes.

@@ -117,4 +117,4 @@ All listed files are self-contained examples rather than fragments. Read the com
 | `selective_two_target_cast.mana` | Selects one of two target profiles outside the spell definition and checks that only the selected target is hit. |
 | `impact_handler_counter.mana` | Counts an actual runtime impact event and inspects the target after contact. |
 
-These five additions are also covered by deterministic regression tests; they are run by the all-examples smoke test rather than being syntax-only samples.
+These five additions are standalone, runnable integration examples rather than syntax-only snippets.

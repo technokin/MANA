@@ -105,7 +105,7 @@ Each object has an integrity readout based on its current effective stress energ
 | Compound | `1.5e12 J/kg` |
 | ThermalRelease | `0 J/kg` (energy carrier; not a stabilizable material) |
 
-For a label without an explicit entry, the fallback is `1.5e12 J/kg`. `E_break` is the chosen specific threshold multiplied by current mass and then modified by the stabilizer rules. These values are initial calibration constants and should be changed only alongside corresponding integrity regression tests.
+For a label without an explicit entry, the fallback is `1.5e12 J/kg`. `E_break` is the chosen specific threshold multiplied by current mass and then modified by the stabilizer rules. These values are initial calibration constants and should be changed only alongside a documented energy-model rationale and updated examples.
 
 The runtime updates integrity after object-state changes and physics steps. At 0 integrity, the object becomes inactive and its tracked physical energy is transferred to a `ThermalRelease` carrier. The original object's `collapsed_into` property points to that carrier. Integrity is an additional stability model; it does not destroy physical energy or silently convert it to mana.
 

@@ -17,7 +17,7 @@ New to MANA's magical model? Start with the [magic-first introduction](MANA_INTR
 
 MANA's current interpreter is implemented in Python. Python is the implementation language, not the language you write MANA programs in. The runtime currently uses only Python's standard library.
 
-> **MANA source/package version: v2.0.0.** The release workflow validates each pushed version tag against `VERSION` and publishes the matching source archive and VS Code extensions only after the configured Linux/Windows quality matrix passes. The existing [v1.0.0 release](https://github.com/technokin/MANA/releases/tag/v1.0.0) remains available. Check [Implementation Status](docs/current/foundations/IMPLEMENTATION_STATUS.md) and [Not Supported Yet](docs/current/foundations/NOT_SUPPORTED_YET.md) for the exact feature boundaries.
+> **MANA source/package version: v2.0.0.** This source package contains the interpreter, libraries, examples, documentation, and optional VS Code extensions. GitHub Actions workflow files and the bundled automated test suite are not included in this package. The existing [v1.0.0 release](https://github.com/technokin/MANA/releases/tag/v1.0.0) remains available. Check [Implementation Status](docs/current/foundations/IMPLEMENTATION_STATUS.md) and [Not Supported Yet](docs/current/foundations/NOT_SUPPORTED_YET.md) for the exact feature boundaries.
 
 ## Contents
 
@@ -25,7 +25,7 @@ MANA's current interpreter is implemented in Python. Python is the implementatio
 - [Quick start](#quick-start)
 - [Visualiser graphics and resource use](#visualiser-graphics-and-resource-use)
 - [VS Code support](#vs-code-support)
-- [Run checks and tests](#run-checks-and-tests)
+- [Build VS Code packages](#build-vs-code-packages)
 - [What is included](#what-is-included)
 - [Documentation](#documentation)
 - [Repository layout](#repository-layout)
@@ -37,11 +37,11 @@ MANA's current interpreter is implemented in Python. Python is the implementatio
 
 ## Requirements
 
-- **Python 3.12 or newer** to run the interpreter from source ([download Python](https://www.python.org/downloads/)). GitHub Actions is configured to test Python 3.12, 3.13, 3.14, and 3.15 on Windows and Linux. We recommend using a current stable Python release compatible with the project. On Windows, ensure Python is available as `python` or `py`.
+- **Python 3.12 or newer** to run the interpreter from source ([download Python](https://www.python.org/downloads/)). We recommend using a current stable Python release compatible with the project. On Windows, ensure Python is available as `python` or `py`.
 - **No third-party runtime packages** are currently required. MANA uses Python's standard library.
 - **An editor** of your choice. VS Code users can install the included optional MANA Language Support extension. Other editors can also edit `.mana` files.
 
-`requirements.txt` is the list for runtime third-party packages. It intentionally contains no package entries today because the runtime does not need external dependencies. `requirements-dev.txt` installs the optional tools used to run tests and check contributor code; it is not required just to use MANA.
+`requirements.txt` is reserved for runtime third-party packages. It currently contains no package entries because the runtime does not need external dependencies.
 
 ## Quick start
 
@@ -75,15 +75,7 @@ To install the packaged extension:
 3. Select [`installers/vscode/mana-language-2.0.0.vsix`](installers/vscode/mana-language-2.0.0.vsix).
 4. Open a `.mana` file and click **Run** in the editor toolbar, or run **MANA: Run File** from the Command Palette. The command does not start a debugger. You can also use `python mana.py path/to/file.mana` in a terminal.
 
-To rebuild the extension package after changing its source, grammar, completion logic, metadata, or icon:
-
-```powershell
-python tools/vscode/build_mana_vsix.py
-python tools/vscode/build_mana_visualiser_vsix.py
-python tools/vscode/build_mana_vsix.py --check
-python tools/vscode/build_mana_visualiser_vsix.py --check
-python tools/package_project_zip.py
-```
+To rebuild the extension packages after changing their source, grammar, completion logic, metadata, or icons, use the build commands in [Build VS Code packages](#build-vs-code-packages).
 
 The language extension source lives in [`tools/vscode-extension/`](tools/vscode-extension/); the Visualiser source is in [`tools/mana-visualiser-extension/`](tools/mana-visualiser-extension/). See the [VS Code Extension Guide](docs/current/tooling/VSCODE_EXTENSION_GUIDE.md) for installation, settings, editor actions and troubleshooting. The extensions do not require a custom MANA IDE.
 
@@ -99,33 +91,17 @@ python mana.py --record fireball.jsonl examples/fireball_contact.mana
 
 The recording is an internal replay file for the optional Visualiser, not a public game-integration API. See [Where MANA Could Be Used](docs/current/foundations/FUTURE_USES_AND_ROADMAP.md) for possible application areas and the longer-term roadmap. For replay controls, see the [Visualiser guide](docs/current/tooling/MAGIC_VISUALISER.md).
 
-## Run checks and tests
+## Build VS Code packages
 
-Install the optional developer tools first:
-
-```powershell
-python -m pip install -r requirements-dev.txt
-```
-
-Then run the full test suite and main checks:
+The installable VSIX files are included under `installers/vscode/`. To rebuild both extensions after editing their source, run the builders and package utility from the project root:
 
 ```powershell
-python -m pytest -q
-ruff check magiclang tests tools mana.py
-python -m pyflakes magiclang
-python tools/version_sync.py --check
-python tools/sync_documentation_outputs.py --check
-python tools/generate_reference_index.py --check
-python tools/generate_error_catalogue.py --check
-python mana.py --check examples/fireball.mana
-
-# Rebuild both VS Code packages and make a clean source ZIP
 python tools/vscode/build_mana_vsix.py
 python tools/vscode/build_mana_visualiser_vsix.py
 python tools/package_project_zip.py
 ```
 
-`pytest` runs the regression tests. **Ruff** checks Python source for common bugs and style issues; it can also format Python code. Ruff is a development tool, not a MANA runtime dependency. Its settings are in [`ruff.toml`](ruff.toml). The [test guide](tests/README.md) describes test coverage and focused commands.
+The source ZIP does not include GitHub Actions workflows, a bundled test suite, or separate lint/audit dependencies. The interpreter remains usable directly with Python and does not require either VS Code extension.
 
 ## What is included
 
@@ -136,7 +112,7 @@ python tools/package_project_zip.py
 - Built-in libraries for pure mana, 2D geometry, 3D vector calculations, weather and matter, materials and metals, equipment, anatomy, physiology, arcana, planes, summoning, and necromancy.
 - A developing 2D world solver with motion, collisions, supported thermal and material-state effects, energy bookkeeping, and explicit resource limits.
 - Expanded material and creature catalogues, including comparative body plans. Catalogue values are reference/gameplay data, not a complete chemistry or biology simulator.
-- A set of 67 runnable examples, regression and stress tests, generated references, and optional editor tools.
+- A set of 67 runnable examples, generated references, and optional editor tools.
 - Two independent optional VS Code extensions: language support and the Magic Visualiser. Neither is required to run `.mana` programs.
 
 Names and examples do not imply that every envisioned subsystem is a complete simulator. See the implementation-status and limitations pages linked above.
@@ -155,14 +131,12 @@ Names and examples do not imply that every envisioned subsystem is a complete si
 - **[Implementation Status](docs/current/foundations/IMPLEMENTATION_STATUS.md):** implemented, partial, and planned functionality.
 - **[Not Supported Yet](docs/current/foundations/NOT_SUPPORTED_YET.md):** known boundaries.
 - **[Troubleshooting](docs/current/troubleshooting/TROUBLESHOOTING.md):** common setup and runtime errors.
-- **[Release checklist](docs/current/RELEASE_CHECKLIST.md):** release verification steps.
 - **[Contributing](CONTRIBUTING.md):** how to report bugs, improve docs, and propose changes.
 - **[Security policy](SECURITY.md):** how to report suspected vulnerabilities and the boundaries of code execution.
-- **[Security audit snapshot](SECURITY_AUDIT.md):** dated review notes; its old test counts are historical, not the current release result.
+- **[Security and runtime boundaries](SECURITY_AUDIT.md):** a summary of runtime limitations and safe-use boundaries.
 - **[Changelog](CHANGELOG.md):** the cumulative release history, including the changes since the public v1.0.0 source tag.
-- **[MANA 2.0.0 Final Verification Report](docs/current/RELEASE_V2_0_0_REPORT.md):** final checklist, regression results, package checks, and known limits.
-- **[MANA 2.0.0 Release Log](MANA_v2.0.0_RELEASE_LOG.md):** the historical plain-English summary for the 2.0.0 source snapshot.
-- **[v1.0.0 Source Verification Report](docs/archive/audits/release_reports/RELEASE_V1_0_0_REPORT.md):** historical verification for the previous release; see the [current final verification report](docs/current/RELEASE_V2_0_0_REPORT.md) for the current checks.
+- **[MANA 2.0.0 Source Snapshot Notes](docs/current/RELEASE_V2_0_0_REPORT.md):** what is included in this package and its scope boundaries.
+- **[MANA 2.0.0 Release Log](MANA_v2.0.0_RELEASE_LOG.md):** historical plain-English release notes.
 
 ## Repository layout
 
@@ -175,33 +149,28 @@ MANA/
 ├── CHANGELOG.md              # Cumulative release history
 ├── CONTRIBUTING.md            # Contribution workflow and style
 ├── SECURITY.md               # Security-reporting policy and execution limits
-├── SECURITY_AUDIT.md          # Dated security audit snapshot
+├── SECURITY_AUDIT.md          # Security and runtime boundaries
 ├── LICENSE                   # GPL-3.0-only licence text
 ├── VERSION                   # Single current-version source (2.0.0)
 ├── mana.py                   # Command-line interpreter and syntax checker
 ├── magiclang/                # Lexer, parser, runtime, physics, units, libraries
 ├── libraries/                # User/project library packages and library notes
 ├── examples/                 # Runnable .mana programs (67 examples)
-├── tests/                    # Regression, stress, example, and tooling tests
-│   └── fixtures/             # MANA inputs used only by tests
 ├── docs/
 │   ├── current/              # Maintained language/runtime documentation
 │   ├── ideas/                # Proposals, not release promises
 │   └── archive/              # Historical audits and release reports
-├── .github/                  # CI and tagged-release workflows/notes
+├── .github/                  # Release notes; no Actions workflows included
 ├── tools/
 │   ├── vscode-extension/     # MANA editing, Run/Check, hover and completion
 │   ├── mana-visualiser-extension/ # Optional magic-first scene replay
-│   ├── vscode/               # VSIX build/validation scripts
+│   ├── vscode/               # VSIX build scripts
 │   ├── generate_*.py         # Documentation/reference generators
 │   ├── package_project_zip.py # Clean source ZIP with both VSIX installers
-│   ├── version_sync.py       # Version-label consistency check
-│   └── check_release_tag.py  # Cross-platform release-tag check
+│   └── sync_documentation_outputs.py # Documentation output generator
 ├── installers/vscode/        # Versioned VSIX distribution
 ├── assets/branding/          # MANA logo source
 ├── requirements.txt          # Runtime third-party dependencies (none today)
-├── requirements-dev.txt      # Optional test and lint tools
-├── ruff.toml                 # Ruff lint/format rules
 ├── .editorconfig             # Shared editor indentation/line-ending rules
 ├── .gitattributes            # Git text/binary and line-ending rules
 └── .gitignore                # Files Git should not track
@@ -210,12 +179,9 @@ MANA/
 ## Development files explained
 
 - **`requirements.txt`** lists external packages needed to run the MANA interpreter. It is intentionally empty of package entries while MANA uses only Python's standard library.
-- **`requirements-dev.txt`** lists optional maintainer tools such as pytest, Ruff, and pyflakes. They are not needed to run a MANA program.
-- **Ruff** is a Python code checker (and formatter). It helps contributors find common mistakes and keep style consistent; it does not execute MANA programs and is not required by users.
 - **`.editorconfig`** asks compatible editors to use consistent text encodings, line endings, indentation, and whitespace. It does not affect program execution.
-- **`ruff.toml`** stores Ruff's project rules. We do not need a `pyproject.toml` just to configure Ruff.
 - **`tools/package_project_zip.py`** builds a clean source ZIP, keeps both VSIX installers inside it, and excludes caches and generated files. ZIPs are made from files only, so empty source folders are not carried across.
-- **[Project file map](docs/current/tooling/PROJECT_LAYOUT.md)** explains where source, docs, examples, tests, fixtures, extension code, and packaged VSIX files belong.
+- **[Project file map](docs/current/tooling/PROJECT_LAYOUT.md)** explains where source, docs, examples, extension code, and packaged VSIX files belong.
 - **`.gitignore`** keeps generated files, local environments, and caches out of Git commits. The versioned VSIX is intentionally kept as a release artifact.
 
 ## License
@@ -224,14 +190,14 @@ MANA is distributed under the **GNU General Public License v3.0 only (GPL-3.0-on
 
 ## Contributing
 
-MANA is an open project, and contributions are welcome. You can help by reporting reproducible bugs, adding regression tests, improving documentation, building small example spells, reviewing language behaviour, or improving VS Code syntax support.
+MANA is an open project, and contributions are welcome. You can help by reporting reproducible bugs, improving documentation, building small example spells, reviewing language behaviour, or improving VS Code syntax support.
 
-Before changing language syntax or spell semantics, read the language specification and contributing guide. For code changes, please run the test suite and relevant checks, describe the behaviour changed, and include an example when useful. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md); open an issue in the repository to discuss a bug or proposal, or submit a pull request for a focused improvement.
+Before changing language syntax or spell semantics, read the language specification and contributing guide. Describe behaviour changes clearly and include a small `.mana` example when useful. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md); open an issue in the repository to discuss a bug or proposal, or submit a pull request for a focused improvement.
 
 
 ## What can I build with MANA?
 
-MANA is a language and small 2D simulation for describing magical behaviour. You can write a spell, run it, and inspect whether the runtime reports an impact or changes an object. It is useful for testing rules and sketching spell behaviour, but it is not a finished game engine and does not include a supported external-engine integration.
+MANA is a language and small 2D simulation for describing magical behaviour. You can write a spell, run it, and inspect whether the runtime reports an impact or changes an object. It is useful for exploring rules and sketching spell behaviour, but it is not a finished game engine and does not include a supported external-engine integration.
 
 Here is a small example using the v2 `spell` declaration to send a fire spell at a training target:
 

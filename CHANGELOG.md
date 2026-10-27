@@ -1,6 +1,6 @@
 # Changelog
 
-This changelog records changes since the public GitHub `v1.0.0` source tag. The project version is 2.0.0. The release workflow publishes the matching `v2.0.0` tag only after its configured Linux/Windows and Python-version quality matrix passes.
+This changelog records changes since the public GitHub `v1.0.0` source tag. The project version is 2.0.0. The current source package does not include GitHub Actions workflow files or a bundled automated test suite; entries below preserve the historical development record.
 
 ## [2.0.0]
 
@@ -15,7 +15,7 @@ MANA 2.0.0 consolidates the following Visualiser, runtime, documentation, and ex
 - Added the Visual Lab with 32 colour themes, 18 backdrops, 15 spell-body treatments, 13 trail styles, 14 glyph grammars, 12 complete-look recipes, and seven independently configurable colour channels. User overrides now flow through the corresponding renderer layers.
 - Removed user-facing graphics-quality tiers. The renderer now uses one adaptive policy, retaining a readable spell silhouette while simplifying expensive decorative detail under sustained load. Added a four-million-pixel canvas backing-store ceiling, bounded event-parse cache, off-screen culling, reusable per-frame position maps, and hidden-view idle pausing.
 - Motion-path bounds are cached once per recording instead of rescanning recorded waypoints on each frame or interaction; the cache is replaced when a new recording is loaded. Corrected reduced-motion preference transitions, rejected malformed/non-finite/out-of-policy recording coordinates across fit/draw/selection/effect paths, improved large-world camera fitting, and retained contact character cues for older recordings when a validated entity position is available.
-- Hardened version synchronisation so current labels can be updated without rewriting historical references. Release workflow tag routing now accepts version-shaped tags but checks an exact match to `VERSION`, and release notes are rendered from the matching current changelog section.
+- Hardened version metadata handling during 2.0.0 development so current labels were kept aligned without rewriting historical references. Release notes were organized around the current changelog entry rather than old feature lists and installer names.
 - Corrected documentation navigation, current-report labels, and the release archive requirements. Current documentation remains separated from historical audit reports; archived records are preserved rather than silently rewritten as current results.
 - Added five new end-to-end examples: `preview_commit_boundary.mana`, `plane_path_lifecycle.mana`, `kinetic_thermal_ledger.mana`, `selective_two_target_cast.mana`, and `impact_handler_counter.mana`. They cover preview rollback versus committed release, one-way plane-path lifecycle, combined heat/motion accounting, external target selection, and runtime-reported impacts.
 - Added focused regression tests that assert runtime state for those examples, in addition to the all-example execution smoke test. The source now contains 67 runnable `.mana` examples.

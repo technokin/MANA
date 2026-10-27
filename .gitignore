@@ -1,4 +1,4 @@
-# Python bytecode, caches, and test coverage
+# Python bytecode, caches, and local build output
 __pycache__/
 *.py[cod]
 .pytest_cache/

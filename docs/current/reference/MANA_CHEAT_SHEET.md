@@ -66,5 +66,4 @@ CLI diagnostics include a stable diagnostic code and source location. Set `MANA_
 python mana.py examples\fireball.mana
 python mana.py --check examples\fireball.mana
 python tools\library_builder.py validate libraries\my_geometry
-python tools\version_sync.py --check
 ```

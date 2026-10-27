@@ -79,7 +79,7 @@ When the language surface changes, update these together:
 3. VS Code grammar/snippet vocabulary.
 4. VS Code TextMate grammar, language configuration and snippets.
 5. Current documentation and every runnable `.mana` example.
-6. Regression tests for old forms failing and new forms working.
+6. Updated migration examples showing the old and new forms.
 7. Function reference coverage and the versioned VSIX package.
 
 The runtime may use internal implementation helpers to implement `span()` and `length()`. Those helpers do not become MANA built-ins.

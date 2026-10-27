@@ -1,6 +1,0 @@
-spldef impossible_spell():
-    stone = create Earth
-    cool(stone, 999999999999999999999 K)
-    incant stone
-
-release(impossible_spell)

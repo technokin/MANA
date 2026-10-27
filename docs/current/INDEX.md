@@ -2,7 +2,7 @@
 
 **Page kind:** Reference  
 
-> **Current source snapshot:** [MANA 2.0.0 final verification report](RELEASE_V2_0_0_REPORT.md). The older [pre-release audit notes](../archive/audits/release_reports/MANA_V2_PRE_RELEASE_AUDIT.md) and [consolidation audit](../archive/audits/release_reports/PROJECT_AUDIT_AND_CONSOLIDATION_PRE_RELEASE.md) are retained for history; their old test counts are not the current release result.
+> **Current source snapshot:** [MANA 2.0.0 Source Snapshot Notes](RELEASE_V2_0_0_REPORT.md) describes what this package contains. The [MANA 2.0.0 Release Log](../../MANA_v2.0.0_RELEASE_LOG.md) summarizes the earlier development history. The older [pre-release audit notes](../archive/audits/release_reports/MANA_V2_PRE_RELEASE_AUDIT.md) and [consolidation audit](../archive/audits/release_reports/PROJECT_AUDIT_AND_CONSOLIDATION_PRE_RELEASE.md) are retained as historical records.
 
 
 This is the current documentation entry point for MANA. Read the foundations handbook first to understand what the language is designed to express, then use the language guide and references for exact syntax and function signatures.
@@ -40,6 +40,10 @@ Start with the short repository-level [MANA Introduction](../../MANA_INTRO.md) i
 - [Implementation Status](foundations/IMPLEMENTATION_STATUS.md) — implemented, partial, and planned features.
 - [Glossary and Design Terms](foundations/GLOSSARY_AND_DESIGN_TERMS.md) — consistent terminology used throughout the docs.
 
+## Source snapshot
+
+- [MANA 2.0.0 Source Snapshot Notes](RELEASE_V2_0_0_REPORT.md) — included components and package boundaries.
+
 ## Quick lookup and diagnostics
 
 - [MANA Cheat Sheet](reference/MANA_CHEAT_SHEET.md) — keywords, operators, units, reserved names, events, and errors.
@@ -48,9 +52,7 @@ Start with the short repository-level [MANA Introduction](../../MANA_INTRO.md) i
 - [Generated API Index](reference/API_INDEX.md) — functions, language constructs, events, and error classes.
 - [Glossary Usage Index](foundations/GLOSSARY_USAGE_INDEX.md) — pages mentioning each glossary term.
 - [Not Supported Yet](foundations/NOT_SUPPORTED_YET.md) — current limits in one place.
-- [Project Changelog](../../CHANGELOG.md) — full version history, including the comparison from the public v1.0.0 source tag to the v2.0.0 source snapshot.
-- [Release Checklist](RELEASE_CHECKLIST.md) — repeatable verification before a release.
-- [MANA 2.0.0 Final Verification Report](RELEASE_V2_0_0_REPORT.md) — current regression results, five new example programs, packaging verification, release workflow checks, and limitations.
+- [Project Changelog](../../CHANGELOG.md) — historical version notes and source changes.
 - [Earlier Project Audit](../archive/audits/release_reports/PROJECT_AUDIT_AND_CONSOLIDATION_PRE_RELEASE.md) — historical pre-release snapshot; do not use its test counts as current.
 
 ## Learn the actual language
@@ -70,7 +72,6 @@ Start with the short repository-level [MANA Introduction](../../MANA_INTRO.md) i
 
 - [Physics Engine](physics/PHYSICS_ENGINE.md)
 - [Energy Model](physics/ENERGY_MODEL.md)
-- [World Engine Stress Report](physics/WORLD_ENGINE_STRESS_REPORT.md) — regression and stress-test scope, safety budgets, and remaining physics limits.
 - [Interpreter Architecture](internals/INTERPRETER_ARCHITECTURE.md)
 - [Component Reference](internals/COMPONENT_REFERENCE.md)
 
@@ -94,7 +95,7 @@ Start with the short repository-level [MANA Introduction](../../MANA_INTRO.md) i
 
 - [Python Setup and VS Code](tooling/PYTHON_AND_VSCODE.md)
 - [VS Code Extension Guide](tooling/VSCODE_EXTENSION_GUIDE.md) — Run, inline completion, and Visualiser installation.
-- [Project File Layout](tooling/PROJECT_LAYOUT.md) — where source, tests, fixtures, docs, extensions, and installers belong.
+- [Project File Layout](tooling/PROJECT_LAYOUT.md) — where source, docs, examples, extensions, and installers belong.
 - [Magic Visualiser](tooling/MAGIC_VISUALISER.md) — optional magical scene replay.
 - [Where MANA Could Be Used](foundations/FUTURE_USES_AND_ROADMAP.md) — current application areas and a practical future roadmap.
 - [Troubleshooting](troubleshooting/TROUBLESHOOTING.md)

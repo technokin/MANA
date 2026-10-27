@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 DEFAULT_OUTPUT = ROOT / "dist" / f"MANA-{VERSION}-source.zip"
 EXCLUDED_DIRS = {
-    ".git", ".pytest_cache", "__pycache__", ".ruff_cache", ".mypy_cache",
+    ".git", "tests", ".pytest_cache", "__pycache__", ".ruff_cache", ".mypy_cache",
     ".venv", "venv", ".build-venv", "build", "dist",
 }
 EXCLUDED_SUFFIXES = {".pyc", ".pyo", ".swp", ".tmp", ".log"}
@@ -27,6 +27,8 @@ def should_include(path: Path) -> bool:
         return False
     relative = path.relative_to(ROOT)
     if any(part in EXCLUDED_DIRS for part in relative.parts):
+        return False
+    if relative.parts[:2] == (".github", "workflows"):
         return False
     if path.name in EXCLUDED_NAMES or path.suffix.lower() in EXCLUDED_SUFFIXES:
         return False
@@ -69,7 +71,6 @@ def build(output: Path = DEFAULT_OUTPUT) -> Path:
         names = set(archive.namelist())
         required = {
             "README.md", "MANA_INTRO.md", "VERSION", "mana.py", "MANA_v2.0.0_RELEASE_LOG.md",
-            "docs/current/RELEASE_V2_0_0_REPORT.md",
             "assets/branding/mana-icon.png",
             "tools/vscode-extension/README.md", "tools/mana-visualiser-extension/README.md",
             *(path.as_posix() for path in REQUIRED_PACKAGES),

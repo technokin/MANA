@@ -14,7 +14,7 @@ The runtime caps source size at 2 MiB, source lines at 50,000, token count at 15
 
 The Run actions require a trusted VS Code workspace, use process argument arrays rather than a shell, pass a reduced environment, cap captured output, and terminate long-running processes. The Visualiser uses a random private temporary directory, removes generated recordings when its panel closes, validates imports, restricts source navigation to workspace `.mana` files, and uses a restrictive Content Security Policy. Extension and language-level restrictions are defence-in-depth; they are not equivalent to OS isolation.
 
-CI runs the full test suite, linting, syntax/package checks, generated-document validation, and a `pip-audit` scan of development dependencies. GitHub Actions are pinned to verified immutable commit SHAs, and CI jobs request read-only repository permissions. Release builds must be rebuilt from the source tree and tested before distribution.
+This source package does not include automated repository workflows. The runtime safety limits described above reduce some classes of input and resource risk, but they do not establish an operating-system security boundary.
 
 
 ## Additional audit notes
@@ -28,11 +28,6 @@ files, duplicate/oversized archives, and output archive paths that are symlinks.
 source ZIP builder excludes symlinks rather than following them into unrelated files.
 
 
-## Maintainer tooling
+## Build and distribution notes
 
-As of 2026-10-15, the development tools are directly pinned to pytest 9.1.1, Ruff
-0.17.0, Pyflakes 4.0.3 and pip-audit 2.10.1. CI runs a strict dependency audit and
-checks Python 3.12 through 3.15 on Linux and Windows. These tools are not runtime
-dependencies; the MANA interpreter itself currently uses only the Python standard
-library. Pins should be reviewed as part of routine security maintenance rather than
-left to silently drift.
+The runtime currently uses Python's standard library. The VS Code extensions are optional and can be rebuilt from their source under `tools/`. This source snapshot does not include automated Actions workflows or a bundled test suite.

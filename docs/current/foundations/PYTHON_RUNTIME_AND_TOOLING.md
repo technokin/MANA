@@ -27,7 +27,6 @@ MANA programs are ordinary text files with the `.mana` extension. They can be ed
 - `mana.py` is the command-line runner and syntax-check entry point.
 - `tools/vscode-extension/` contains VS Code language-support source.
 - `tools/vscode/build_mana_vsix.py` builds the installable VSIX.
-- `tests/` contains language, physics, library, stress, and documentation checks.
 - `docs/current/` is maintained documentation; `docs/archive/` preserves historical audit reports.
 
-There is no separate MANA IDE to install or maintain. Runtime or language changes should normally be made in `magiclang/` and covered by tests. The VS Code extension needs changes only when its highlighting or editing support must be updated.
+There is no separate MANA IDE to install or maintain. Runtime or language changes should normally be made in `magiclang/`, with corresponding user-facing documentation and examples. The VS Code extension needs changes only when its highlighting or editing support must be updated.

@@ -176,17 +176,16 @@ The first line prints the value/reference; the second runs a trial and displays 
 
 MANA checks dimensions. Use a velocity such as `300 m/s`, a temperature increment such as `500 K`, and a distance such as `20 m`. A temperature is not a speed, and a scalar speed is not the same thing as a direction vector.
 
-## 9. Run a file or the test suite
+## 9. Run a MANA file
 
-From the project root:
+From the project root, run an example or your own source file:
 
 ```powershell
-python mana.py examples\fireball.mana
-python -m pytest -q
+python mana.py examplesireball.mana
 ```
 
-If `python` does not resolve on Windows, use the installed Python executable's full path or the Python launcher (`py`) if available. Python is required for this prototype unless you build the optional standalone executable.
+If `python` does not resolve on Windows, use the installed Python executable path or the Python launcher (`py`) if available. Python is required for this source implementation.
 
 ## 10. VS Code extension is not the interpreter
 
-Install `installers/vscode/mana-language-2.0.0.vsix` through **Extensions → Install from VSIX**. The extension supplies editor support; run MANA using the command in Section 9 or the project task. The root `.vscode/tasks.json` is workspace configuration, not part of the VSIX extension.
+Install `installers/vscode/mana-language-2.0.0.vsix` through **Extensions → Install from VSIX**. The extension supplies editor support; run MANA using the command in Section 9 or the workspace task. The root `.vscode/tasks.json` is workspace configuration, not part of the VSIX extension.

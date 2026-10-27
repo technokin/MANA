@@ -55,7 +55,6 @@ The 2D world engine operates without an explicit library load. `geometry2d` and 
 | `magiclang/libraries/plane_data/` | Independent data modules for the 13 elemental planes and spirits, Hell's current regions, and currently specified beings. | Changing the semantics of MANA execution. |
 | `tools/library_builder.py` | Creates library projects, validates MANA library source/manifest, and packages `.manalib` archives. | Executing arbitrary Python code from a library package. |
 | `tools/vscode-extension/` | VS Code syntax definition, snippets, comment/indent rules and extension metadata. | Interpreting or simulating MANA programs. |
-| `tests/` | Regression checks for parsing, runtime semantics, energy, physics, libraries, tooling and examples. | Defining new language behaviour by test convention alone. |
 
 For execution semantics, the existing rules remain unchanged: `show` prints; `post(spell)` runs a trial and restores world state; `release(spell)` commits the same spell execution. Their records are available to host tools and tests, not as assignable MANA expressions. See [Spell Modes in the Language Specification](../language/LANGUAGE_SPEC.md#4-statements-and-expression-behaviour).
 
@@ -206,30 +205,3 @@ All user-facing language errors use `MagicLangError` subclasses and include sour
 
 The CLI prints MANA errors without exposing a Python traceback. Host developers should test features both at module level and by running representative `.mana` programs through the public entry point.
 
-## 11. Tests and coverage
-
-| Test file | Main coverage |
-|---|---|
-| `test_basic.py`, `test_language.py` | Lexing/parsing, source semantics, errors and ordinary expressions. |
-| `test_engine.py` | Elements, units, physics helpers, object operations and energy rules. |
-| `test_spell_modes.py` | Configured spell instances, `tune`, `skip`, and trial/release behaviour. |
-| `test_physics_engine.py` | Motion, collision detection/response, impact effects, target context and rollback. |
-| `test_energy_model.py`, `test_energy_consistency.py` | Conversion readouts, thermal/kinetic bookkeeping, energy provenance and consistency. |
-| `test_libraries.py` | Namespaced built-ins, `.manalib` builder/load security, coexistence and documentation coverage. |
-| `test_examples_smoke.py` | Public examples and CLI behaviour. |
-| `test_editor_tooling.py` | Extension syntax metadata, snippets and package integrity. |
-
-Recommended verification from the project root:
-
-```powershell
-python -m pytest -q
-python -m compileall -q magiclang mana.py tools\library_builder.py
-python mana.py examples\targeted_fireball.mana
-```
-
-Read the [current documentation index](../INDEX.md) for user-facing guides and the [historical v0.10.1 audit](../../archive/audits/AUDIT_V0_10_1.md) for fixes and remaining limitations.
-
-
-## Native weather syntax node
-
-`WeatherStatement` is the AST node for a brace-free climate statement such as `weather rain, radius=80 m`. It is interpreted by the runtime's built-in weather rules, supports global climate when no radius is given, and records area zones otherwise. `spell` is a contextual declaration spelling in the parser rather than a globally reserved token, which preserves `spell` as a legal ordinary identifier and keeps `spldef` compatibility.
