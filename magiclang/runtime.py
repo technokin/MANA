@@ -28,7 +28,6 @@ from .elements import (
     ELEMENTS, FUNDAMENTAL_ELEMENTS, interaction, can_influence,
 )
 from .materials import (
-    ELEMENTS as CHEMICAL_ELEMENTS, ELEMENTAL_DENSITIES_KG_M3,
     composition_for_material, phase_for_temperature, resolve_element, resolve_material, physical_material_profile,
     MATERIAL_DENSITIES_KG_M3, MATERIAL_DEFAULT_STATES,
 )
@@ -1468,7 +1467,6 @@ class Runtime:
             unknown = sorted({name for name, _ in stmt.fields} - allowed)
             if unknown:
                 raise TypeErrorML("unknown weave setting(s): " + ", ".join(unknown) + "; supported settings are " + ", ".join(sorted(allowed)))
-            from .shapes import SUPPORTED_SHAPES
             kwargs = {
                 name: (value.name.casefold() if name == "shape" and isinstance(value, Name)
                        else self.eval_expr(value, env))
@@ -4047,7 +4045,6 @@ class Runtime:
                     return
                 state["seen"].add(identity)
                 is_mapping = isinstance(item, dict)
-                is_sequence = isinstance(item, (list, tuple))
                 if is_mapping:
                     emit("{")
                     iterable = item.items()

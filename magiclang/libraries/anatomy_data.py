@@ -1151,12 +1151,18 @@ def _stock_variant(key, label, base, *, clade, skeleton, movement_mode, special_
         "evidence": "real-species-summary; game trait values are illustrative priors",
         "notes": list(parent.get("notes", [])) + list(notes or []),
     })
-    if circulation is not None: profile["circulation"] = copy.deepcopy(circulation)
-    if respiration is not None: profile["respiration"] = copy.deepcopy(respiration)
-    if digestion is not None: profile["digestion"] = copy.deepcopy(digestion)
-    if integument is not None: profile["integument"] = copy.deepcopy(integument)
-    if blood is not None: profile["blood"] = copy.deepcopy(blood)
-    if senses is not None: profile["senses"] = list(senses)
+    if circulation is not None:
+        profile["circulation"] = copy.deepcopy(circulation)
+    if respiration is not None:
+        profile["respiration"] = copy.deepcopy(respiration)
+    if digestion is not None:
+        profile["digestion"] = copy.deepcopy(digestion)
+    if integument is not None:
+        profile["integument"] = copy.deepcopy(integument)
+    if blood is not None:
+        profile["blood"] = copy.deepcopy(blood)
+    if senses is not None:
+        profile["senses"] = list(senses)
     SPECIES[key] = profile
 
 
@@ -2013,7 +2019,7 @@ SPECIES_ALIASES = {
     "gray wolf": "wolf", "grey wolf": "wolf", "brown bear": "bear", "grizzly": "bear",
     "african elephant": "elephant", "bat": "bat", "croc": "crocodile", "alligator": "crocodile",
     "turtle": "tortoise", "frog": "frog", "amphibian": "frog", "shark": "shark", "dolphin": "dolphin",
-    "orca": "dolphin", "killer whale": "dolphin", "octopus": "octopus", "spider": "spider", "arachnid": "spider",
+    "octopus": "octopus", "spider": "spider", "arachnid": "spider",
     "cervid": "deer", "lagomorph": "rabbit", "camelid": "camel", "wallaroo": "kangaroo",
     "domestic chicken": "chicken", "penguin": "penguin", "seal": "seal", "whale": "whale",
     "squid": "squid", "crustacean": "crab", "bee": "bee", "ant": "ant", "salamander": "salamander",
@@ -2056,14 +2062,18 @@ def _make_human_bone_records():
     add("hyoid", "axial", "hyoid")
     add("atlas_c1", "axial", "vertebral_column")
     add("axis_c2", "axial", "vertebral_column")
-    for n in range(3, 8): add(f"cervical_c{n}", "axial", "vertebral_column")
-    for n in range(1, 13): add(f"thoracic_t{n}", "axial", "vertebral_column")
-    for n in range(1, 6): add(f"lumbar_l{n}", "axial", "vertebral_column")
+    for n in range(3, 8):
+        add(f"cervical_c{n}", "axial", "vertebral_column")
+    for n in range(1, 13):
+        add(f"thoracic_t{n}", "axial", "vertebral_column")
+    for n in range(1, 6):
+        add(f"lumbar_l{n}", "axial", "vertebral_column")
     add("sacrum", "axial", "vertebral_column")
     add("coccyx", "axial", "vertebral_column")
     add("sternum", "axial", "thoracic_cage")
     for side in ("left", "right"):
-        for n in range(1, 13): add(f"{side}_rib_{n}", "axial", "thoracic_cage")
+        for n in range(1, 13):
+            add(f"{side}_rib_{n}", "axial", "thoracic_cage")
     for name in ("left_clavicle", "right_clavicle", "left_scapula", "right_scapula"):
         add(name, "appendicular", "pectoral_girdle")
     for side in ("left", "right"):
@@ -2071,11 +2081,13 @@ def _make_human_bone_records():
             add(f"{side}_{name}", "appendicular", "upper_limbs")
         for name in ("scaphoid", "lunate", "triquetrum", "pisiform", "trapezium", "trapezoid", "capitate", "hamate"):
             add(f"{side}_{name}", "appendicular", "upper_limbs")
-        for n in range(1, 6): add(f"{side}_metacarpal_{n}", "appendicular", "upper_limbs")
+        for n in range(1, 6):
+            add(f"{side}_metacarpal_{n}", "appendicular", "upper_limbs")
         for level, digits in (("proximal", ["thumb", "index", "middle", "ring", "little"]),
                               ("middle", ["index", "middle", "ring", "little"]),
                               ("distal", ["thumb", "index", "middle", "ring", "little"])):
-            for digit in digits: add(f"{side}_{digit}_{level}_phalanx", "appendicular", "upper_limbs")
+            for digit in digits:
+                add(f"{side}_{digit}_{level}_phalanx", "appendicular", "upper_limbs")
     add("left_hip_bone", "appendicular", "pelvic_girdle")
     add("right_hip_bone", "appendicular", "pelvic_girdle")
     for side in ("left", "right"):
@@ -2083,11 +2095,13 @@ def _make_human_bone_records():
             add(f"{side}_{name}", "appendicular", "lower_limbs")
         for name in ("talus", "calcaneus", "navicular", "cuboid", "medial_cuneiform", "intermediate_cuneiform", "lateral_cuneiform"):
             add(f"{side}_{name}", "appendicular", "lower_limbs")
-        for n in range(1, 6): add(f"{side}_metatarsal_{n}", "appendicular", "lower_limbs")
+        for n in range(1, 6):
+            add(f"{side}_metatarsal_{n}", "appendicular", "lower_limbs")
         for level, digits in (("proximal", ["great_toe", "second_toe", "third_toe", "fourth_toe", "little_toe"]),
                               ("middle", ["second_toe", "third_toe", "fourth_toe", "little_toe"]),
                               ("distal", ["great_toe", "second_toe", "third_toe", "fourth_toe", "little_toe"])):
-            for digit in digits: add(f"{side}_{digit}_{level}_phalanx", "appendicular", "lower_limbs")
+            for digit in digits:
+                add(f"{side}_{digit}_{level}_phalanx", "appendicular", "lower_limbs")
     return records
 
 
@@ -2148,8 +2162,10 @@ for _species_name, _profile in SPECIES.items():
         _structures = _SNAKE_SKELETAL_STRUCTURES
     elif _species_name in {"crocodile", "tortoise", "frog"}:
         _structures = ["skull", "vertebral_column", "ribs", "limb_girdles", "forelimb_bones", "hindlimb_bones", "phalanges"]
-        if _species_name == "tortoise": _structures += ["carapace", "plastron"]
-        if _species_name == "frog": _structures += ["elongated_hindlimbs", "urostyle"]
+        if _species_name == "tortoise":
+            _structures += ["carapace", "plastron"]
+        if _species_name == "frog":
+            _structures += ["elongated_hindlimbs", "urostyle"]
     elif _species_name == "shark":
         _structures = ["cartilaginous_skeleton", "cartilaginous_cranium", "vertebral_column", "jaw_cartilages", "pectoral_fins", "pelvic_fins", "caudal_fin"]
     elif _species_name in {"octopus", "spider", "bee", "ant", "freshwater_hydra"}:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import sys
+from typing import Any
 from .ast_nodes import (
     After,
     Assignment,
@@ -614,7 +615,7 @@ class Parser:
         # declaration is the v2 spelling; `spldef` remains a legacy token alias.
         if is_spell and params and params != ["element"]:
             raise SyntaxErrorML(
-                "spell definitions accept no parameters or one element selector: use spell name(element):",
+                "spell definitions currently accept no parameters or one element selector; use spell name(element):",
                 self.filename, self.current.line,
             )
         if is_spell and params == ["element"] and defaults:

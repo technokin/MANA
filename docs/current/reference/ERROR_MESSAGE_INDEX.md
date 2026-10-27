@@ -82,7 +82,7 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `MagicErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 47 | `'metals.control() changes the world; use it inside a spell'` |
 | `MagicErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 52 | `'metals.control() cannot control an inactive object'` |
 | `MagicErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 54 | `'metals.control() requires an object made from a registered metal or alloy'` |
-| `MagicErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 70 | `'metals.field() changes world state; use it inside a spell'` |
+| `MagicErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 69 | `'metals.field() changes world state; use it inside a spell'` |
 | `MagicErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 34 | `f"necromancy.{operation}() changes the world; execute it within post()/release()"` |
 | `MagicErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 41 | `f"necromancy.{operation}() cannot affect an inactive object"` |
 | `MagicErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 43 | `f"{runtime._object_label(value)} is already animated"` |
@@ -103,27 +103,27 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 116 | `f"physiology.{operation}() cannot affect an inactive being"` |
 | `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 122 | `f"physiology.{operation}() changes body state; call it inside an executable spell"` |
 | `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 128 | `f"physiology.{operation}() requires a living, conscious-capable body; current state is {state}"` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 631 | `'physiology.define_form() name must be 1–48 letters, digits, or spaces and start with a letter'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 633 | `f"body form '{key}' is already registered"` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 642 | `f"physiology.define_form() organ '{organ}' is duplicated"` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 651 | `'physiology.define_form() vital_structures must be included in organs'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 658 | `'a living body form must include brain and heart or appropriate clade-specific equivalents (such as ganglia and aortic arches/hemolymph); set vital_structures explicitly for a deliberately different fictional life-support model, or use a purpose-built construct for nonliving forms'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 661 | `'physiology.define_form() movement_mode must be terrestrial, flight-capable, swim-capable, slither-capable, amphibious, stationary, burrowing, climbing, gliding, or custom'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 676 | `f"unknown body trait '{trait}' in physiology.define_form()"` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 685 | `f"body trait '{trait}' was specified more than once"` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 773 | `'physiology.enhance() trait must be strength, speed, endurance, durability, senses, reflexes, regeneration, or recovery'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 826 | `"physiology.propel() mode must be 'physical' or 'arcane'"` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 828 | `'physiology.propel() cannot propel an anchored being; call unanchor() first'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 902 | `'physiology.heal() cannot restore a dead being; use physiology.revive() or necromancy'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 929 | `'physiology.manipulate_blood() mode must be bind, draw, clot, restore, or purge'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 994 | `'unknown body system; use physiology.systems() or anatomy.systems(species) to inspect the catalogue'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1014 | `'physiology.heal_system() cannot restore a dead being; use physiology.revive() or necromancy'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1020 | `'unknown body system; use physiology.systems() or anatomy.systems(species) to inspect the catalogue'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1065 | `'physiology.kill() requires a living target; this target is already dead or undead'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1075 | `'physiology.revive() requires a dead body that still exists'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1077 | `'physiology.revive() cannot reach this soul; resolve its soul binding first'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1080 | `'physiology.revive() body has reached the three-revival stability limit'` |
-| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1157 | `f"physiology.{operation}() requires a known organ/structure; use anatomy.organs(species) or anatomy.define_organ() to inspect or define the catalogue"` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 630 | `'physiology.define_form() name must be 1–48 letters, digits, or spaces and start with a letter'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 632 | `f"body form '{key}' is already registered"` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 641 | `f"physiology.define_form() organ '{organ}' is duplicated"` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 650 | `'physiology.define_form() vital_structures must be included in organs'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 657 | `'a living body form must include brain and heart or appropriate clade-specific equivalents (such as ganglia and aortic arches/hemolymph); set vital_structures explicitly for a deliberately different fictional life-support model, or use a purpose-built construct for nonliving forms'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 660 | `'physiology.define_form() movement_mode must be terrestrial, flight-capable, swim-capable, slither-capable, amphibious, stationary, burrowing, climbing, gliding, or custom'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 675 | `f"unknown body trait '{trait}' in physiology.define_form()"` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 684 | `f"body trait '{trait}' was specified more than once"` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 772 | `'physiology.enhance() trait must be strength, speed, endurance, durability, senses, reflexes, regeneration, or recovery'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 825 | `"physiology.propel() mode must be 'physical' or 'arcane'"` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 827 | `'physiology.propel() cannot propel an anchored being; call unanchor() first'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 901 | `'physiology.heal() cannot restore a dead being; use physiology.revive() or necromancy'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 928 | `'physiology.manipulate_blood() mode must be bind, draw, clot, restore, or purge'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 993 | `'unknown body system; use physiology.systems() or anatomy.systems(species) to inspect the catalogue'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1013 | `'physiology.heal_system() cannot restore a dead being; use physiology.revive() or necromancy'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1019 | `'unknown body system; use physiology.systems() or anatomy.systems(species) to inspect the catalogue'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1064 | `'physiology.kill() requires a living target; this target is already dead or undead'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1074 | `'physiology.revive() requires a dead body that still exists'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1076 | `'physiology.revive() cannot reach this soul; resolve its soul binding first'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1079 | `'physiology.revive() body has reached the three-revival stability limit'` |
+| `MagicErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1156 | `f"physiology.{operation}() requires a known organ/structure; use anatomy.organs(species) or anatomy.define_organ() to inspect or define the catalogue"` |
 | `MagicErrorML` | [`magiclang/libraries/planes.py`](../../../magiclang/libraries/planes.py) | 58 | `f"the {channel_name} mana channel must be invoked before its energy can be recorded; use planes.invoke(\"{channel_name}\") first"` |
 | `MagicErrorML` | [`magiclang/libraries/summoning.py`](../../../magiclang/libraries/summoning.py) | 181 | `f"summoning '{record.name}' is missing required conditions: {', '.join(missing)}"` |
 | `MagicErrorML` | [`magiclang/libraries/summoning.py`](../../../magiclang/libraries/summoning.py) | 223 | `'summoning.bring() changes the world; call it from a spell using post()/release()'` |
@@ -138,78 +138,78 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `MagicErrorML` | [`magiclang/libraries/weather.py`](../../../magiclang/libraries/weather.py) | 295 | `'precipitation kind must be rain, snow, dust, ash, hail, or none'` |
 | `MagicErrorML` | [`magiclang/libraries/world.py`](../../../magiclang/libraries/world.py) | 89 | `'world.configure() changes world laws; call it from a spell with post() or release()'` |
 | `MagicErrorML` | [`magiclang/libraries/world.py`](../../../magiclang/libraries/world.py) | 135 | `'world.reset() changes world laws; call it from a spell with post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 361 | `'mana cannot be stored on a magical object'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 363 | `f"{name} is a runtime-managed property and cannot be assigned directly"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1386 | `'a directly called definition must be pure; move world-changing or scheduling statements into a spell and execute it with post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1397 | `'a directly called definition must be pure; use post() or release() to execute a spell'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1432 | `'weather changes world state; place the statement inside a spell and use post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1466 | `'a directly called definition cannot weave mana; use post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1499 | `'a directly called definition must be pure; use show from a spell or top-level code'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1515 | `f"target '{self._object_label(selected)}' is not targetable"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1718 | `'a directly called definition cannot assign object properties; use post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1724 | `'a directly called definition cannot mutate a list; use post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1742 | `f"'{element_name}' is not a directly available elemental plane type; combine fundamental elements or use a registered elemental plane"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1749 | `f"creating {element_name} requires 'load planes' and 'planes.invoke(\"{element_name}\")' first"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1755 | `f"creating {element_name} requires 'planes.invoke(\"{element_name}\")' first"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1812 | `'a directly called definition cannot create objects; use post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1818 | `f"unknown built-in element or element variable '{element_name}'"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1822 | `f"create expects a registered element type; '{element_name}' is not an element selector"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1826 | `'mana is woven, not created; use `construct = weave mana` and add settings beneath `weave mana:` if needed'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1905 | `f"'{callee.name}' expects one of the four base element types: Fire, Water, Earth, or Air"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1981 | `'a directly called definition must be pure; move world-changing operations into a spell and execute it with post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2187 | `'mana is not stored on objects'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2190 | `'acceleration_persistent is an internal physics flag; use accelerate() or assign .acc'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2192 | `'bound_energy is managed by planar energy transfers and cannot be assigned directly'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2194 | `f"{name} is a runtime-managed cost readout and cannot be assigned directly"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2199 | `f"{name} is managed by the energy-release ledger and cannot be assigned directly"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2203 | `f"{name} is managed by runtime object lifecycle operations"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2205 | `f"{name} is calculated by the integrity system and cannot be assigned directly"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2206 | `f"{name} is derived from mass, temp, and velocity; change those inputs instead"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2236 | `f"cannot change {name} on an inactive object; separate or reactivate it first"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2271 | `'mass cannot be reduced by direct assignment; use a matter-removal operation or Null'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2312 | `'targets cannot store mana; spell mana is reported as a calculated cost'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2358 | `'target state must be solid, liquid, gas, plasma, powder, or burning'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2374 | `'target density is derived from mass and volume; set mass and volume instead'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2418 | `f"unsupported shape '{geometry}'; choose a shape from the MANA shape catalogue"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2429 | `'cannot move an anchored object; call unanchor() first'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2548 | `'cannot apply an impulse to an anchored object; call unanchor() first'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3216 | `'combine() requires two distinct objects; an object cannot be combined with itself'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3420 | `'a directly called definition cannot summon a being; put the operation in a spell and use appraise or cast'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3446 | `'a directly called definition cannot conjure matter; use post() or release()'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3452 | `'conjure() creates physical matter; use create for elemental manifestations and summoning for beings'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3476 | `f"unknown equipment blueprint '{item}'; inspect armory.blueprints() for supported forms"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3478 | `'conjure() cannot specify an item blueprint both as its first word and item=...'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3487 | `"material=... is only valid when conjuring an equipment blueprint; write 'conjure sword, material=steel'"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3503 | `'conjure() creates ordinary matter, not pure mana or released-energy carriers; use weave mana for mana constructs'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3506 | `'conjure() creates physical matter; use create for elemental manifestations and summoning for beings'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3509 | `f"density for {element_record.name} is not registered; provide density=... explicitly"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3512 | `f"conjure() has no density for '{material_name}'; provide density=... or use a registered material such as {choices}"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3536 | `'conjure() shape must be a supported MANA shape'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3565 | `'conjure() state must be solid, liquid, gas, plasma, or powder'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3599 | `'conjure() payload must be none, binding, shock, smoke, flare, anchor, burst, or acid'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3601 | `'payload=... is supported only for projectile blueprints such as arrow, shock arrow, or smoke arrow'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3683 | `'transmute() requires matter; woven mana and released-energy carriers are not materials'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3689 | `'transmute() state must be solid, liquid, gas, plasma, or powder'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3713 | `f"transmute() has no registered density for '{material_name}'; provide density=... or use a registered material/periodic-table element"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3813 | `'transfigure() works on living beings or matter made by conjure(); use shape() to change ordinary object geometry'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3892 | `<message supplied by expression: 'unsupported transfiguration form; choose humanoid, wizard, knight, bird, serpent, beast, or golem. Use physiology.define_form() or anatomy.define_species() to register a body form, or shape() for geometric forms.' + suffix>` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3931 | `f"unsupported matter state '{state}'"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3933 | `f"{self._object_label(target)} is not defined as powderable"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4148 | `'cannot aim an anchored object; call unanchor() first'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4165 | `f"cannot {operation} an anchored object; call unanchor() first"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4473 | `'mana appraisal is calculated internally; do not pass mana= to an operation'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4490 | `'mana appraisal readout must be a finite non-negative number'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4494 | `'mana appraisal readout is outside the supported numeric range'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4496 | `'mana appraisal readout must be a finite non-negative number'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4623 | `f"{label} must be a non-negative mana amount"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4627 | `f"{label} is outside the supported numeric range"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4629 | `f"{label} must be finite"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4867 | `f"{operation}() cannot modify an inactive object"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4873 | `f"{operation}() is forbidden for this target"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4960 | `'simul blocks currently require direct operation calls; nested control flow is ambiguous'` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4965 | `f"simul cannot verify write conflicts for '{op_name}'"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4967 | `f"{op_name}() needs a target inside simul"` |
-| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4973 | `f"simul conflict: {writes[key]} and {op_name}() both write the same {prop} property"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 360 | `'mana cannot be stored on a magical object'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 362 | `f"{name} is a runtime-managed property and cannot be assigned directly"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1385 | `'a directly called definition must be pure; move world-changing or scheduling statements into a spell and execute it with post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1396 | `'a directly called definition must be pure; use post() or release() to execute a spell'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1431 | `'weather changes world state; place the statement inside a spell and use post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1465 | `'a directly called definition cannot weave mana; use post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1497 | `'a directly called definition must be pure; use show from a spell or top-level code'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1513 | `f"target '{self._object_label(selected)}' is not targetable"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1716 | `'a directly called definition cannot assign object properties; use post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1722 | `'a directly called definition cannot mutate a list; use post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1740 | `f"'{element_name}' is not a directly available elemental plane type; combine fundamental elements or use a registered elemental plane"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1747 | `f"creating {element_name} requires 'load planes' and 'planes.invoke(\"{element_name}\")' first"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1753 | `f"creating {element_name} requires 'planes.invoke(\"{element_name}\")' first"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1810 | `'a directly called definition cannot create objects; use post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1816 | `f"unknown built-in element or element variable '{element_name}'"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1820 | `f"create expects a registered element type; '{element_name}' is not an element selector"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1824 | `'mana is woven, not created; use `construct = weave mana` and add settings beneath `weave mana:` if needed'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1903 | `f"'{callee.name}' expects one of the four base element types: Fire, Water, Earth, or Air"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1979 | `'a directly called definition must be pure; move world-changing operations into a spell and execute it with post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2185 | `'mana is not stored on objects'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2188 | `'acceleration_persistent is an internal physics flag; use accelerate() or assign .acc'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2190 | `'bound_energy is managed by planar energy transfers and cannot be assigned directly'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2192 | `f"{name} is a runtime-managed cost readout and cannot be assigned directly"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2197 | `f"{name} is managed by the energy-release ledger and cannot be assigned directly"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2201 | `f"{name} is managed by runtime object lifecycle operations"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2203 | `f"{name} is calculated by the integrity system and cannot be assigned directly"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2204 | `f"{name} is derived from mass, temp, and velocity; change those inputs instead"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2234 | `f"cannot change {name} on an inactive object; separate or reactivate it first"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2269 | `'mass cannot be reduced by direct assignment; use a matter-removal operation or Null'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2310 | `'targets cannot store mana; spell mana is reported as a calculated cost'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2356 | `'target state must be solid, liquid, gas, plasma, powder, or burning'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2372 | `'target density is derived from mass and volume; set mass and volume instead'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2416 | `f"unsupported shape '{geometry}'; choose a shape from the MANA shape catalogue"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2427 | `'cannot move an anchored object; call unanchor() first'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2546 | `'cannot apply an impulse to an anchored object; call unanchor() first'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3214 | `'combine() requires two distinct objects; an object cannot be combined with itself'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3418 | `'a directly called definition cannot summon a being; put the operation in a spell and use appraise or cast'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3444 | `'a directly called definition cannot conjure matter; use post() or release()'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3450 | `'conjure() creates physical matter; use create for elemental manifestations and summoning for beings'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3474 | `f"unknown equipment blueprint '{item}'; inspect armory.blueprints() for supported forms"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3476 | `'conjure() cannot specify an item blueprint both as its first word and item=...'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3485 | `"material=... is only valid when conjuring an equipment blueprint; write 'conjure sword, material=steel'"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3501 | `'conjure() creates ordinary matter, not pure mana or released-energy carriers; use weave mana for mana constructs'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3504 | `'conjure() creates physical matter; use create for elemental manifestations and summoning for beings'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3507 | `f"density for {element_record.name} is not registered; provide density=... explicitly"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3510 | `f"conjure() has no density for '{material_name}'; provide density=... or use a registered material such as {choices}"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3534 | `'conjure() shape must be a supported MANA shape'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3563 | `'conjure() state must be solid, liquid, gas, plasma, or powder'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3597 | `'conjure() payload must be none, binding, shock, smoke, flare, anchor, burst, or acid'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3599 | `'payload=... is supported only for projectile blueprints such as arrow, shock arrow, or smoke arrow'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3681 | `'transmute() requires matter; woven mana and released-energy carriers are not materials'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3687 | `'transmute() state must be solid, liquid, gas, plasma, or powder'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3711 | `f"transmute() has no registered density for '{material_name}'; provide density=... or use a registered material/periodic-table element"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3811 | `'transfigure() works on living beings or matter made by conjure(); use shape() to change ordinary object geometry'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3890 | `<message supplied by expression: 'unsupported transfiguration form; choose humanoid, wizard, knight, bird, serpent, beast, or golem. Use physiology.define_form() or anatomy.define_species() to register a body form, or shape() for geometric forms.' + suffix>` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3929 | `f"unsupported matter state '{state}'"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3931 | `f"{self._object_label(target)} is not defined as powderable"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4145 | `'cannot aim an anchored object; call unanchor() first'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4162 | `f"cannot {operation} an anchored object; call unanchor() first"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4470 | `'mana appraisal is calculated internally; do not pass mana= to an operation'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4487 | `'mana appraisal readout must be a finite non-negative number'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4491 | `'mana appraisal readout is outside the supported numeric range'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4493 | `'mana appraisal readout must be a finite non-negative number'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4620 | `f"{label} must be a non-negative mana amount"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4624 | `f"{label} is outside the supported numeric range"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4626 | `f"{label} must be finite"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4864 | `f"{operation}() cannot modify an inactive object"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4870 | `f"{operation}() is forbidden for this target"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4957 | `'simul blocks currently require direct operation calls; nested control flow is ambiguous'` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4962 | `f"simul cannot verify write conflicts for '{op_name}'"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4964 | `f"{op_name}() needs a target inside simul"` |
+| `MagicErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4970 | `f"simul conflict: {writes[key]} and {op_name}() both write the same {prop} property"` |
 | `PhysicsErrorML` | [`magiclang/libraries/anatomy.py`](../../../magiclang/libraries/anatomy.py) | 387 | `'a runtime can define at most 512 custom anatomical structures'` |
 | `PhysicsErrorML` | [`magiclang/libraries/anatomy.py`](../../../magiclang/libraries/anatomy.py) | 427 | `'a runtime can define at most 128 custom anatomy systems'` |
 | `PhysicsErrorML` | [`magiclang/libraries/anatomy.py`](../../../magiclang/libraries/anatomy.py) | 473 | `'a runtime can define at most 128 custom species profiles'` |
@@ -252,20 +252,20 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `PhysicsErrorML` | [`magiclang/libraries/materials.py`](../../../magiclang/libraries/materials.py) | 338 | `'custom compositions may contain at most 20 elements'` |
 | `PhysicsErrorML` | [`magiclang/libraries/materials.py`](../../../magiclang/libraries/materials.py) | 341 | `'custom composition mass fractions must sum to 1.0 (within 0.02)'` |
 | `PhysicsErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 31 | `f"metals.{label}() value must be {'greater than 0' if positive else 'non-negative'}{bound}"` |
-| `PhysicsErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 78 | `'the world can contain at most 64 active magnetic fields; wait for one to expire'` |
+| `PhysicsErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 77 | `'the world can contain at most 64 active magnetic fields; wait for one to expire'` |
 | `PhysicsErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 141 | `'necromantic accounting total must be finite'` |
 | `PhysicsErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 187 | `'necromancy.lichify() phylactery must have positive finite mass'` |
 | `PhysicsErrorML` | [`magiclang/libraries/periodic.py`](../../../magiclang/libraries/periodic.py) | 29 | `f"atomic number must be between 1 and {len(ELEMENTS)}"` |
 | `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 136 | `f"physiology.{label} must be between {low} and {high}"` |
 | `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 274 | `'an entity can track at most 1024 anatomical structures'` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 635 | `'a runtime can register at most 128 custom body forms'` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 780 | `'physiology.enhance() duration must be greater than 0 and at most 60 seconds'` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 786 | `f"a being can have at most {_MAX_ENHANCEMENTS} concurrent body enhancements"` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 824 | `'physiology.propel() speed must be greater than 0 and no greater than the speed of light'` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 833 | `'physiology.propel() requires a being with positive mass'` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 861 | `"requested physical movement exceeds this body's current integrity-energy threshold; enhance/reinforce the body or use physiology.propel(..., mode='arcane') for explicitly magical high-speed movement"` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 936 | `'physiology.manipulate_blood() duration must be greater than 0 and no more than 60 seconds'` |
-| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1041 | `'physiology.set_temperature() must be between 250 K and 400 K'` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 634 | `'a runtime can register at most 128 custom body forms'` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 779 | `'physiology.enhance() duration must be greater than 0 and at most 60 seconds'` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 785 | `f"a being can have at most {_MAX_ENHANCEMENTS} concurrent body enhancements"` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 823 | `'physiology.propel() speed must be greater than 0 and no greater than the speed of light'` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 832 | `'physiology.propel() requires a being with positive mass'` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 860 | `"requested physical movement exceeds this body's current integrity-energy threshold; enhance/reinforce the body or use physiology.propel(..., mode='arcane') for explicitly magical high-speed movement"` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 935 | `'physiology.manipulate_blood() duration must be greater than 0 and no more than 60 seconds'` |
+| `PhysicsErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1040 | `'physiology.set_temperature() must be between 250 K and 400 K'` |
 | `PhysicsErrorML` | [`magiclang/libraries/planes.py`](../../../magiclang/libraries/planes.py) | 226 | `'a pathway cannot connect a plane or region to itself'` |
 | `PhysicsErrorML` | [`magiclang/libraries/planes.py`](../../../magiclang/libraries/planes.py) | 327 | `'send_energy() requires different source and destination planes or regions'` |
 | `PhysicsErrorML` | [`magiclang/libraries/planes.py`](../../../magiclang/libraries/planes.py) | 333 | `'planes.send_energy() amount must be finite and non-negative'` |
@@ -327,94 +327,94 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `PhysicsErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 708 | `'physics timestep must be a finite positive duration'` |
 | `PhysicsErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 712 | `'physics timestep is outside the supported numeric range'` |
 | `PhysicsErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 714 | `'physics timestep must be a finite positive duration'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1649 | `'wait duration cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1658 | `'after delay cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1667 | `'every interval must be greater than zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1858 | `'unary arithmetic result is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1860 | `f"invalid unary arithmetic operation: {exc}"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1991 | `'division by zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1993 | `'operation exceeded the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1995 | `f"operation rejected the supplied numeric value: {exc}"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2086 | `'division by zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2090 | `f"exponent exceeds the MANA safety limit ({MAX_POWER_EXPONENT}); value is outside the supported numeric range"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2094 | `f"exponent exceeds the MANA safety limit ({MAX_POWER_EXPONENT}); value is outside the supported numeric range"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2107 | `f"integer power result exceeds the MANA size limit ({MAX_INTEGER_RESULT_BITS} bits)"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2116 | `'division by zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2118 | `'arithmetic result is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2120 | `f"invalid arithmetic operation: {exc}"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2124 | `'arithmetic result is complex; MANA supports real-valued numbers only'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2126 | `'arithmetic result must be finite; operation produced infinity or NaN'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2243 | `'restitution is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2247 | `'restitution must be between 0 and 1'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2323 | `f"target field '{name}' is outside the supported numeric range"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2325 | `f"target field '{name}' must be finite"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2339 | `f"target {name} must be {rule}"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2343 | `'target temperature cannot be below 0 K'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2372 | `'ignition temperature cannot be below 0 K'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2382 | `'area cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2386 | `'target collision_radius cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2437 | `'move() cannot use a zero direction'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2456 | `'heat() amount cannot be negative; use cool() to decrease temperature'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2484 | `'cool() amount cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2489 | `'cooling cannot reduce temperature below 0 K'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2556 | `'impulse() vector must be non-zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2560 | `'impulse() requires a target with positive finite mass'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2608 | `'velocity() speed cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2618 | `f"cannot aim '{self._object_label(target)}' at '{self._object_label(selected)}': they occupy the same position; give the target a distance or position"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2865 | `'automatic target flight exceeds 60 s; use a closer target or configure motion explicitly'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3341 | `'not enough thermal energy is available to form Ice'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3518 | `'conjure() density must be finite and greater than zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3523 | `'conjure() mass must be greater than 0 and no more than 1e12 kg'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3527 | `'conjure() dimensions are outside the supported range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3553 | `f"conjure() {label} must be between 0 and {maximum}"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3561 | `'conjure() temperature must be between 0 K and 10000000 K'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3580 | `f"conjure() {field_name} must be between 0.0001 and 1000 metres"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3590 | `'conjure() durability must be greater than 0 and at most 1e9'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3715 | `'transmute() density must be finite and greater than zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3739 | `'transmute() requires positive mass, volume, and area'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3747 | `'transmute() result is outside the supported physical range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3900 | `'transfigure() scale must be between 0.05 and 20'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3945 | `'absolute pressure cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3955 | `'volume cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4134 | `'direction() component is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4136 | `'direction() components must be finite'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4140 | `'direction() cannot be the zero vector'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4153 | `'aim() direction cannot be zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4168 | `f"{operation}() duration must be between 0 and {MAX_PERSISTENCE_SECONDS} seconds"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4172 | `f"{operation}() duration is outside the supported numeric range"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4174 | `f"{operation}() duration must be between 0 and {MAX_PERSISTENCE_SECONDS} seconds"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4176 | `f"{operation}() force magnitude cannot be negative"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4181 | `f"{operation}() direction cannot be zero"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4187 | `f"{operation}() target must have positive mass"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4238 | `'rotate() angle is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4254 | `'scale() factor must be finite and greater than zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4258 | `'scale() factor is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4260 | `'scale() factor must be finite and greater than zero'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4267 | `'scale() result is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4269 | `'scale() would reduce volume to zero; choose a larger factor'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4278 | `'scale() result is outside the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4439 | `'sqrt() cannot calculate the real square root of a negative value'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4512 | `'planar energy transfer must be finite and non-negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4544 | `'energy transfer must be a finite number'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4546 | `'energy transfer must be a finite number'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4658 | `'body mass must be a positive finite number of kilograms'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4660 | `'body mass must be greater than 0 and no greater than 1e12 kg'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4671 | `'current body scale is outside the supported physical-profile range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4679 | `'body physical dimensions exceed the supported numeric range'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4683 | `'body collision radius must be positive and finite'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4896 | `f"{label} is outside the supported numeric range"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4898 | `f"{label} must be finite"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4923 | `'mass cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4925 | `'volume cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4927 | `'area cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4929 | `'collision_radius cannot be negative; use 0 m for area-derived 2D bounds'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4932 | `'temperature cannot be below 0 K'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4934 | `'temperature exceeds the Planck temperature; this requires the causality library'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4938 | `'absolute pressure cannot be negative'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5074 | `'time advancement requires a finite non-negative duration'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5079 | `'physics timestep must be a finite positive duration'` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5081 | `f"physics timestep cannot exceed {MAX_TIMESTEP_SECONDS} s; smaller steps reduce missed collisions"` |
-| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5492 | `'planar channel produced an invalid energy amount'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1647 | `'wait duration cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1656 | `'after delay cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1665 | `'every interval must be greater than zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1856 | `'unary arithmetic result is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1858 | `f"invalid unary arithmetic operation: {exc}"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1989 | `'division by zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1991 | `'operation exceeded the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1993 | `f"operation rejected the supplied numeric value: {exc}"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2084 | `'division by zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2088 | `f"exponent exceeds the MANA safety limit ({MAX_POWER_EXPONENT}); value is outside the supported numeric range"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2092 | `f"exponent exceeds the MANA safety limit ({MAX_POWER_EXPONENT}); value is outside the supported numeric range"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2105 | `f"integer power result exceeds the MANA size limit ({MAX_INTEGER_RESULT_BITS} bits)"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2114 | `'division by zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2116 | `'arithmetic result is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2118 | `f"invalid arithmetic operation: {exc}"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2122 | `'arithmetic result is complex; MANA supports real-valued numbers only'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2124 | `'arithmetic result must be finite; operation produced infinity or NaN'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2241 | `'restitution is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2245 | `'restitution must be between 0 and 1'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2321 | `f"target field '{name}' is outside the supported numeric range"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2323 | `f"target field '{name}' must be finite"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2337 | `f"target {name} must be {rule}"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2341 | `'target temperature cannot be below 0 K'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2370 | `'ignition temperature cannot be below 0 K'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2380 | `'area cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2384 | `'target collision_radius cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2435 | `'move() cannot use a zero direction'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2454 | `'heat() amount cannot be negative; use cool() to decrease temperature'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2482 | `'cool() amount cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2487 | `'cooling cannot reduce temperature below 0 K'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2554 | `'impulse() vector must be non-zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2558 | `'impulse() requires a target with positive finite mass'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2606 | `'velocity() speed cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2616 | `f"cannot aim '{self._object_label(target)}' at '{self._object_label(selected)}': they occupy the same position; give the target a distance or position"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2863 | `'automatic target flight exceeds 60 s; use a closer target or configure motion explicitly'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3339 | `'not enough thermal energy is available to form Ice'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3516 | `'conjure() density must be finite and greater than zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3521 | `'conjure() mass must be greater than 0 and no more than 1e12 kg'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3525 | `'conjure() dimensions are outside the supported range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3551 | `f"conjure() {label} must be between 0 and {maximum}"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3559 | `'conjure() temperature must be between 0 K and 10000000 K'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3578 | `f"conjure() {field_name} must be between 0.0001 and 1000 metres"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3588 | `'conjure() durability must be greater than 0 and at most 1e9'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3713 | `'transmute() density must be finite and greater than zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3737 | `'transmute() requires positive mass, volume, and area'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3745 | `'transmute() result is outside the supported physical range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3898 | `'transfigure() scale must be between 0.05 and 20'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3943 | `'absolute pressure cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3953 | `'volume cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4131 | `'direction() component is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4133 | `'direction() components must be finite'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4137 | `'direction() cannot be the zero vector'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4150 | `'aim() direction cannot be zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4165 | `f"{operation}() duration must be between 0 and {MAX_PERSISTENCE_SECONDS} seconds"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4169 | `f"{operation}() duration is outside the supported numeric range"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4171 | `f"{operation}() duration must be between 0 and {MAX_PERSISTENCE_SECONDS} seconds"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4173 | `f"{operation}() force magnitude cannot be negative"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4178 | `f"{operation}() direction cannot be zero"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4184 | `f"{operation}() target must have positive mass"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4235 | `'rotate() angle is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4251 | `'scale() factor must be finite and greater than zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4255 | `'scale() factor is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4257 | `'scale() factor must be finite and greater than zero'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4264 | `'scale() result is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4266 | `'scale() would reduce volume to zero; choose a larger factor'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4275 | `'scale() result is outside the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4436 | `'sqrt() cannot calculate the real square root of a negative value'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4509 | `'planar energy transfer must be finite and non-negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4541 | `'energy transfer must be a finite number'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4543 | `'energy transfer must be a finite number'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4655 | `'body mass must be a positive finite number of kilograms'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4657 | `'body mass must be greater than 0 and no greater than 1e12 kg'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4668 | `'current body scale is outside the supported physical-profile range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4676 | `'body physical dimensions exceed the supported numeric range'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4680 | `'body collision radius must be positive and finite'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4893 | `f"{label} is outside the supported numeric range"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4895 | `f"{label} must be finite"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4920 | `'mass cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4922 | `'volume cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4924 | `'area cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4926 | `'collision_radius cannot be negative; use 0 m for area-derived 2D bounds'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4929 | `'temperature cannot be below 0 K'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4931 | `'temperature exceeds the Planck temperature; this requires the causality library'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4935 | `'absolute pressure cannot be negative'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5071 | `'time advancement requires a finite non-negative duration'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5076 | `'physics timestep must be a finite positive duration'` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5078 | `f"physics timestep cannot exceed {MAX_TIMESTEP_SECONDS} s; smaller steps reduce missed collisions"` |
+| `PhysicsErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5489 | `'planar channel produced an invalid energy amount'` |
 | `PhysicsErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 165 | `'quantity is outside the supported numeric range'` |
 | `PhysicsErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 167 | `'quantity must be finite'` |
 | `PhysicsErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 170 | `'mass cannot be negative'` |
@@ -470,84 +470,84 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `RuntimeErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 634 | `'physics broad-phase index exceeded its cell-membership safety limit; reduce the number of very large or fast-moving colliders'` |
 | `RuntimeErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 659 | `'physics broad-phase exceeded its candidate-work safety limit; reduce the number of densely packed colliders'` |
 | `RuntimeErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 666 | `f"physics would check more than {max_pair_checks} collision pairs in one substep; the current budget is exhausted. Reduce colliders or split the scene."` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 133 | `f"cannot safely open library '{name}': {exc.strerror or exc.__class__.__name__}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 140 | `f"library '{name}' must be a regular .manalib file"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 142 | `f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_BYTES}-byte compressed archive limit"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 147 | `f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_BYTES}-byte compressed archive limit"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 151 | `f"cannot safely read library '{name}': {exc.strerror or exc.__class__.__name__}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 158 | `f"library '{name}' is not a valid .manalib archive"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 354 | `"mana is not stored on objects; inspect the spell's mana appraisal readout"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 476 | `f"'{name}' is not identified"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 738 | `'internal Visualiser observation buffer order is invalid'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1009 | `<message supplied by expression: 'library load cycle detected: ' + ' -> '.join(cycle)>` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1011 | `f"invalid library name '{name}'"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1031 | `f"library {name} needs {dependency} loaded first"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1104 | `f"library name '{name}' is reserved by the MANA language or built-in API"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1107 | `f"library '{name}' is not available; built-in libraries are geometry2d, vector3d, planes, elemental_planes, hell, heaven, atlantis, fae_paradise, lineage_halls, and wild_realm. User libraries must be packaged as libraries/{name}.manalib"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1116 | `f"cannot inspect library package '{name}': {exc.strerror or exc.__class__.__name__}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1118 | `f"library '{name}' must be a regular .manalib file inside the project libraries directory"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1127 | `f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_MEMBERS}-member archive limit"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1132 | `f"library '{name}' contains duplicate archive member names"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1135 | `f"library '{name}' exceeds the {MAX_LIBRARY_UNCOMPRESSED_BYTES}-byte uncompressed size limit"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1140 | `f"library package '{name}' is corrupt at {bad_member}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1144 | `f"library '{name}' manifest exceeds the {MAX_LIBRARY_MANIFEST_BYTES}-byte safety limit"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1152 | `f"library '{name}' has no valid or safely nested mana-library.json manifest"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1154 | `f"library '{name}' manifest must be a JSON object"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1156 | `f"library '{name}' has an unsupported package format"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1158 | `f"library manifest name does not match loaded name '{name}'"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1164 | `f"library '{name}' manifest dependencies must be a unique list of library names"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1168 | `f"library '{name}' manifest entry must be a relative path string"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1173 | `f"library '{name}' has an unsafe entry path"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1177 | `f"library '{name}' is missing its UTF-8 MANA entry file '{entry}'"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1183 | `f"runtime reached the source-location safety limit ({MAX_SOURCE_LOCATION_ENTRIES} entries)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1193 | `f"library '{name}' entry files may contain only ordinary def functions, load statements, and skip at top level"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1201 | `f"library '{name}' manifest must list one or more valid exported names"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1208 | `f"library '{name}' exports undefined names: {', '.join(missing_exports)}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1216 | `f"library '{name}' is not a valid .manalib archive"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1234 | `'execution stopped by user'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1253 | `f"runtime reached the source-location safety limit ({MAX_SOURCE_LOCATION_ENTRIES} entries)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1336 | `f"program exceeded the cumulative allocation safety limit ({MAX_CUMULATIVE_ALLOCATION_UNITS} {kind} units)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1341 | `f"runtime exceeded its cumulative allocation safety limit ({MAX_RUNTIME_CUMULATIVE_ALLOCATION_UNITS} {kind} units)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1354 | `f"program exceeded the execution statement budget ({MAX_EXECUTION_STATEMENTS})"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1435 | `'the built-in weather rules are unavailable'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1438 | `'the built-in weather.configure operation is unavailable'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1448 | `f"invalid library function name '{stmt.name}'"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1481 | `'the built-in mana construct helper is unavailable'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1508 | `'incant can only be used inside a def'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1613 | `'while loop exceeded the safety iteration limit'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1629 | `'for loop exceeded the safety iteration limit'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1651 | `f"wait duration exceeds the {MAX_PERSISTENCE_SECONDS}s safety cap"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1660 | `f"after delay exceeds the {MAX_PERSISTENCE_SECONDS}s safety cap"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1669 | `'every interval exceeds the persistent-spell safety cap'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1682 | `f"unsupported statement {type(stmt).__name__}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1732 | `f"list index {index} is out of range for a list of length {len(container)}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1762 | `f"expression evaluation exceeds the safety limit ({MAX_EXPRESSION_DEPTH} nested operations)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1808 | `f"index {index} is out of range for a value of length {len(container)}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1863 | `f"unknown unary operator {expr.op}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1876 | `f"{name} is a MANA command/special form, not a value-producing function; write it using its documented standalone syntax"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1896 | `f"unsupported expression {type(expr).__name__}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1935 | `f"MANA definition call depth exceeded the safety limit ({MAX_FUNCTION_DEPTH})"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2053 | `f"string result exceeds the MANA size limit ({MAX_COLLECTION_SIZE} characters)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2060 | `f"list result exceeds the MANA size limit ({MAX_COLLECTION_SIZE} items)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2077 | `f"repeated {kind} exceed the MANA size limit ({MAX_COLLECTION_SIZE})"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2112 | `f"unknown binary operator {op}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2902 | `f"runtime exceeded the world-object safety limit ({MAX_WORLD_OBJECTS_PER_RUNTIME})"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2908 | `f"program exceeded the world-object safety limit ({MAX_WORLD_OBJECTS_PER_EXECUTION})"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2948 | `'integer is too large to display; reduce its size before using show()'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3429 | `'the built-in summoning rules are unavailable'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3432 | `'the built-in summoning operation is unavailable'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3586 | `'equipment blueprint is missing a physical dimension'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3988 | `f"program exceeded the cumulative output safety limit ({MAX_CUMULATIVE_OUTPUT_CHARS} characters)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3993 | `f"runtime exceeded its cumulative output safety limit ({MAX_RUNTIME_CUMULATIVE_OUTPUT_CHARS} characters)"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4097 | `'integer is too large to display; reduce its size before using show()'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4916 | `'timing value is outside the supported numeric range'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4918 | `'timing value must be finite'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5041 | `'timer execution exceeded the per-advance safety limit'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5045 | `'incant cannot escape from a persistent timer'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5092 | `f"advance_time() requires {step_count} physics steps; the safety cap is {MAX_PHYSICS_STEPS_PER_ADVANCE}"` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5538 | `'span() step cannot be zero'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5551 | `'span() exceeds the safety iteration limit'` |
-| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5565 | `f"'{name}' is reserved and cannot be used as an identifier"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 132 | `f"cannot safely open library '{name}': {exc.strerror or exc.__class__.__name__}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 139 | `f"library '{name}' must be a regular .manalib file"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 141 | `f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_BYTES}-byte compressed archive limit"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 146 | `f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_BYTES}-byte compressed archive limit"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 150 | `f"cannot safely read library '{name}': {exc.strerror or exc.__class__.__name__}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 157 | `f"library '{name}' is not a valid .manalib archive"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 353 | `"mana is not stored on objects; inspect the spell's mana appraisal readout"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 475 | `f"'{name}' is not identified"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 737 | `'internal Visualiser observation buffer order is invalid'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1008 | `<message supplied by expression: 'library load cycle detected: ' + ' -> '.join(cycle)>` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1010 | `f"invalid library name '{name}'"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1030 | `f"library {name} needs {dependency} loaded first"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1103 | `f"library name '{name}' is reserved by the MANA language or built-in API"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1106 | `f"library '{name}' is not available; built-in libraries are geometry2d, vector3d, planes, elemental_planes, hell, heaven, atlantis, fae_paradise, lineage_halls, and wild_realm. User libraries must be packaged as libraries/{name}.manalib"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1115 | `f"cannot inspect library package '{name}': {exc.strerror or exc.__class__.__name__}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1117 | `f"library '{name}' must be a regular .manalib file inside the project libraries directory"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1126 | `f"library '{name}' exceeds the {MAX_LIBRARY_ARCHIVE_MEMBERS}-member archive limit"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1131 | `f"library '{name}' contains duplicate archive member names"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1134 | `f"library '{name}' exceeds the {MAX_LIBRARY_UNCOMPRESSED_BYTES}-byte uncompressed size limit"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1139 | `f"library package '{name}' is corrupt at {bad_member}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1143 | `f"library '{name}' manifest exceeds the {MAX_LIBRARY_MANIFEST_BYTES}-byte safety limit"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1151 | `f"library '{name}' has no valid or safely nested mana-library.json manifest"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1153 | `f"library '{name}' manifest must be a JSON object"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1155 | `f"library '{name}' has an unsupported package format"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1157 | `f"library manifest name does not match loaded name '{name}'"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1163 | `f"library '{name}' manifest dependencies must be a unique list of library names"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1167 | `f"library '{name}' manifest entry must be a relative path string"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1172 | `f"library '{name}' has an unsafe entry path"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1176 | `f"library '{name}' is missing its UTF-8 MANA entry file '{entry}'"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1182 | `f"runtime reached the source-location safety limit ({MAX_SOURCE_LOCATION_ENTRIES} entries)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1192 | `f"library '{name}' entry files may contain only ordinary def functions, load statements, and skip at top level"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1200 | `f"library '{name}' manifest must list one or more valid exported names"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1207 | `f"library '{name}' exports undefined names: {', '.join(missing_exports)}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1215 | `f"library '{name}' is not a valid .manalib archive"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1233 | `'execution stopped by user'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1252 | `f"runtime reached the source-location safety limit ({MAX_SOURCE_LOCATION_ENTRIES} entries)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1335 | `f"program exceeded the cumulative allocation safety limit ({MAX_CUMULATIVE_ALLOCATION_UNITS} {kind} units)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1340 | `f"runtime exceeded its cumulative allocation safety limit ({MAX_RUNTIME_CUMULATIVE_ALLOCATION_UNITS} {kind} units)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1353 | `f"program exceeded the execution statement budget ({MAX_EXECUTION_STATEMENTS})"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1434 | `'the built-in weather rules are unavailable'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1437 | `'the built-in weather.configure operation is unavailable'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1447 | `f"invalid library function name '{stmt.name}'"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1479 | `'the built-in mana construct helper is unavailable'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1506 | `'incant can only be used inside a def'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1611 | `'while loop exceeded the safety iteration limit'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1627 | `'for loop exceeded the safety iteration limit'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1649 | `f"wait duration exceeds the {MAX_PERSISTENCE_SECONDS}s safety cap"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1658 | `f"after delay exceeds the {MAX_PERSISTENCE_SECONDS}s safety cap"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1667 | `'every interval exceeds the persistent-spell safety cap'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1680 | `f"unsupported statement {type(stmt).__name__}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1730 | `f"list index {index} is out of range for a list of length {len(container)}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1760 | `f"expression evaluation exceeds the safety limit ({MAX_EXPRESSION_DEPTH} nested operations)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1806 | `f"index {index} is out of range for a value of length {len(container)}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1861 | `f"unknown unary operator {expr.op}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1874 | `f"{name} is a MANA command/special form, not a value-producing function; write it using its documented standalone syntax"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1894 | `f"unsupported expression {type(expr).__name__}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1933 | `f"MANA definition call depth exceeded the safety limit ({MAX_FUNCTION_DEPTH})"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2051 | `f"string result exceeds the MANA size limit ({MAX_COLLECTION_SIZE} characters)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2058 | `f"list result exceeds the MANA size limit ({MAX_COLLECTION_SIZE} items)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2075 | `f"repeated {kind} exceed the MANA size limit ({MAX_COLLECTION_SIZE})"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2110 | `f"unknown binary operator {op}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2900 | `f"runtime exceeded the world-object safety limit ({MAX_WORLD_OBJECTS_PER_RUNTIME})"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2906 | `f"program exceeded the world-object safety limit ({MAX_WORLD_OBJECTS_PER_EXECUTION})"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2946 | `'integer is too large to display; reduce its size before using show()'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3427 | `'the built-in summoning rules are unavailable'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3430 | `'the built-in summoning operation is unavailable'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3584 | `'equipment blueprint is missing a physical dimension'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3986 | `f"program exceeded the cumulative output safety limit ({MAX_CUMULATIVE_OUTPUT_CHARS} characters)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3991 | `f"runtime exceeded its cumulative output safety limit ({MAX_RUNTIME_CUMULATIVE_OUTPUT_CHARS} characters)"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4094 | `'integer is too large to display; reduce its size before using show()'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4913 | `'timing value is outside the supported numeric range'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4915 | `'timing value must be finite'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5038 | `'timer execution exceeded the per-advance safety limit'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5042 | `'incant cannot escape from a persistent timer'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5089 | `f"advance_time() requires {step_count} physics steps; the safety cap is {MAX_PHYSICS_STEPS_PER_ADVANCE}"` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5535 | `'span() step cannot be zero'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5548 | `'span() exceeds the safety iteration limit'` |
+| `RuntimeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5562 | `f"'{name}' is reserved and cannot be used as an identifier"` |
 | `SyntaxErrorML` | [`magiclang/lexer.py`](../../../magiclang/lexer.py) | 24 | `f"source exceeds the {MAX_SOURCE_BYTES}-character safety limit"` |
 | `SyntaxErrorML` | [`magiclang/lexer.py`](../../../magiclang/lexer.py) | 31 | `'source contains invalid Unicode surrogate characters'` |
 | `SyntaxErrorML` | [`magiclang/lexer.py`](../../../magiclang/lexer.py) | 33 | `f"source exceeds the {MAX_SOURCE_BYTES}-byte safety limit"` |
@@ -561,60 +561,60 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `SyntaxErrorML` | [`magiclang/lexer.py`](../../../magiclang/lexer.py) | 152 | `'numeric literal exceeds the supported input range'` |
 | `SyntaxErrorML` | [`magiclang/lexer.py`](../../../magiclang/lexer.py) | 157 | `'numeric literal is outside the supported finite range'` |
 | `SyntaxErrorML` | [`magiclang/lexer.py`](../../../magiclang/lexer.py) | 212 | `f"unexpected character {ch}"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 65 | `<message supplied by expression: message or self._unexpected_token_message(token_type)>` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 125 | `"expression or block nesting exceeds MANA's parser safety limit"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 149 | `f"'{self.current.value}' is reserved and cannot be used as an identifier"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 237 | `"show needs a value, for example 'show stone.temp'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 243 | `'show/post/release/tune cannot be nested inside another expression'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 245 | `"create must be assigned to a name first, for example 'fire = create Fire'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 251 | `f"'{expr.name}' is not identified"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 261 | `"write tuning as 'tune(spell.operation) = target, value'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 267 | `'tune must identify a named spell instance'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 278 | `"the old '.tune' syntax is removed; use 'tune(spell.operation) = target, value'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 294 | `'show/post/release cannot be assigned to variables; tune is only valid as a special assignment form'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 299 | `"create results must be assigned directly to a variable name, for example 'fire = create Fire'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 301 | `"create results must be assigned directly, for example 'fire = create Fire'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 307 | `"create results must be assigned directly, for example 'fire = create Fire'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 310 | `'show/post/release must be standalone commands; tune must be used as an assignment'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 312 | `'show/post/release/tune cannot be nested inside another command'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 320 | `f"{mode} expects a named spell, for example '{mode}(fireball)'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 326 | `'release accepts only the spell name; visual presentation is available with post(spell, visual)'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 329 | `"post's second argument must be 'text' or 'visual'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 333 | `"post accepts at most two arguments: the spell name and optional 'text' or 'visual'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 341 | `f"{context} cannot contain show/post/release; these are standalone commands"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 346 | `f"{context} cannot contain an unassigned create; use 'name = create Element'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 405 | `f"expected 'into' in {operation} statement"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 417 | `f"{operation} needs a destination after 'into'; use a name or a parenthesised expression"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 470 | `f"summon option '{key.value}' is specified more than once"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 478 | `'summon options cannot end with a comma'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 480 | `'separate summon options with commas'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 483 | `<message supplied by expression: 'unknown summon option(s): ' + ', '.join(unknown)>` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 499 | `f"summon needs a {label}; use a name or a parenthesised expression"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 515 | `'weather needs a named climate preset'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 523 | `f"weather option '{key.value}' is specified more than once"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 536 | `'weather options cannot end with a comma'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 538 | `'separate weather options with commas'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 544 | `<message supplied by expression: 'unknown weather option(s): ' + ', '.join(unknown)>` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 552 | `"conjure needs a material name, e.g. 'iron = conjure steel, mass=5 kg'"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 564 | `f"conjure option '{key.value}' is specified more than once"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 575 | `'conjure options cannot end with a comma'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 577 | `'separate conjure options with commas'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 580 | `<message supplied by expression: 'unknown conjure option(s): ' + ', '.join(unknown)>` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 600 | `f"parameter '{param}' is defined more than once"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 608 | `'required parameters must come before parameters with defaults'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 616 | `'spell definitions accept no parameters or one element selector: use spell name(element):'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 621 | `'the spell element selector cannot have a default value'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 623 | `'library modules may export ordinary def functions, not spell definitions'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 627 | `'target selection belongs outside a spell; use `tgset(target): release(spell)` around the cast'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 661 | `'incant accepts one value expression; function-call syntax is not supported'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 672 | `'incant accepts one value expression; function-call syntax is not supported'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 677 | `'create results must be assigned directly before use with incant'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 679 | `'show/post/release are commands and tune is not an incant value'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 707 | `f"target field '{field_name}' is defined more than once"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 725 | `'weave currently accepts only `mana`'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 740 | `f"construct setting '{field_name}' is defined more than once"` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 927 | `'property name must be an identifier'` |
-| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 1063 | `<message supplied by expression: message>` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 66 | `<message supplied by expression: message or self._unexpected_token_message(token_type)>` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 126 | `"expression or block nesting exceeds MANA's parser safety limit"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 150 | `f"'{self.current.value}' is reserved and cannot be used as an identifier"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 238 | `"show needs a value, for example 'show stone.temp'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 244 | `'show/post/release/tune cannot be nested inside another expression'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 246 | `"create must be assigned to a name first, for example 'fire = create Fire'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 252 | `f"'{expr.name}' is not identified"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 262 | `"write tuning as 'tune(spell.operation) = target, value'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 268 | `'tune must identify a named spell instance'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 279 | `"the old '.tune' syntax is removed; use 'tune(spell.operation) = target, value'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 295 | `'show/post/release cannot be assigned to variables; tune is only valid as a special assignment form'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 300 | `"create results must be assigned directly to a variable name, for example 'fire = create Fire'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 302 | `"create results must be assigned directly, for example 'fire = create Fire'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 308 | `"create results must be assigned directly, for example 'fire = create Fire'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 311 | `'show/post/release must be standalone commands; tune must be used as an assignment'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 313 | `'show/post/release/tune cannot be nested inside another command'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 321 | `f"{mode} expects a named spell, for example '{mode}(fireball)'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 327 | `'release accepts only the spell name; visual presentation is available with post(spell, visual)'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 330 | `"post's second argument must be 'text' or 'visual'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 334 | `"post accepts at most two arguments: the spell name and optional 'text' or 'visual'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 342 | `f"{context} cannot contain show/post/release; these are standalone commands"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 347 | `f"{context} cannot contain an unassigned create; use 'name = create Element'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 406 | `f"expected 'into' in {operation} statement"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 418 | `f"{operation} needs a destination after 'into'; use a name or a parenthesised expression"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 471 | `f"summon option '{key.value}' is specified more than once"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 479 | `'summon options cannot end with a comma'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 481 | `'separate summon options with commas'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 484 | `<message supplied by expression: 'unknown summon option(s): ' + ', '.join(unknown)>` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 500 | `f"summon needs a {label}; use a name or a parenthesised expression"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 516 | `'weather needs a named climate preset'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 524 | `f"weather option '{key.value}' is specified more than once"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 537 | `'weather options cannot end with a comma'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 539 | `'separate weather options with commas'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 545 | `<message supplied by expression: 'unknown weather option(s): ' + ', '.join(unknown)>` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 553 | `"conjure needs a material name, e.g. 'iron = conjure steel, mass=5 kg'"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 565 | `f"conjure option '{key.value}' is specified more than once"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 576 | `'conjure options cannot end with a comma'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 578 | `'separate conjure options with commas'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 581 | `<message supplied by expression: 'unknown conjure option(s): ' + ', '.join(unknown)>` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 601 | `f"parameter '{param}' is defined more than once"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 609 | `'required parameters must come before parameters with defaults'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 617 | `'spell definitions currently accept no parameters or one element selector; use spell name(element):'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 622 | `'the spell element selector cannot have a default value'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 624 | `'library modules may export ordinary def functions, not spell definitions'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 628 | `'target selection belongs outside a spell; use `tgset(target): release(spell)` around the cast'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 662 | `'incant accepts one value expression; function-call syntax is not supported'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 673 | `'incant accepts one value expression; function-call syntax is not supported'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 678 | `'create results must be assigned directly before use with incant'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 680 | `'show/post/release are commands and tune is not an incant value'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 708 | `f"target field '{field_name}' is defined more than once"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 726 | `'weave currently accepts only `mana`'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 741 | `f"construct setting '{field_name}' is defined more than once"` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 928 | `'property name must be an identifier'` |
+| `SyntaxErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 1064 | `<message supplied by expression: message>` |
 | `SyntaxErrorML` | [`magiclang/runner.py`](../../../magiclang/runner.py) | 21 | `'MANA source must be a regular file'` |
 | `SyntaxErrorML` | [`magiclang/runner.py`](../../../magiclang/runner.py) | 23 | `f"source exceeds the {MAX_SOURCE_FILE_BYTES}-byte safety limit"` |
 | `SyntaxErrorML` | [`magiclang/runner.py`](../../../magiclang/runner.py) | 30 | `f"cannot read source file: {exc.strerror or exc.__class__.__name__}"` |
@@ -726,7 +726,7 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `TypeErrorML` | [`magiclang/libraries/materials.py`](../../../magiclang/libraries/materials.py) | 326 | `'composition mass fractions must be numeric'` |
 | `TypeErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 50 | `'metals.control() target must be a MANA world object'` |
 | `TypeErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 56 | `'metals.control() direction must be a planar direction vector'` |
-| `TypeErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 76 | `"metals.field() polarity must be 'attract' or 'repel'"` |
+| `TypeErrorML` | [`magiclang/libraries/metals.py`](../../../magiclang/libraries/metals.py) | 75 | `"metals.field() polarity must be 'attract' or 'repel'"` |
 | `TypeErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 39 | `f"necromancy.{operation}() expects an existing MANA object"` |
 | `TypeErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 105 | `'necromancy.reanimate() name must be non-empty text when supplied'` |
 | `TypeErrorML` | [`magiclang/libraries/necromancy.py`](../../../magiclang/libraries/necromancy.py) | 124 | `'necromancy.reanimate_many() expects a non-empty list of corpse objects'` |
@@ -744,20 +744,20 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `TypeErrorML` | [`magiclang/libraries/periodic.py`](../../../magiclang/libraries/periodic.py) | 40 | `'periodic.search() requires a non-empty query'` |
 | `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 111 | `f"physiology.{operation}() expects a MANA world object"` |
 | `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 133 | `f"physiology.{label} must be a finite number"` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 628 | `'physiology.define_form() name must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 637 | `'physiology.define_form() organs must be a list of 3–1024 known organ names'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 647 | `'physiology.define_form() vital_structures must be a list of 1–16 structure names'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 667 | `'physiology.define_form() label must be non-empty text up to 64 characters'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 673 | `'physiology.define_form() trait_factors must be a dictionary when called from Python'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 777 | `'physiology.enhance() duration must use seconds'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 817 | `'physiology.propel() direction must be a dimensionless vector, e.g. vector3d.direction(0, 1, 0)'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 821 | `'physiology.propel() speed must use velocity units such as 15 m/s'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 933 | `'physiology.manipulate_blood() duration must use seconds'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 990 | `'physiology.injure_system() system must be text'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1016 | `'physiology.heal_system() system must be text'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1038 | `'physiology.set_temperature() temperature must use kelvin (K)'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1063 | `'physiology.kill() cause must be non-empty text no longer than 80 characters'` |
-| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1146 | `f"physiology.{operation}() organ must be text"` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 627 | `'physiology.define_form() name must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 636 | `'physiology.define_form() organs must be a list of 3–1024 known organ names'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 646 | `'physiology.define_form() vital_structures must be a list of 1–16 structure names'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 666 | `'physiology.define_form() label must be non-empty text up to 64 characters'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 672 | `'physiology.define_form() trait_factors must be a dictionary when called from Python'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 776 | `'physiology.enhance() duration must use seconds'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 816 | `'physiology.propel() direction must be a dimensionless vector, e.g. vector3d.direction(0, 1, 0)'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 820 | `'physiology.propel() speed must use velocity units such as 15 m/s'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 932 | `'physiology.manipulate_blood() duration must use seconds'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 989 | `'physiology.injure_system() system must be text'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1015 | `'physiology.heal_system() system must be text'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1037 | `'physiology.set_temperature() temperature must use kelvin (K)'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1062 | `'physiology.kill() cause must be non-empty text no longer than 80 characters'` |
+| `TypeErrorML` | [`magiclang/libraries/physiology.py`](../../../magiclang/libraries/physiology.py) | 1145 | `f"physiology.{operation}() organ must be text"` |
 | `TypeErrorML` | [`magiclang/libraries/planar_registry.py`](../../../magiclang/libraries/planar_registry.py) | 146 | `'plane identifier must be a name, ID, or plane/region reference'` |
 | `TypeErrorML` | [`magiclang/libraries/planar_registry.py`](../../../magiclang/libraries/planar_registry.py) | 166 | `'region name must be non-empty text'` |
 | `TypeErrorML` | [`magiclang/libraries/planar_registry.py`](../../../magiclang/libraries/planar_registry.py) | 195 | `'region parent must be a registered plane'` |
@@ -820,105 +820,105 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `TypeErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 107 | `'restitution must be a finite number between 0 and 1'` |
 | `TypeErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 113 | `'restitution must be a finite number between 0 and 1'` |
 | `TypeErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 127 | `'friction must be a finite number between 0 and 2'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 356 | `f"{self.element} object has no property '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 365 | `f"{self.element} object has no property '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1400 | `f"{stmt.mode}({stmt.spell.name}) expects a named spell or configured spell instance, not {type(spell).__name__}"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1411 | `"tune requires a configured spell instance; create one first, for example 'fire_ball = e_ball(Fire)'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1417 | `f"cannot tune '{spell.name}.{stmt.operation}' for '{stmt.target_name}': that operation and target do not exist in the spell"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1422 | `f"cannot tune '{spell.name}.{stmt.operation}' for '{stmt.target_name}': multiple matching operations exist; make the target/operation unambiguous"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1454 | `"spell definitions accept no parameters or one base-element selector: use 'spell name(element):'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1470 | `<message supplied by expression: 'unknown weave setting(s): ' + ', '.join(unknown) + '; supported settings are ' + ', '.join(sorted(allowed))>` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1620 | `'for loop expects a list or span'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1728 | `'indexed assignment requires a list; only list items are assignable'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1730 | `'list index must be an integer'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1735 | `'assignment target must be a variable or object property'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1804 | `'indexing is supported for lists, strings, and spans'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1806 | `'index must be an integer'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1862 | `f"unary '{expr.op}' is not supported for {type(value).__name__}"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1902 | `f"spell template '{callee.name}' expects exactly one element: {callee.name}(Fire)"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1910 | `f"spell '{callee.name}' takes no arguments"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1914 | `f"function '{callee.name}' takes at most {len(callee.params)} arguments"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1920 | `f"function '{callee.name}' has no parameter '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1922 | `f"function '{callee.name}' got multiple values for '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1930 | `f"function '{callee.name}' is missing required argument '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1956 | `f"spell '{callee.name}' cannot be called as a value; use post({callee.name}) or release({callee.name})"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1969 | `f"configured spell '{callee.name}' is not called directly; use post({callee.name}) or release({callee.name})"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1997 | `<message supplied by expression: str(exc)>` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1998 | `f"value {callee} is not callable"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2122 | `<message supplied by expression: str(exc)>` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2132 | `f"library '{obj.name}' does not export '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2159 | `f"object has no MANA property '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2164 | `'properties can only be assigned on magical objects'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2185 | `'properties can only be assigned on magical objects'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2210 | `'display_name must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2212 | `'object_kind must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2214 | `'material must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2217 | `'stabilizers must be a list of registered element names'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2224 | `'stabilizers may contain only Earth, Water, Air, Order, Light, Space, Time, Entropy, or Death'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2231 | `f"{obj.element} object has no property '{name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2239 | `'restitution must be a finite number between 0 and 1'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2245 | `'restitution must be a finite number between 0 and 1'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2254 | `'friction must be between 0 and 2'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2257 | `'collidable must be true or false'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2319 | `f"target field '{name}' must be a non-negative number"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2332 | `f"{name} must be between 0 and 1 (0 = none, 1 = full resistance)"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2346 | `'target material must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2350 | `'target kind must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2354 | `'target shape must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2362 | `'target combustible must be true or false'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2365 | `'target anchored must be true or false'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2368 | `'target powderable must be true or false'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2393 | `'target restitution must be between 0 and 1'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2401 | `'target friction must be between 0 and 2'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2405 | `'target collidable must be true or false'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2414 | `'shape() expects a built-in geometry name'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2434 | `'move() direction must be a vector'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2550 | `'impulse() expects a momentum vector, for example vector3d.direction(1, 0, 0) * (10 kg*m/s)'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2646 | `'detect() currently expects a magical object'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2649 | `'detect() property name must be text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2651 | `f"detect() target has no property '{property_name}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2670 | `"appraise presentation must be 'text' or 'visual'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2682 | `"post presentation must be 'text' or 'visual'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2691 | `f"'{candidate.name}' is an ordinary function, not a spell; call it normally to calculate a value"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2693 | `f"'{candidate.name}' is a spell template; configure it first, e.g. '{candidate.name}(Fire)'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2704 | `f"'{candidate}' is an ordinary function, not a spell; call it normally to calculate a value"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2706 | `f"'{candidate}' is a spell template; configure it first, e.g. '{candidate}(Fire)'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2708 | `f"{mode}() expected a named spell or configured spell instance, got {candidate}"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2710 | `f"{mode}() accepts a spell name only, not a magical object; use object operations for objects"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2711 | `f"{mode}() expects one spell name"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3449 | `f"conjure() got unsupported option(s): {unknown}"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3454 | `'conjure() source must be a material name or equipment blueprint'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3468 | `'conjure() material must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3470 | `'conjure() item must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3539 | `'conjure() anchored and collidable options must be true or false'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3550 | `f"conjure() {label} must be a finite number"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3596 | `'conjure() payload must be text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3685 | `'transmute() material must be a non-empty text name'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3687 | `'transmute() preserve_mass must be true or false'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3815 | `'transfigure() form must be non-empty text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3898 | `'transfigure() scale must be a finite dimensionless number'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3927 | `'transform() state must be text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3963 | `'show() separator must be text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4129 | `'direction() components must be numbers'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4150 | `'aim() direction must be a vector created by direction()'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4178 | `f"{operation}() direction must be a vector"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4222 | `'pull() needs position vectors on both objects'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4234 | `'rotate() angle must be a finite number of radians'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4240 | `'rotate() angle must be a finite number of radians'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4293 | `'reflect() needs a non-zero direction vector as surface normal'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4315 | `'split() parts must be an integer between 2 and 10000'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4431 | `'sqrt() expects a non-negative number'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4437 | `'sqrt() expects a non-negative number'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4448 | `'magnitude() expects a vector or numeric quantity'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4454 | `'has_domain() domain must be text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4861 | `f"{operation}() expects a magical object"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4878 | `f"{operation}() requires target property '{prop}'"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4889 | `f"{label} requires a numeric value"` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4912 | `'timing requires a numeric duration'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5512 | `'emit() event name must be text'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5534 | `'span() expects 1 to 3 integer arguments'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5536 | `'span() arguments must be integers'` |
-| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5558 | `'length() expects a list, string, or span'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 355 | `f"{self.element} object has no property '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 364 | `f"{self.element} object has no property '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1399 | `f"{stmt.mode}({stmt.spell.name}) expects a named spell or configured spell instance, not {type(spell).__name__}"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1410 | `"tune requires a configured spell instance; create one first, for example 'fire_ball = e_ball(Fire)'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1416 | `f"cannot tune '{spell.name}.{stmt.operation}' for '{stmt.target_name}': that operation and target do not exist in the spell"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1421 | `f"cannot tune '{spell.name}.{stmt.operation}' for '{stmt.target_name}': multiple matching operations exist; make the target/operation unambiguous"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1453 | `"spell definitions accept no parameters or one base-element selector: use 'spell name(element):'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1469 | `<message supplied by expression: 'unknown weave setting(s): ' + ', '.join(unknown) + '; supported settings are ' + ', '.join(sorted(allowed))>` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1618 | `'for loop expects a list or span'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1726 | `'indexed assignment requires a list; only list items are assignable'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1728 | `'list index must be an integer'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1733 | `'assignment target must be a variable or object property'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1802 | `'indexing is supported for lists, strings, and spans'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1804 | `'index must be an integer'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1860 | `f"unary '{expr.op}' is not supported for {type(value).__name__}"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1900 | `f"spell template '{callee.name}' expects exactly one element: {callee.name}(Fire)"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1908 | `f"spell '{callee.name}' takes no arguments"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1912 | `f"function '{callee.name}' takes at most {len(callee.params)} arguments"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1918 | `f"function '{callee.name}' has no parameter '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1920 | `f"function '{callee.name}' got multiple values for '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1928 | `f"function '{callee.name}' is missing required argument '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1954 | `f"spell '{callee.name}' cannot be called as a value; use post({callee.name}) or release({callee.name})"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1967 | `f"configured spell '{callee.name}' is not called directly; use post({callee.name}) or release({callee.name})"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1995 | `<message supplied by expression: str(exc)>` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 1996 | `f"value {callee} is not callable"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2120 | `<message supplied by expression: str(exc)>` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2130 | `f"library '{obj.name}' does not export '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2157 | `f"object has no MANA property '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2162 | `'properties can only be assigned on magical objects'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2183 | `'properties can only be assigned on magical objects'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2208 | `'display_name must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2210 | `'object_kind must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2212 | `'material must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2215 | `'stabilizers must be a list of registered element names'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2222 | `'stabilizers may contain only Earth, Water, Air, Order, Light, Space, Time, Entropy, or Death'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2229 | `f"{obj.element} object has no property '{name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2237 | `'restitution must be a finite number between 0 and 1'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2243 | `'restitution must be a finite number between 0 and 1'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2252 | `'friction must be between 0 and 2'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2255 | `'collidable must be true or false'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2317 | `f"target field '{name}' must be a non-negative number"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2330 | `f"{name} must be between 0 and 1 (0 = none, 1 = full resistance)"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2344 | `'target material must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2348 | `'target kind must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2352 | `'target shape must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2360 | `'target combustible must be true or false'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2363 | `'target anchored must be true or false'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2366 | `'target powderable must be true or false'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2391 | `'target restitution must be between 0 and 1'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2399 | `'target friction must be between 0 and 2'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2403 | `'target collidable must be true or false'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2412 | `'shape() expects a built-in geometry name'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2432 | `'move() direction must be a vector'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2548 | `'impulse() expects a momentum vector, for example vector3d.direction(1, 0, 0) * (10 kg*m/s)'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2644 | `'detect() currently expects a magical object'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2647 | `'detect() property name must be text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2649 | `f"detect() target has no property '{property_name}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2668 | `"appraise presentation must be 'text' or 'visual'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2680 | `"post presentation must be 'text' or 'visual'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2689 | `f"'{candidate.name}' is an ordinary function, not a spell; call it normally to calculate a value"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2691 | `f"'{candidate.name}' is a spell template; configure it first, e.g. '{candidate.name}(Fire)'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2702 | `f"'{candidate}' is an ordinary function, not a spell; call it normally to calculate a value"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2704 | `f"'{candidate}' is a spell template; configure it first, e.g. '{candidate}(Fire)'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2706 | `f"{mode}() expected a named spell or configured spell instance, got {candidate}"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2708 | `f"{mode}() accepts a spell name only, not a magical object; use object operations for objects"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2709 | `f"{mode}() expects one spell name"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3447 | `f"conjure() got unsupported option(s): {unknown}"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3452 | `'conjure() source must be a material name or equipment blueprint'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3466 | `'conjure() material must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3468 | `'conjure() item must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3537 | `'conjure() anchored and collidable options must be true or false'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3548 | `f"conjure() {label} must be a finite number"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3594 | `'conjure() payload must be text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3683 | `'transmute() material must be a non-empty text name'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3685 | `'transmute() preserve_mass must be true or false'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3813 | `'transfigure() form must be non-empty text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3896 | `'transfigure() scale must be a finite dimensionless number'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3925 | `'transform() state must be text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3961 | `'show() separator must be text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4126 | `'direction() components must be numbers'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4147 | `'aim() direction must be a vector created by direction()'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4175 | `f"{operation}() direction must be a vector"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4219 | `'pull() needs position vectors on both objects'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4231 | `'rotate() angle must be a finite number of radians'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4237 | `'rotate() angle must be a finite number of radians'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4290 | `'reflect() needs a non-zero direction vector as surface normal'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4312 | `'split() parts must be an integer between 2 and 10000'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4428 | `'sqrt() expects a non-negative number'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4434 | `'sqrt() expects a non-negative number'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4445 | `'magnitude() expects a vector or numeric quantity'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4451 | `'has_domain() domain must be text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4858 | `f"{operation}() expects a magical object"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4875 | `f"{operation}() requires target property '{prop}'"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4886 | `f"{label} requires a numeric value"` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4909 | `'timing requires a numeric duration'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5509 | `'emit() event name must be text'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5531 | `'span() expects 1 to 3 integer arguments'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5533 | `'span() arguments must be integers'` |
+| `TypeErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5555 | `'length() expects a list, string, or span'` |
 | `TypeErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 161 | `'quantity value must be numeric, not boolean or text'` |
 | `TypeErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 181 | `f"cannot combine a quantity in {self.dimension} with {other_kind}; expected another quantity in {self.dimension}"` |
 | `TypeErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 213 | `'boolean values cannot be used as quantities'` |
@@ -967,9 +967,9 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `UnitErrorML` | [`magiclang/libraries/world.py`](../../../magiclang/libraries/world.py) | 31 | `f"{label} must be dimensionless"` |
 | `UnitErrorML` | [`magiclang/libraries/world.py`](../../../magiclang/libraries/world.py) | 96 | `'world.configure() gravity must be an acceleration vector in m/s²'` |
 | `UnitErrorML` | [`magiclang/libraries/world.py`](../../../magiclang/libraries/world.py) | 102 | `'world.configure() air_density must use kg/m³'` |
-| `UnitErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 986 | `f"unknown unit '{candidate}'"` |
-| `UnitErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 999 | `'numeric literal is outside the supported range for unit conversion'` |
-| `UnitErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 1004 | `'numeric literal is outside the supported finite range for unit conversion'` |
+| `UnitErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 987 | `f"unknown unit '{candidate}'"` |
+| `UnitErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 1000 | `'numeric literal is outside the supported range for unit conversion'` |
+| `UnitErrorML` | [`magiclang/parser.py`](../../../magiclang/parser.py) | 1005 | `'numeric literal is outside the supported finite range for unit conversion'` |
 | `UnitErrorML` | [`magiclang/physics.py`](../../../magiclang/physics.py) | 55 | `f"vector dimensions differ: {self.dimension} and {other.dimension}"` |
 | `UnitErrorML` | [`magiclang/physics.py`](../../../magiclang/physics.py) | 158 | `f"expected {expected}, got {value.dimension}"` |
 | `UnitErrorML` | [`magiclang/physics.py`](../../../magiclang/physics.py) | 175 | `f"{label} expects {dimension}, got {value.dimension}"` |
@@ -982,36 +982,36 @@ Generated from direct error-constructor calls in `magiclang/`. Run `python tools
 | `UnitErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 91 | `'2D collision bounds require area measured in m2'` |
 | `UnitErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 400 | `'mana projectile impact target needs a temperature in K'` |
 | `UnitErrorML` | [`magiclang/physics_engine.py`](../../../magiclang/physics_engine.py) | 716 | `'2D world gravity must be an acceleration vector in m/s2'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2047 | `f"cannot compare these values: {exc}"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2251 | `'friction must be dimensionless'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2266 | `f"{obj.element}.{name} requires a vector in {old.dimension}"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2316 | `f"target field '{name}' must be a plain number"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2329 | `f"target field '{name}' must be dimensionless"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2377 | `'target pos must be a position vector'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2390 | `'target restitution must be dimensionless'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2398 | `'target friction must be dimensionless'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2453 | `'heat() expects a temperature change in K, not an absolute Celsius temperature'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2481 | `'cool() expects a temperature change in K, not an absolute Celsius temperature'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2505 | `'accelerate() vector must be in m/s2'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2523 | `'decelerate() vector must be in m/s2'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2552 | `f"impulse() vector must use {MOMENTUM}"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2566 | `'impulse() target velocity must be a velocity vector'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2602 | `'velocity() vector must be in m/s'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2614 | `'targeted velocity requires source and target positions in metres'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2841 | `'selected target needs a world position in metres'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3531 | `'conjure() position must be a 2D position measured in metres'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3543 | `'conjure() velocity must be a velocity vector, e.g. velocity=direction(1, 0) * (5 m/s)'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3577 | `f"conjure() {field_name} must be a distance, e.g. {field_name}=0.8 m"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3894 | `'transfigure() scale must be dimensionless'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4126 | `'direction() components must be dimensionless'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4231 | `'rotate() angle is dimensionless and interpreted in radians'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4251 | `'scale() factor must be dimensionless'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4361 | `'anchor() position must be a position vector in metres'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4434 | `'sqrt() currently accepts only dimensionless quantities'` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4620 | `f"{label} must be measured in mana"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4886 | `f"{label} requires {expected}, got {value.dimension}"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4909 | `f"timing requires seconds, got {value.dimension}"` |
-| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5089 | `'advance_time() gravity must be an acceleration vector in m/s2'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2045 | `f"cannot compare these values: {exc}"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2249 | `'friction must be dimensionless'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2264 | `f"{obj.element}.{name} requires a vector in {old.dimension}"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2314 | `f"target field '{name}' must be a plain number"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2327 | `f"target field '{name}' must be dimensionless"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2375 | `'target pos must be a position vector'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2388 | `'target restitution must be dimensionless'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2396 | `'target friction must be dimensionless'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2451 | `'heat() expects a temperature change in K, not an absolute Celsius temperature'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2479 | `'cool() expects a temperature change in K, not an absolute Celsius temperature'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2503 | `'accelerate() vector must be in m/s2'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2521 | `'decelerate() vector must be in m/s2'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2550 | `f"impulse() vector must use {MOMENTUM}"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2564 | `'impulse() target velocity must be a velocity vector'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2600 | `'velocity() vector must be in m/s'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2612 | `'targeted velocity requires source and target positions in metres'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 2839 | `'selected target needs a world position in metres'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3529 | `'conjure() position must be a 2D position measured in metres'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3541 | `'conjure() velocity must be a velocity vector, e.g. velocity=direction(1, 0) * (5 m/s)'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3575 | `f"conjure() {field_name} must be a distance, e.g. {field_name}=0.8 m"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 3892 | `'transfigure() scale must be dimensionless'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4123 | `'direction() components must be dimensionless'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4228 | `'rotate() angle is dimensionless and interpreted in radians'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4248 | `'scale() factor must be dimensionless'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4358 | `'anchor() position must be a position vector in metres'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4431 | `'sqrt() currently accepts only dimensionless quantities'` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4617 | `f"{label} must be measured in mana"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4883 | `f"{label} requires {expected}, got {value.dimension}"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 4906 | `f"timing requires seconds, got {value.dimension}"` |
+| `UnitErrorML` | [`magiclang/runtime.py`](../../../magiclang/runtime.py) | 5086 | `'advance_time() gravity must be an acceleration vector in m/s2'` |
 | `UnitErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 89 | `f"unknown or unsupported dimension/unit '{value}'"` |
 | `UnitErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 121 | `f"unknown unit '{text}'"` |
 | `UnitErrorML` | [`magiclang/units.py`](../../../magiclang/units.py) | 138 | `f"C is only supported as a standalone absolute-temperature literal, not '{text}'"` |

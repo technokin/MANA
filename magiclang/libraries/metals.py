@@ -58,7 +58,6 @@ def build_library(runtime: Any) -> dict[str, Any]:
         duration_s = _finite_quantity(duration, S, "control", maximum=10.0)
         force_q = strength if isinstance(strength, Quantity) else Quantity(float(strength), FORCE)
         force_n = _finite_quantity(force_q, FORCE, "control", maximum=1_000_000.0)
-        old = runtime.object_energy_j(target)
         result = runtime._apply_force(target, Quantity(force_n, FORCE), direction, "metal control", {}, duration_seconds=duration_s)
         runtime._observe("magic.effect", effect="metal_manipulation", mode="directed_force", entity=runtime._visual_entity(target), force_n=force_n, duration_s=duration_s)
         return result

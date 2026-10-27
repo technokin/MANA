@@ -129,7 +129,6 @@ def test_world_namespace_exposes_real_physics_laws_and_validates_configuration()
 
 
 def test_configured_world_gravity_is_the_default_for_time_advancement():
-    from magiclang.ast_nodes import Program
     from magiclang.lexer import Lexer
     from magiclang.parser import Parser
 

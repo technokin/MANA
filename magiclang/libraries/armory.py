@@ -10,11 +10,11 @@ import copy
 import math
 from typing import Any
 
-from ..errors import MagicErrorML, PhysicsErrorML, TypeErrorML
+from ..errors import MagicErrorML, PhysicsErrorML, TypeErrorML, UnitErrorML
 from ..equipment import all_blueprints, blueprint, canonical_item
-from ..materials import physical_material_profile, resolve_material
+from ..materials import physical_material_profile
 from ..physics import Vector3
-from ..units import DENSITY, ENERGY, FORCE, KG, M, VELOCITY, Quantity
+from ..units import ENERGY, FORCE, KG, M, VELOCITY, Quantity
 
 
 def _object(value: Any, label: str):

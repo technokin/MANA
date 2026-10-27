@@ -10,7 +10,7 @@ import pytest
 from magiclang.errors import PhysicsErrorML, RuntimeErrorML, SyntaxErrorML, TypeErrorML
 from magiclang.lexer import Lexer, MAX_SOURCE_BYTES, MAX_SOURCE_LINES, MAX_TOKEN_COUNT, MAX_STRING_LITERAL_CHARS
 from magiclang.parser import Parser
-from magiclang.runner import read_mana_source, run_file
+from magiclang.runner import read_mana_source
 from magiclang.runtime import (
     Runtime,
     MAX_CUMULATIVE_ALLOCATION_UNITS,

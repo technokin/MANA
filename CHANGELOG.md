@@ -85,6 +85,8 @@ MANA 2.0.0 consolidates the following Visualiser, runtime, documentation, and ex
 
 ### Documentation integrity and release-readiness audit
 
+- Fixed the Python lint findings that stopped the hosted quality matrix before tests and documentation checks could run: missing type/error imports, unused imports and assignments, one-line control flow, and repeated orca aliases. The alias correction preserves the effective mapping to the dedicated orca profile.
+
 - Corrected generated API links for names containing underscores. The generator now preserves valid characters in GitHub heading IDs, and a regression test checks that heading links in the current documentation resolve.
 - Corrected a mislabeled historical audit reference in the component reference page.
 - Moved two old pre-release audit snapshots out of `docs/current/` and into `docs/archive/audits/release_reports/`, then updated the index, version-sync exclusions, generated glossary usage index, and historical links. The current documentation index now links all 65 current documentation pages.

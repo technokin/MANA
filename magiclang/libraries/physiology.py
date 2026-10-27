@@ -363,7 +363,6 @@ def refresh_effective_properties(obj: Any, now: float) -> None:
             factors[trait] = min(10.0, factors[trait] * factor)
         if trait == "regeneration":
             regen_bonus += 0.35 * max(0.0, factor - 1.0)
-    anatomy = props.get("anatomy", {})
     # Different body plans transmit force through different structures. Resolve
     # an actually present analogue rather than making worms, spiders, or sharks
     # depend on a missing mammalian skeleton/muscle key.
@@ -1180,7 +1179,6 @@ def advance_runtime(runtime: Any, dt: float, objects: list[Any]) -> None:
             refresh_effective_properties(obj, now)
         if state == "undead":
             continue
-        anatomy = props.get("anatomy", {})
         species_id = str(props.get("anatomy_species_id", "")).casefold()
         # Use the structures the selected clade actually owns. Invertebrates do not
         # fail merely because they lack vertebrate organs with familiar names.

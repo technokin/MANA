@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from magiclang.errors import MagicErrorML, PhysicsErrorML, SyntaxErrorML
+from magiclang.errors import PhysicsErrorML, SyntaxErrorML
 from magiclang.lexer import Lexer
 from magiclang.parser import Parser
 from magiclang.physics import Vector3
 from magiclang.runtime import Runtime, SpellResult
-from magiclang.units import KG, M, Quantity, S, VELOCITY
+from magiclang.units import KG, M, Quantity, S
 
 
 def execute(source: str, runtime: Runtime | None = None):

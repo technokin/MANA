@@ -555,7 +555,6 @@ def test_swept_collision_quadratic_is_scaled_to_avoid_finite_input_overflow():
 
 
 def test_generic_body_propel_supports_multistorey_jump_under_gravity():
-    from magiclang.libraries.physiology import advance_runtime
     from magiclang.units import DIMENSIONLESS, S
 
     runtime = Runtime(project_root=ROOT)

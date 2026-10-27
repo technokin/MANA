@@ -89,24 +89,26 @@ cast water_bolt
 Expected output:
 
 ```text
-[POST fire_bolt] inputs: element=Fire
-[POST fire_bolt] energy input: 1e+06 J (create Fire; matter creation (initial state))
-[POST fire_bolt] created Fire (Fire, 1 kg; create Fire)
-[POST fire_bolt] projectile.shape: 'point' -> 'circle' (shape)
-[POST fire_bolt] energy input: 20000 J (velocity; spell work)
-[POST fire_bolt] projectile.energy: 1e+06 J -> 1.02e+06 J (velocity)
-[POST fire_bolt] projectile.integrity: 0.992062994740159 -> 0.9920104302595459 (velocity)
-[POST fire_bolt] projectile.integrity_effective_energy_j: 1000000.0 -> 1020000.0000000066 (velocity)
-[POST fire_bolt] projectile.integrity_energy: 1e+06 J -> 1.02e+06 J (velocity)
-[POST fire_bolt] projectile.integrity_last_score_j: 1000000.0 -> 1020000.0000000066 (velocity)
-[POST fire_bolt] projectile.kinetic_energy: 0 J -> 20000 J (velocity)
-[POST fire_bolt] projectile.mana_cost: 0.1 -> 20000.100000006674 (velocity)
-[POST fire_bolt] projectile.mana_used: 0.1 -> 20000.100000006674 (velocity)
-[POST fire_bolt] projectile.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(200, 0, 0) [kg*m/s] (velocity)
-[POST fire_bolt] projectile.vel: Vector3(0, 0, 0) [m/s] -> Vector3(200, 0, 0) [m/s] (velocity)
-[POST fire_bolt] spell completed
-[POST fire_bolt] mana appraisal: 20000.1 mana
-[POST fire_bolt] created: projectile (Fire, 1 kg)
+[APPRAISAL fire_bolt] inputs: element=Fire
+[APPRAISAL fire_bolt] energy input: 1e+06 J (create Fire; matter creation (initial state))
+[APPRAISAL fire_bolt] created Fire (Fire, 1 kg; create Fire)
+[APPRAISAL fire_bolt] projectile.shape: 'point' -> 'circle' (shape)
+[APPRAISAL fire_bolt] energy input: 20000 J (velocity; spell work)
+[APPRAISAL fire_bolt] projectile.energy: 1e+06 J -> 1.02e+06 J (velocity)
+[APPRAISAL fire_bolt] projectile.integrity: 0.992062994740159 -> 0.9920104302595459 (velocity)
+[APPRAISAL fire_bolt] projectile.integrity_effective_energy_j: 1000000.0 -> 1020000.0000000066 (velocity)
+[APPRAISAL fire_bolt] projectile.integrity_energy: 1e+06 J -> 1.02e+06 J (velocity)
+[APPRAISAL fire_bolt] projectile.integrity_last_score_j: 1000000.0 -> 1020000.0000000066 (velocity)
+[APPRAISAL fire_bolt] projectile.kinetic_energy: 0 J -> 20000 J (velocity)
+[APPRAISAL fire_bolt] projectile.mana_cost: 0.1 -> 20000.100000006674 (velocity)
+[APPRAISAL fire_bolt] projectile.mana_used: 0.1 -> 20000.100000006674 (velocity)
+[APPRAISAL fire_bolt] projectile.momentum: Vector3(0, 0, 0) [kg*m/s] -> Vector3(200, 0, 0) [kg*m/s] (velocity)
+[APPRAISAL fire_bolt] projectile.vel: Vector3(0, 0, 0) [m/s] -> Vector3(200, 0, 0) [m/s] (velocity)
+[APPRAISAL fire_bolt] spell completed
+[APPRAISAL fire_bolt] mana appraisal: 20000.1 mana
+[APPRAISAL fire_bolt] created: projectile (Fire, 1 kg)
+[CAST water_bolt] spell committed
+[CAST water_bolt] mana appraisal: 20000.1 mana
 ```
 
 Only the four fundamental element type selectors are valid template arguments. Calling the template configures an instance; it does not execute the spell body immediately.
