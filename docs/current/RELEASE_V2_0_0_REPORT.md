@@ -31,15 +31,15 @@ Each new example is included in the all-example execution smoke test and has foc
 
 ## Verification record
 
-- Full regression suite: **499 passed**.
-- All **67** `.mana` examples pass the smoke test; every example also passes `python mana.py --check`.
+- Full regression suite: **500 passed**.
+- All **67** `.mana` examples pass the full example smoke test. The five representative examples used by CI also pass `python mana.py --check`.
 - Both VS Code extension packages were built with version 2.0.0 and passed their package validation checks.
-- Version synchronization, generated indexes, documentation expected-output checks, Python byte-compilation, JavaScript syntax checks, release workflow parsing, release-tag validation and release-note rendering passed locally.
+- Version synchronization, generated indexes, documentation expected-output checks, Python byte-compilation, JavaScript syntax checks, both VSIX build/validation steps, and the five CI example syntax checks passed locally.
 - The source archive passed ZIP integrity/content checks and contains only the two current 2.0.0 VSIX installers.
 
 ## Checks not verified locally
 
-Ruff, Pyflakes and pip-audit were not available in the local environment; package installation for optional development checks was blocked by the configured package index. The hosted Windows/Linux × Python 3.12–3.15 matrix is not run from this local workspace; the release workflow executes it on GitHub Actions. A hardware-specific GPU/RAM benchmark and full pixel-level interactive browser review were also not completed. These are unverified, not passed.
+Ruff, Pyflakes and pip-audit could not be run in the local environment: the tools were absent and package installation could not reach the configured package index. The hosted Windows/Linux × Python 3.12–3.15 matrix is not run from this local workspace; the release workflow executes it on GitHub Actions. A hardware-specific GPU/RAM benchmark and full pixel-level interactive browser review were also not completed. These are unverified, not passed.
 
 ## Release workflow
 
